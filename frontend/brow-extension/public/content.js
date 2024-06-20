@@ -81,7 +81,7 @@ function logEvent(action) {
     timestamp: new Date().toISOString()
   };
 
-  fetch('http://localhost:8000/log', { // Replace with your backend URL
+  fetch('http://localhost:8000/log', { 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
