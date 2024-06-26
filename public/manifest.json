@@ -15,6 +15,12 @@
       "js": ["static/js/contentScript.js"]
     }
   ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",

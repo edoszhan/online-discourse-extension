@@ -3,15 +3,18 @@ import './App.css';
 
 function App() {
   function toggleGrayscale() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      if (tab && tab.id !== undefined) {
-        chrome.tabs.sendMessage(tab.id, {
-          action: 'removeColorControl',
-        });
-      }
-    });
+    if (chrome && chrome.tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (tab && tab.id !== undefined) {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'removeColorControl',
+          });
+        }
+      });
+    }
   }
+  
 
   return (
     <div className="App" style={{padding: "30px"}}>
