@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": " Personal Extension v1",
+  "name": " Personal Extension v2",
   "version": "1.0",
   "description": "A Chrome extension for online discourse",
   "permissions": [
@@ -17,7 +17,13 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["dist/content.bundle.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injectedComponent.js"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

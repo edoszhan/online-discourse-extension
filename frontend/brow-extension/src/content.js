@@ -1,3 +1,7 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import InjectedComponent from './components/InjectedComponent.jsx';
+
 chrome.storage.sync.get(['selectedRole'], (result) => {
   const role = result.selectedRole || 'L0';
   const validPage = !chrome.runtime.getURL('/').includes(window.location.origin);
@@ -21,7 +25,7 @@ function injectThreads(role) {
   container.style.backgroundColor = '#f9f9f9';
   container.style.borderRadius = '8px';
   container.style.display = 'flex';
-  container.style.flexDirection = 'column'; // container column view
+  container.style.flexDirection = 'column';
   container.style.alignItems = 'center'; 
   container.style.width = '80%';
   container.style.marginLeft = 'auto';
@@ -29,7 +33,7 @@ function injectThreads(role) {
 
   const headingsContainer = document.createElement('div');
   headingsContainer.style.display = 'flex'; 
-  headingsContainer.style.justifyContent = 'space-between'; // distance between headings
+  headingsContainer.style.justifyContent = 'space-between';
   headingsContainer.style.width = '100%';
 
   const headings = ['Heading A', 'Heading B', 'Heading C'];
@@ -59,10 +63,8 @@ function injectThreads(role) {
 
   container.appendChild(headingsContainer);
 
-  // Single comment section at the end
   const commentSection = document.createElement('div');
   commentSection.className = 'comment-section';
-  // commentSection.style.marginTop = '20px';
   commentSection.style.width = '100%';
 
   const commentForm = document.createElement('form');
@@ -95,28 +97,18 @@ function injectThreads(role) {
   commentSection.appendChild(commentForm);
   container.appendChild(commentSection);
 
-  // page is going to relaod after submitting the comment, it is intentional for now
-  // commentForm.onsubmit = (e) => {
-  //   e.preventDefault(); 
-  //   if (commentInput.value.trim() !== '') {
-  //     const commentItem = document.createElement('div');
-  //     commentItem.innerText = commentInput.value.trim();
-  //     commentItem.style.padding = '10px';
-  //     commentItem.style.marginTop = '10px';
-  //     commentItem.style.border = '1px solid #ddd';
-  //     commentItem.style.borderRadius = '4px';
-  //     commentItem.style.backgroundColor = '#fff';
-  //     commentSection.appendChild(commentItem);
-  //     commentInput.value = '';
-  //   }
-  // };
+  const reactRoot = document.createElement('div');
+  reactRoot.id = 'react-root';
+  container.appendChild(reactRoot);
 
   const article = document.querySelector('article');
   if (article) {
     article.parentNode.insertBefore(container, article.nextSibling);
   } else {
-    document.body.appendChild(container);
+          document.body.appendChild(container);
   }
+
+  ReactDOM.render(<InjectedComponent />, reactRoot);
 
   logEvent('Threads Injected');
 }
@@ -127,11 +119,15 @@ function logEvent(action) {
     timestamp: new Date().toISOString()
   };
 
-  fetch('http://localhost:8000/log', { 
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(log)
-  });
+  try {
+    fetch('http://localhost:8000/log', { 
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(log)
+    });
+  } catch (error) {
+    console.error('Error logging event:', error);
+  }
 }
