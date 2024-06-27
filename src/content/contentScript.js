@@ -23,7 +23,7 @@ function removeColorControl() {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'removeColorControl') {
-    console.log('remove');
+    console.log('tables added');
     removeColorControl();
   }
 });
