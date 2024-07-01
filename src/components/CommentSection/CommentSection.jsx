@@ -30,7 +30,7 @@ function CommentSection() {
                 <div
                   className="thread-box"
                   onClick={() => handleThreadClick(item)}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9" }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9",  border: '1px solid black'}}
                 >
                   <b>No Comments</b>
                   <br />

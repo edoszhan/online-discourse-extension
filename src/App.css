@@ -1,27 +1,27 @@
 .App {
   text-align: center;
-  width: 100%;
+  width: 250px;
 }
 
 .App-header {
-  background-color: #5D6BE5;
+  background-color: #F0F1FA;
   min-height: 70vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /*stack on top of each other*/
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-  width: 70%;
-  padding: 40px;
+  font-size: 14px;
+  color: black;
+  width: 150px;
+  padding: 50px;
 }
 
 .role-selection {
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .role-selection h2 {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .role-selection select {
@@ -31,7 +31,7 @@
 }
 
 button {
-  margin-top: 40px;
-  padding: 15px 30px;
-  font-size: 18px;
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
 }

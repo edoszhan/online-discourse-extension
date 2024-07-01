@@ -1,6 +1,7 @@
 const path = require('path');
 const { override, addWebpackPlugin } = require('customize-cra');
 const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = function override(config, env) {
   config.entry = {
@@ -23,6 +24,25 @@ module.exports = function override(config, env) {
     new webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
       exclude: ['vendor.js'],
+    })
+  )(config);
+  
+  config = addWebpackPlugin(
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/components/CommentSection/CommentSection.css'),
+          to: path.resolve(__dirname, 'build/static/css/CommentSection.css'),
+        },
+        {
+          from: path.resolve(__dirname, 'src/components/CommentThread/CommentThread.css'),
+          to: path.resolve(__dirname, 'build/static/css/CommentThread.css'),
+        },
+        {
+          from: path.resolve(__dirname, 'src/components/CommentBox/CommentBox.css'),
+          to: path.resolve(__dirname, 'build/static/css/CommentBox.css'),
+        },
+      ],
     })
   )(config);
 
