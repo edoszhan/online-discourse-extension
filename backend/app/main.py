@@ -1,15 +1,28 @@
 from fastapi import FastAPI
-from .routes import logs  # Import the logs route module
+from .routes import logs  
 from .utils.database import engine, Base
 import logging
+from app.routes import comments
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Configure CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
 # Include routers
-app.include_router(logs.router)  # Include the logs router
+app.include_router(logs.router)  
+app.include_router(comments.router, prefix="/api")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
