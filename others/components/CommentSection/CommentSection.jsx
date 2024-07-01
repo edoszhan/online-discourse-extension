@@ -16,10 +16,6 @@ function CommentSection() {
     setSelectedThread(topic);
   };
 
-  const handleBackClick = () => {
-    setSelectedThread(null);
-  };
-
   return (
     <div className="comment-section css-s2htvn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {!selectedThread ? (
@@ -34,7 +30,7 @@ function CommentSection() {
                 <div
                   className="thread-box"
                   onClick={() => handleThreadClick(item)}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9" }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9",  border: '1px solid black'}}
                 >
                   <b>No Comments</b>
                   <br />
@@ -45,7 +41,7 @@ function CommentSection() {
           </div>
         </div>
       ) : (
-        <CommentThread topic={selectedThread} onBack={handleBackClick} />
+        <CommentThread topic={selectedThread} />
       )}
     </div>
   );
