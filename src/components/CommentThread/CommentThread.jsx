@@ -1,11 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import styled from 'styled-components';
 import CommentBox from '../CommentBox/CommentBox';
 import './CommentThread.css';
+import axios from 'axios';
 
-const CommentThread = ({ topic }) => {
+
+const CommentBoxContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  margin-top: 20px;
+  width: 100%;
+`;
+
+const CommentInputContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  width: 100%;
+`;
+
+const CommentInput = styled.textarea`
+  width: 100%;
+  height: 60px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+`;
+
+const CommentActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+`;
+
+const UserProfile = styled.img`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+`;
+
+const AddCommentButton = styled.button`
+  width: 100%;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  box-sizing: border-box;
+`;
+
+const Separator = styled.hr`
+  width: 100%;
+  border: 0;
+  height: 1px;
+  background: #ccc;
+  margin: 20px 0;
+`;
+
+const ThreadHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+`;  
+
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+`;
+
+const BackIcon = styled.span`
+  margin-right: 5px;
+  font-size: 15px;
+`;
+
+const CommentThread = ({ threadId, topic, onBack }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+
+  const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
+
+
+  useEffect(() => {
+    console.log('useEffect threadId:', threadId);
+    fetchComments();
+  }, [threadId]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      setComments(response.data);
+      // setComments(response.data.comments || []);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
 
   const onDragEnd = (result) => {
     const { destination, source } = result;
@@ -19,20 +117,33 @@ const CommentThread = ({ topic }) => {
     setComments(reorderedComments);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim()) {
-      setComments([...comments, { id: Date.now().toString(), text: newComment }]);
-      setNewComment('');
+      try {
+        const response = await axios.post('http://localhost:8000/api/comments', {
+          thread_id: threadId,
+          text: newComment
+        });
+        setComments([...comments, response.data]);
+        setNewComment('');
+      } catch (error) {
+        console.error('Error adding comment:', error);
+      }
     }
   };
 
   return (
     <div className="comment-thread-container">
-      <div className="thread-header">
+        <BackButton onClick={onBack}>
+          <BackIcon>&larr;</BackIcon> 
+          Back
+        </BackButton>
+      <ThreadHeader className="thread-header">
         <h2>{topic}</h2>
-        <div className="heading-underline"></div>
-        {comments.length > 0 && <div className="comment-count">{comments.length} comments</div>}
-      </div>
+      </ThreadHeader>
+      <div className="heading-underline"></div>
+      <div className="random-question">{randomQuestion}</div>
+      {comments.length > 0 && <div className="comment-count">{comments.length} comments</div>}
       {comments.length === 0 ? (
         <div className="no-comments">
           <p>No Comments</p>
@@ -61,18 +172,22 @@ const CommentThread = ({ topic }) => {
           </Droppable>
         </DragDropContext>
       )}
-      <div className="comment-box-container">
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="comment-input"
-        />
-        <button onClick={handleAddComment} className="add-comment-button">
-          POST
-        </button>
-      </div>
+      <Separator />
+      <CommentBoxContainer>
+        <UserProfile src={chrome.runtime.getURL('static/media/default-avatar-2.png')} alt="User Profile" />
+        <CommentInputContainer>
+          <CommentInput
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
+          <CommentActions>
+            <AddCommentButton onClick={handleAddComment}>
+              POST
+            </AddCommentButton>
+          </CommentActions>
+        </CommentInputContainer>
+      </CommentBoxContainer>
     </div>
   );
 };

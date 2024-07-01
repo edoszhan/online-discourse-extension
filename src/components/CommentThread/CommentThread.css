@@ -1,4 +1,3 @@
-/* CommentThread.css */
 .comment-thread-container {
   width: 100%;
   max-width: 800px;
@@ -20,7 +19,13 @@
 .heading-underline {
   height: 4px;
   background-color: #5D6BE5; /* Change this color to match the topic */
-  width: 100px;
+  width: 600px;
+}
+
+.random-question {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
 }
 
 .comment-count {
@@ -34,6 +39,7 @@
   padding: 20px 0;
   font-size: 16px;
   color: #999;
+  font-weight: bold;
 }
 
 .comments-list {
@@ -41,16 +47,29 @@
 }
 
 .comment-box-container {
-  display: flex;
-  align-items: center;
   margin-top: 20px;
 }
 
 .comment-input {
-  flex: 1;
+  width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  margin-bottom: 10px;
+  resize: vertical;
+  min-height: 100px; /* Make the input area bigger */
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-profile {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   margin-right: 10px;
 }
 

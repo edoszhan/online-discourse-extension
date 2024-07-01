@@ -25,7 +25,8 @@
       "resources": [
         "static/css/CommentSection.css",
         "static/css/CommentThread.css",
-        "static/css/CommentBox.css"
+        "static/css/CommentBox.css",
+        "static/media/default-avatar-2.png"
       ],
       "matches": ["<all_urls>"]
     }

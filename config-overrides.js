@@ -42,6 +42,10 @@ module.exports = function override(config, env) {
           from: path.resolve(__dirname, 'src/components/CommentBox/CommentBox.css'),
           to: path.resolve(__dirname, 'build/static/css/CommentBox.css'),
         },
+        {
+        from: path.resolve(__dirname, 'src/components/img/default-avatar-2.png'),
+          to: path.resolve(__dirname, 'build/static/media/default-avatar-2.png'),
+        },
       ],
     })
   )(config);
