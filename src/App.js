@@ -42,6 +42,19 @@ function App() {
     }
   };
 
+  const extractArticleText = () => {
+    if (chrome && chrome.runtime) {
+      chrome.runtime.sendMessage({ action: 'EXTRACT_ARTICLE_TEXT' }, (response) => {
+        console.log('Message sent for text extraction');
+        if (chrome.runtime.lastError) {
+          console.error('Error in sending message:', chrome.runtime.lastError);
+        }
+      });
+    } else {
+      console.error('Chrome runtime is not available.');
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -55,6 +68,7 @@ function App() {
           </select>
         </div>
         <button onClick={injectThreads}>Add Threads</button>
+        <button onClick={extractArticleText}>Extract Article Text</button>
       </header>
     </div>
   );

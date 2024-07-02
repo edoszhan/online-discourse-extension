@@ -6,7 +6,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = function override(config, env) {
   config.entry = {
     main: ['./src/index.js'],
-    contentScript: './src/content/contentScript.js'
+    contentScript: './src/content/contentScript.js',
+    extractionScript: './src/extraction/extractionScript.js',
+    background: './src/background.js'
   };
   config.output = {
     ...config.output,

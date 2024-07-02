@@ -18,6 +18,10 @@
         "static/css/CommentThread.css",
         "static/css/CommentBox.css"
       ]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["static/js/extractionScript.js"]
     }
   ],
   "web_accessible_resources": [
@@ -31,6 +35,9 @@
       "matches": ["<all_urls>"]
     }
   ],
+  "background": {
+    "service_worker": "static/js/background.js"
+  },
   "permissions": [
     "storage",
     "activeTab",
