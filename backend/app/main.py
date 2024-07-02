@@ -4,6 +4,7 @@ from .utils.database import engine, Base
 import logging
 from app.routes import comments
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import generate
 
 app = FastAPI()
 
@@ -23,6 +24,7 @@ Base.metadata.create_all(bind=engine)
 # Include routers
 app.include_router(logs.router)  
 app.include_router(comments.router, prefix="/api")
+app.include_router(generate.router)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
