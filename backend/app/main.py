@@ -5,6 +5,8 @@ import logging
 from app.routes import comments
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import generate
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI()
 

@@ -9,7 +9,7 @@ class ArticleText(BaseModel):
 @router.post("/generate-topics")
 async def generate_topics_endpoint(article: ArticleText):
     extracted_text = article.text
-    print("Received extracted text:", extracted_text)
+    # print("Received extracted text:", extracted_text)
 
     generated_topics = generate_topics(extracted_text)
 
