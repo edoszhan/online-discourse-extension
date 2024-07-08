@@ -77,12 +77,9 @@
 
 
 
-
-
-
 import React from 'react';
 import styled from 'styled-components';
-import { Draggable } from '@hello-pangea/dnd';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
 import Comment from './Comment';
 
 const CommentBoxContainer = styled.div`
@@ -90,27 +87,48 @@ const CommentBoxContainer = styled.div`
   background-color: ${(props) => (props.isDragging ? 'lightgreen' : 'white')};
 `;
 
+const ClusteredCommentsContainer = styled.div`
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: black;
+`;
+
 const CommentBox = ({ comment, index }) => {
+  console.log(`Comment ${comment.id} has ${comment.children.length} children`);
+
   return (
-    <Draggable draggableId={comment.id} index={index}>
+    <Droppable droppableId={comment.id} isDropDisabled={comment.children.length > 0}>
       {(provided, snapshot) => (
         <CommentBoxContainer
           ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          isDragging={snapshot.isDragging}
+          {...provided.droppableProps}
+          isDragging={snapshot.isDraggingOver}
         >
-          <Comment comment={comment} isCombined={comment.children.length > 0} />
-          {comment.children.length > 0 && (
-            <div style={{ paddingLeft: '20px', background: 'red' }}>
-              {comment.children.map((child, childIndex) => (
-                <CommentBox key={child.id} comment={child} index={childIndex} />
-              ))}
-            </div>
-          )}
+          <Draggable draggableId={comment.id} index={index}>
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                {...provided.dragHandleProps}
+              >
+                {comment.children.length > 0 ? (
+                  <ClusteredCommentsContainer>
+                    <Comment comment={comment} isCombined={true} />
+                    {comment.children.map((child, childIndex) => (
+                      <CommentBox key={child.id} comment={child} index={childIndex} />
+                    ))}
+                  </ClusteredCommentsContainer>
+                ) : (
+                  <Comment comment={comment} isCombined={false} />
+                )}
+              </div>
+            )}
+          </Draggable>
+          {provided.placeholder}
         </CommentBoxContainer>
       )}
-    </Draggable>
+    </Droppable>
   );
 };
 

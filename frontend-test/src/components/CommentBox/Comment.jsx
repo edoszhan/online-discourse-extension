@@ -42,7 +42,6 @@ const CommentContent = styled.div`
 `;
 
 const Comment = ({ comment, isCombined }) => {
-  console.log("Rendering comment:", comment);
   return (
     <CommentContainer>
       <UserLogo>

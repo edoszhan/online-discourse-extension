@@ -440,18 +440,14 @@ const CommentsContainer = styled.div`
 
 const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
   const [comments, setComments] = useState([
-    { id: '1', text: 'This is the first sample comment.', children: [] },
-    { id: '2', text: 'This is the second sample comment.', children: [] },
-    { id: '3', text: 'This is the third sample comment.', children: [] },
+    { id: '100', text: 'This is the first comment.', children: [] },
+    { id: '101', text: 'This is the second comment.', children: [] },
+    { id: '102', text: 'This is the third comment.', children: [] },
   ]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
 
   const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
-
-  const onDragOver = (result) => {
-    console.log("onDragOver result:", result);
-  };
 
   const onDragEnd = (result) => {
     console.log("onDragEnd result:", result);
@@ -462,21 +458,28 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
     }
 
     if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      console.log("Dropped in the same position");
       return;
     }
 
     const draggedComment = comments.find((comment) => comment.id === draggableId);
     console.log("Dragged comment:", draggedComment);
-
+    
     if (destination.droppableId === source.droppableId) {
+      console.log("simple reorder");
+      // reordering
       const newComments = Array.from(comments);
       const [removed] = newComments.splice(source.index, 1);
       newComments.splice(destination.index, 0, removed);
       setComments(newComments);
       console.log("Reordered comments:", newComments);
     } else {
+      // clustering 
+      console.log("hard clustering");
       const updatedComments = comments.map((comment) => {
+        console.log("comment:", comment);
         if (comment.id === destination.droppableId) {
+          console.log("Success");
           return {
             ...comment,
             children: [...comment.children, draggedComment],
@@ -516,7 +519,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
           <p>No Comments</p>
         </div>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd} onDragOver={onDragOver}>
+        <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="droppable-comments" isCombineEnabled={true}>
             {(provided, snapshot) => (
               <CommentsContainer ref={provided.innerRef} {...provided.droppableProps} isDraggingOver={snapshot.isDraggingOver}>
