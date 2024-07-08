@@ -1,23 +1,3 @@
-// import React from 'react';
-// import styled from 'styled-components';
-
-// const CommentContainer = styled.div`
-//   padding: 10px;
-//   border: 1px solid #ccc;
-//   border-radius: 5px;
-//   background-color: ${(props) => (props.isCombined ? 'lightblue' : 'white')};
-// `;
-
-// const Comment = ({ text, isCombined }) => {
-//   return (
-//     <CommentContainer isCombined={isCombined}>
-//       <p>{text}</p>
-//     </CommentContainer>
-//   );
-// };
-
-// export default Comment;
-
 import React from 'react';
 import styled from 'styled-components';
 import IMG from '../../assets/default-avatar-2.png';
@@ -29,7 +9,7 @@ const CommentContainer = styled.div`
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: white;
+  background-color: ${(props) => (props.isCombined ? 'transparent' : 'white')}; 
 `;
 
 const UserLogo = styled.div`
@@ -38,7 +18,7 @@ const UserLogo = styled.div`
 
 const CommentContent = styled.div`
   margin: 0;
-  color: ${(props) => (props.isCombined ? 'red' : 'inherit')};
+  color: ${(props) => (props.isCombined ? 'inherit' : 'black')};
 `;
 
 const Comment = ({ comment, isCombined }) => {
