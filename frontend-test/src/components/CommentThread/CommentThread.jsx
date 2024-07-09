@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import CommentBox from '../CommentBox/CommentBox';
 import './CommentThread.css';
-import IMG from '../../assets/default-avatar-2.png';
+import IMG from '../../assets/default-avatar-2.png';  
+import ReviewPage from '../level1/ReviewPage';
 
 const CommentBoxContainer = styled.div`
   display: flex;
@@ -104,15 +105,34 @@ const CommentsContainer = styled.div`
   background-color: #F2F2F2;
   //  border: 2px solid #000;
 `;
+const ReviewButton = styled.button`
+  background-color: #5D6BE5;
+  color: white;
+  border: none;
+  padding: 4px 5px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+`;
+
+const HeaderUnderline = styled.div`
+  width: 120%;
+  height: 2px;
+  background-color: #5D6BE5;
+  margin-bottom: 10px;
+`;
+
 
 const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
   const [comments, setComments] = useState([
-    { id: '101', text: 'This is the first comment.', children: [], pendingReview: false},
-    { id: '102', text: 'This is the second comment.', children: [], pendingReview: false},
-    { id: '103', text: 'This is the third comment.', children: [], pendingReview: false},
+    { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: []},
+    { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: []},
+    { id: '103', text: 'This is the third comment.', children: [], pendingReview: false, prevOrder: []},
   ]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(comments.length);
+  const [showReviewPage, setShowReviewPage] = useState(false);
 
   const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
@@ -158,7 +178,8 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
           console.log("Success");
           return {
             ...comment,
-            children: [...comment.children, draggedComment],
+            // children: [...comment.children, draggedComment],
+            children: [...comment.children, { ...draggedComment, prevOrder: [...comment.children.map(c => c.id)] }],
             pendingReview: true,
           };
         }
@@ -179,6 +200,28 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
     }
   };
 
+  if (showReviewPage && userLevel === 1) {
+    return (
+      <ReviewPage 
+        comments={comments} 
+        setComments={setComments} 
+        onBack={() => setShowReviewPage(false)} 
+        header={
+          <>
+            <h2>{topic}</h2>
+            <HeaderUnderline />
+            <div>
+              {commentCounter} comments 
+              <span style={{ fontWeight: "bold", marginLeft: "5px" }}>
+                (REVIEWING)
+              </span>
+            </div>
+          </>
+        }
+      />
+    );
+  }
+
   return (
     <div className="comment-thread-container">
       <BackButton onClick={onBack}>
@@ -190,7 +233,12 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
       </ThreadHeader>
       <div className="heading-underline"></div>
       <div className="random-question">{randomQuestion}</div>
+      <div style={{ display: 'flex', justifyContent:'space-between', alignItems: 'center' }}>
       {comments.length > 0 && <div className="comment-count">{commentCounter} comments</div>}
+      {userLevel === 1 && (
+        <ReviewButton onClick={() => setShowReviewPage(true)}>Review clustered comments &gt;&gt;</ReviewButton>
+      )} 
+      </div>
       {comments.length === 0 ? (
         <div className="no-comments">
           <p>No Comments</p>
