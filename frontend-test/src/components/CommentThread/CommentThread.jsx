@@ -126,13 +126,14 @@ const HeaderUnderline = styled.div`
 
 const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
   const [comments, setComments] = useState([
-    { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: []},
-    { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: []},
-    { id: '103', text: 'This is the third comment.', children: [], pendingReview: false, prevOrder: []},
+    { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: ['101']},
+    { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: ['102']},
+    { id: '103', text: 'This is the third comment.', children: [], pendingReview: false, prevOrder: ['103']},
   ]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(comments.length);
   const [showReviewPage, setShowReviewPage] = useState(false);
+  const [reviewsList, setReviewsList] = useState([]);
 
   const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
@@ -148,49 +149,158 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
     return count;
   };
 
+  // const onDragEnd = (result) => {
+  //   console.log("onDragEnd result:", result);
+  //   const { destination, source, draggableId } = result;
+
+  //   if (source.droppableId == destination.droppableId) {
+  //     return;
+  //   }
+  
+  //   if (!destination) {
+  //     return;
+  //   }
+  
+  //   const draggedComment = comments.find((comment) => comment.id === draggableId);
+  //   const originalOrder = comments.map((comment) => comment.id);
+  //   let updatedComments = [...comments];
+  
+  //   console.log("hard clustering");
+  //   updatedComments = comments.map((comment) => {
+  //     if (comment.id === destination.droppableId) {
+  //       return {
+  //         ...comment,
+  //         children: [...comment.children, { ...draggedComment, prevOrder: originalOrder}],
+  //         pendingReview: true,
+  //       };
+  //     }
+  //     return comment;
+  //   }).filter((comment) => comment.id !== draggableId);
+  
+  //   // Set the destination comment (= parent) to pendingReview: true
+  //   updatedComments = updatedComments.map((comment) => {
+  //     if (comment.id === destination.droppableId) {
+  //       return {
+  //         ...comment,
+  //         pendingReview: true,
+  //       };
+  //     }
+  //     return comment;
+  //   });
+
+  //   const getNewOrder = (comments) => {
+  //     let newOrder = [];
+  //     for (const comment of comments) {
+  //       newOrder.push(comment.id);
+  //       if (comment.children.length > 0) {
+  //         newOrder = [...newOrder, ...getNewOrder(comment.children)];
+  //       }
+  //     }
+  //     return newOrder;
+  //   };
+  
+  //   const newOrder = getNewOrder(updatedComments);
+
+  //   const reviewObj = {
+  //     prevOrder: originalOrder,
+  //     newOrder: newOrder,
+  //     sourceId: source.droppableId,
+  //     destinationId: destination.droppableId,
+  //   };
+  //   console.log("Review object:", reviewObj);
+  
+
+  //   setReviewsList([...reviewsList, reviewObj]);
+  //   console.log("Original order:", originalOrder);
+  //   console.log("New order:", newOrder);  
+  
+  //   setComments(updatedComments);
+  //   setCommentCounter(countAllComments(updatedComments));
+  // };
+
   const onDragEnd = (result) => {
     console.log("onDragEnd result:", result);
     const { destination, source, draggableId } = result;
-
+  
+    if (source.droppableId === destination.droppableId) {
+      return;
+    }
+  
     if (!destination) {
       return;
     }
-
-    if (destination.droppableId === source.droppableId && destination.index === source.index) {
-      console.log("Dropped in the same position");
-      return;
-    }
-
+  
     const draggedComment = comments.find((comment) => comment.id === draggableId);
-    
-    if (destination.droppableId === source.droppableId) {
-      console.log("simple reorder");
-      // reordering
-      const newComments = Array.from(comments);
-      const [removed] = newComments.splice(source.index, 1);
-      newComments.splice(destination.index, 0, removed);
-      setComments(newComments);
-    } else {
-      // clustering 
-      console.log("hard clustering");
-      const updatedComments = comments.map((comment) => {
-        if (comment.id === destination.droppableId) {
-          console.log("Success");
-          return {
-            ...comment,
-            // children: [...comment.children, draggedComment],
-            children: [...comment.children, { ...draggedComment, prevOrder: [...comment.children.map(c => c.id)] }],
-            pendingReview: true,
-          };
+    const originalOrder = comments.map((comment) => comment.id);
+  
+    const getParentChildRelationship = (comments) => {
+      const relationship = [];
+      for (const comment of comments) {
+        const commentObj = {
+          id: comment.id,
+          text: comment.text,
+          children: [],
+        };
+        if (comment.children.length > 0) {
+          commentObj.children = getParentChildRelationship(comment.children);
         }
-        return comment;
-      });
-      const filteredComments = updatedComments.filter((comment) => comment.id !== draggableId);
-      setComments(filteredComments);
-      setCommentCounter(countAllComments(filteredComments));
-      
-    }
+        relationship.push(commentObj);
+      }
+      return relationship;
+    };
+  
+    const parentChildRelationship = getParentChildRelationship(comments);
+  
+    let updatedComments = [...comments];
+  
+    console.log("hard clustering");
+    updatedComments = comments.map((comment) => {
+      if (comment.id === destination.droppableId) {
+        return {
+          ...comment,
+          children: [...comment.children, { ...draggedComment, prevOrder: originalOrder }],
+          pendingReview: true,
+        };
+      }
+      return comment;
+    }).filter((comment) => comment.id !== draggableId);
+  
+    updatedComments = updatedComments.map((comment) => {
+      if (comment.id === destination.droppableId) {
+        return {
+          ...comment,
+          pendingReview: true,
+        };
+      }
+      return comment;
+    });
+  
+    const getNewOrder = (comments) => {
+      let newOrder = [];
+      for (const comment of comments) {
+        newOrder.push(comment.id);
+        if (comment.children.length > 0) {
+          newOrder = [...newOrder, ...getNewOrder(comment.children)];
+        }
+      }
+      return newOrder;
+    };
+  
+    const newOrder = getNewOrder(updatedComments);
+  
+    const reviewObj = {
+      prevOrder: originalOrder,
+      newOrder: newOrder,
+      sourceId: source.droppableId,
+      destinationId: destination.droppableId,
+      parentChildRelationship: parentChildRelationship,
+    };
+  
+    setReviewsList([...reviewsList, reviewObj]);
+    setComments(updatedComments);
+    setCommentCounter(countAllComments(updatedComments));
   };
+  
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -206,6 +316,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
         comments={comments} 
         setComments={setComments} 
         onBack={() => setShowReviewPage(false)} 
+        reviewsList={reviewsList}
         header={
           <>
             <h2>{topic}</h2>

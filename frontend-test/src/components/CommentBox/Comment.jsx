@@ -10,6 +10,7 @@ const CommentContainer = styled.div`
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: ${(props) => (props.isCombined ? 'transparent' : 'white')}; 
+  opacity: ${(props) => (props.isDragging ? '0.5' : '1')}; 
 `;
 
 const UserLogo = styled.div`
@@ -21,9 +22,9 @@ const CommentContent = styled.div`
   color: ${(props) => (props.isCombined ? 'inherit' : 'black')};
 `;
 
-const Comment = ({ comment, isCombined }) => {
+const Comment = ({ comment, isCombined, isDragging}) => {
   return (
-    <CommentContainer>
+    <CommentContainer isDragging={isDragging}>
       <UserLogo>
         <img src={IMG} alt="User Profile" className="user-profile" />
       </UserLogo>

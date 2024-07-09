@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import CommentBox from '../CommentBox/CommentBox';
 import './ReviewPage.css';
+import Comment from '../CommentBox/Comment';
 
 const ReviewPageContainer = styled.div`
   padding: 20px;
@@ -47,6 +48,8 @@ const CombinedCommentContainer = styled.div`
   margin: 10px 0;
   background-color: #F8F8F8;
   border: 1px solid lightgray;
+  width: 130%;
+
 `;
 
 const CommentWrapper = styled.div`
@@ -63,7 +66,7 @@ const CommentContent = styled.div`
   width: 48%;
 `;
 
-const ReviewPage = ({ comments, setComments, onBack, header }) => {
+const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
   const handleAccept = (commentId) => {
     const updatedComments = comments.map((comment) => {
       if (comment.id === commentId) {
@@ -100,35 +103,153 @@ const ReviewPage = ({ comments, setComments, onBack, header }) => {
         </BackButton>
       </ReviewHeader>
       {header}
-      <ReviewSection>
-        {comments
-          //  .filter((comment) => comment.pendingReview)
-          .filter((comment) => comment.children.some((child) => child.pendingReview, console.log("comment.children", comment.children)))
-          .map((comment, index) => (
-            <div key={comment.id}>
-              <div className="review-title">#{index + 1} Review</div>
-              <CombinedCommentContainer>
-                <CommentWrapper>
-                  <CommentContent>
-                    {comment.prevOrder.map((prevCommentId) => {
-                      const prevComment = comments.find((c) => c.id === prevCommentId);
-                      return <CommentBox key={prevComment.id} comment={prevComment} />;
-                    })}
-                  </CommentContent>
-                  <CommentContent>
-                    {comment.children.map((childComment) => (
-                      <CommentBox key={childComment.id} comment={childComment} />
-                    ))}
-                  </CommentContent>
-                </CommentWrapper>
-                <div>
-                  <ReviewButton style={{backgroundColor: "green"}} onClick={() => handleAccept(comment.id)}>Accept</ReviewButton>
-                  <ReviewButton onClick={() => handleDecline(comment.id)}>Decline</ReviewButton>
-                </div>
-              </CombinedCommentContainer>
-            </div>
-          ))}
-      </ReviewSection>
+      {/* <ReviewSection>
+  {reviewsList.map((reviewObj, index) => {
+    if (!comments || comments.length === 0) {
+      console.log("nothing to display");
+      return null; // Return early since comments array is empty or undefined
+    }
+
+    return (
+      <div key={index}>
+        <CombinedCommentContainer>
+          <div className="review-title">#{index + 1} Review</div>
+          <CommentWrapper>
+            <CommentContent>
+              {reviewObj.prevOrder.map((prevCommentId) => {
+                const prevComment = comments.find((c) => c.id === prevCommentId);
+                if (!prevComment) {
+                  return null; // Return early if prevComment is undefined
+                }
+                return (
+                  <div key={prevComment.id}>
+                    <CommentBox
+                      key={prevComment.id}
+                      comment={prevComment}
+                      isCombined={false}
+                      isDragging={false}
+                    />
+                  </div>
+                );
+              })}
+            </CommentContent>
+            <CommentContent>
+              {reviewObj.newOrder.map((newCommentId) => {
+                const newComment = comments.find((c) => c.id === newCommentId);
+                if (!newComment) {
+                  return null; // Return early if newComment is undefined
+                }
+                return (
+                  <div key={newComment.id}>
+                    <CommentBox
+                      key={newComment.id}
+                      comment={newComment}
+                      isCombined={false}
+                      isDragging={false}
+                    />
+                  </div>
+                );
+              })}
+            </CommentContent>
+          </CommentWrapper>
+          <div>
+            <ReviewButton
+              style={{ backgroundColor: 'green' }}
+              onClick={() => handleAccept(reviewObj)}
+            >
+              Accept
+            </ReviewButton>
+            <ReviewButton onClick={() => handleDecline(reviewObj)}>Decline</ReviewButton>
+          </div>
+        </CombinedCommentContainer>
+      </div>
+    );
+  })}
+</ReviewSection> */}
+<ReviewSection>
+  {reviewsList.map((reviewObj, index) => {
+    if (!comments || comments.length === 0) {
+      console.log("nothing to display");
+      return null; // Return early since comments array is empty or undefined
+    }
+
+    console.log("ReviewObj:", reviewObj);
+
+    return (
+      <div key={index}>
+        <CombinedCommentContainer>
+          <div className="review-title">#{index + 1} Review</div>
+          <CommentWrapper>
+            <CommentContent>
+              {reviewObj.parentChildRelationship.map((commentObj) => {
+                console.log("CommentObj in prevOrder:", commentObj);
+                return (
+                  <div key={commentObj.id}  style={{
+                    backgroundColor:
+                    commentObj.id === reviewObj.sourceId || commentObj.id === reviewObj.destinationId
+                      ? '#FEE8E8'
+                      : 'inherit',
+                    padding: "8px",
+                  }}>
+                    {commentObj.children.length > 0 ? (
+                      <CommentBox
+                        key={commentObj.id}
+                        comment={commentObj}
+                        isCombined={false}
+                        isDragging={false}
+                      />
+                    ) : (
+                      <Comment
+                        key={commentObj.id}
+                        comment={commentObj}
+                        isCombined={false}
+                        isDragging={false}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </CommentContent>
+            <CommentContent>
+              {reviewObj.newOrder.map((newCommentId) => {
+                const newComment = comments.find((c) => c.id === newCommentId);
+                if (!newComment) {
+                  return null; // Return early if newComment is undefined
+                }
+                return (
+                  <div
+                    key={newComment.id}
+                    style={{
+                      backgroundColor: newComment.id === reviewObj.destinationId ? '#DCF8E0' : 'inherit',
+                      padding: "8px",
+                    }}
+                  >
+                    <CommentBox
+                      key={newComment.id}
+                      comment={newComment}
+                      isCombined={false}
+                      isDragging={false}
+                    />
+                  </div>
+                );
+              })}
+            </CommentContent>
+          </CommentWrapper>
+          <div>
+            <ReviewButton
+              style={{ backgroundColor: 'green' }}
+              onClick={() => handleAccept(reviewObj)}
+            >
+              Accept
+            </ReviewButton>
+            <ReviewButton onClick={() => handleDecline(reviewObj)}>Decline</ReviewButton>
+          </div>
+        </CombinedCommentContainer>
+      </div>
+    );
+  })}
+</ReviewSection>
+
     </ReviewPageContainer>
   );
 };

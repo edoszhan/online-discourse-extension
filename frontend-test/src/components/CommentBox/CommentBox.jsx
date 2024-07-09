@@ -37,13 +37,13 @@ const CommentBox = ({ comment, index }) => {
               >
                 {comment.children.length > 0 ? (
                   <ClusteredCommentsContainer>
-                    <Comment comment={comment} isCombined={true} />
+                    <Comment comment={comment} isCombined={true} isDragging={snapshot.isDragging}  />
                     {comment.children.map((child, childIndex) => (
                       <CommentBox key={child.id} comment={child} index={childIndex} />
                     ))}
                   </ClusteredCommentsContainer>
                 ) : (
-                  <Comment comment={comment} isCombined={false} />
+                  <Comment comment={comment} isCombined={false} isDragging={snapshot.isDragging}  />
                 )}
               </div>
             )}
