@@ -16,7 +16,8 @@
       "css": [
         "static/css/CommentSection.css",
         "static/css/CommentThread.css",
-        "static/css/CommentBox.css"
+        "static/css/CommentBox.css",
+        "static/css/ReviewPage.css"
       ]
     },
     {
@@ -30,7 +31,8 @@
         "static/css/CommentSection.css",
         "static/css/CommentThread.css",
         "static/css/CommentBox.css",
-        "static/media/default-avatar-2.png"
+        "static/media/default-avatar-2.png",
+        "static/css/ReviewPage.css"
       ],
       "matches": ["<all_urls>"]
     }

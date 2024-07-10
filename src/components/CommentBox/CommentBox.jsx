@@ -1,52 +1,57 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Draggable } from 'react-beautiful-dnd';
-import './CommentBox.css';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
+import Comment from './Comment';
 
-
-const CommentContainer = styled.div`
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  background-color: #f0f0f0;
-  padding: 10px;
-  border: 1px solid #ccc;
+const CommentBoxContainer = styled.div`
+  margin-bottom: 10px;
+  background-color: ${(props) => (props.isDragging ? 'lightgreen' : 'white')};
   border-radius: 5px;
 `;
 
-const UserLogo = styled.div`
-  margin-right: 10px;
-`;
-
-const LogoIcon = styled.svg`
-  width: 30px;
-  height: 30px;
-  fill: #888;
-`;
-
-const CommentContent = styled.div`
-  margin: 0;
+const ClusteredCommentsContainer = styled.div`
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #D9DBF4;
+  margin-bottom: 10px;
 `;
 
 const CommentBox = ({ comment, index }) => {
+
   return (
-    <Draggable draggableId={`comment-${index}`} index={index}>
-      {(provided) => (
-        <CommentContainer
+    <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 2}>
+      {(provided, snapshot) => (
+        <CommentBoxContainer
           ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
+          {...provided.droppableProps}
+          isDragging={snapshot.isDraggingOver}
+          style={{ backgroundColor: comment.children.length > 0 ? 'transparent' : 'white' }}
         >
-          <UserLogo>
-           {/* <img src={IMG} alt="User Profile" className="user-profile" /> */}
-           <img src={chrome.runtime.getURL('static/media/default-avatar-2.png')} alt="User Profile" className="user-profile" />
-          </UserLogo>
-          <CommentContent>
-            <p>{comment}</p>
-          </CommentContent>
-        </CommentContainer>
+          <Draggable draggableId={comment.id} index={index}>
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                {...provided.dragHandleProps}
+              >
+                {comment.children.length > 0 ? (
+                  <ClusteredCommentsContainer>
+                    <Comment comment={comment} isCombined={true} isDragging={snapshot.isDragging}  />
+                    {comment.children.map((child, childIndex) => (
+                      <CommentBox key={child.id} comment={child} index={childIndex} />
+                    ))}
+                  </ClusteredCommentsContainer>
+                ) : (
+                  <Comment comment={comment} isCombined={false} isDragging={snapshot.isDragging}  />
+                )}
+              </div>
+            )}
+          </Draggable>
+          {provided.placeholder}
+        </CommentBoxContainer>
       )}
-    </Draggable>
+    </Droppable>
   );
 };
+
 export default CommentBox;

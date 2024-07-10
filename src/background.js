@@ -5,21 +5,6 @@
 //     });
 //   });
 
-  
-// chrome.action.onClicked.addListener((tab) => {
-//   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-//     const activeTab = tabs[0];
-//     chrome.tabs.sendMessage(activeTab.id, { type: 'EXTRACT_ARTICLE_TEXT' }, response => {
-//       if (chrome.runtime.lastError) {
-//         console.error('Error sending message:', chrome.runtime.lastError);
-//       } else {
-//         console.log('Message sent successfully');
-//       }
-//     });
-//   });
-// });
-
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Message received in background:', request);
 
@@ -45,3 +30,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   return true; 
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'ARTICLE_TEXT_EXTRACTED') {
+    const extractedText = request.text;
+    console.log('reached extraction');
+    fetch('http://localhost:8000/generate-topics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: extractedText })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Generated Topics:', data.topics);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  }
+});
+

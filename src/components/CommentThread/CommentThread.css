@@ -19,7 +19,7 @@
 .heading-underline {
   height: 4px;
   background-color: #5D6BE5; /* Change this color to match the topic */
-  width: 600px;
+  width: 620px;
 }
 
 .random-question {
@@ -84,4 +84,25 @@
 
 .add-comment-button:hover {
   background-color: #4A90E2;
+}
+
+.combined-comments {
+  background-color: lightblue;
+  padding: 8px;
+  margin-top: 8px;
+}
+.font-blue {
+  color: blue;
+}
+
+.comment-box {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.comment-box.dragging {
+  background-color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

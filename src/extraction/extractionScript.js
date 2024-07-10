@@ -1,14 +1,4 @@
-// // extractionScript.js
 
-// function extractArticleText() {
-//     let articleContent = document.querySelectorAll('div.article__content-container p'); //will be changed upon website choice
-//     let articleText = '';
-//     articleContent.forEach(paragraph => {
-//     articleText += paragraph.innerText + '\n';
-//     });
-
-//     console.log('Extracted article text:', articleText);
-//     return articleText.trim();
 // }
 // function sendArticleTextToServer(articleText) {
 //     fetch('http://localhost:8000/generate-topics', {
@@ -47,16 +37,15 @@ function extractArticleText() {
       articleText += paragraph.innerText + '\n';
     });
   
-    console.log('Extracted article text:', articleText);
+    // console.log('Extracted article text:', articleText);
     return articleText.trim();
   }
   
-// Listen for a message to start extraction
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'START_EXTRACTION') {
     const extractedText = extractArticleText(); 
-    console.log('Extracted text:', extractedText);
-    // chrome.runtime.sendMessage({type: 'ARTICLE_TEXT_EXTRACTED', text: extractedText});
+    // console.log('Extracted text:', extractedText);
+    chrome.runtime.sendMessage({type: 'ARTICLE_TEXT_EXTRACTED', text: extractedText});
   }
 });
   
