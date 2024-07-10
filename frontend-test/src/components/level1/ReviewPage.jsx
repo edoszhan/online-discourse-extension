@@ -16,6 +16,7 @@ const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
       return comment;
     });
     setComments(updatedComments);
+    // setAcceptedComments((prevAcceptedComments) => [...prevAcceptedComments, reviewObj.destinationId]);
   };
 
   const handleDecline = (commentId) => {

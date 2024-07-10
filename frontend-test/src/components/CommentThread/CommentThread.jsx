@@ -5,6 +5,7 @@ import CommentBox from '../CommentBox/CommentBox';
 import './CommentThread.css';
 import IMG from '../../assets/default-avatar-2.png';  
 import ReviewPage from '../level1/ReviewPage';
+import SummarizeButton from '../level1/SummarizeBox';
 
 const CommentThread = ({ topic, onBack, userLevel = 1}) => {
   const [comments, setComments] = useState([
@@ -176,6 +177,9 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
                     <CombinedCommentContainer key={comment.id}>
                       <CommentBox comment={comment} index={index} />
                       <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
+                      {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <SummarizeButton comment={comment} />
+                       </div> */}
                     </CombinedCommentContainer>
                   ) : (
                     <CommentBox key={comment.id} comment={comment} index={index} />
