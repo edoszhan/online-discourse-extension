@@ -50,7 +50,7 @@ module.exports = function override(config, env) {
         },
         {
         from: path.resolve(__dirname, 'src/components/level1/ReviewPage.css'),
-        to: path.resolve(__dirname, 'build/static/css/ReviewPage.css'),
+          to: path.resolve(__dirname, 'build/static/css/ReviewPage.css'),
         },
       ],
     })

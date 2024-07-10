@@ -18,6 +18,11 @@ const ClusteredCommentsContainer = styled.div`
 
 const CommentBox = ({ comment, index }) => {
 
+  if (!comment){
+    console.log("no comments in CommentBox");
+    return null;
+  }
+
   return (
     <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 2}>
       {(provided, snapshot) => (
@@ -34,7 +39,7 @@ const CommentBox = ({ comment, index }) => {
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
               >
-                {comment.children.length > 0 ? (
+                {comment.children && comment.children.length > 0 ? (
                   <ClusteredCommentsContainer>
                     <Comment comment={comment} isCombined={true} isDragging={snapshot.isDragging}  />
                     {comment.children.map((child, childIndex) => (

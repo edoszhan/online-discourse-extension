@@ -23,6 +23,9 @@ const CommentContent = styled.div`
 `;
 
 const Comment = ({ comment, isCombined, isDragging}) => {
+  if (!comment){
+    return null;
+  }
   return (
     <CommentContainer isDragging={isDragging}>
       <UserLogo>
@@ -30,7 +33,7 @@ const Comment = ({ comment, isCombined, isDragging}) => {
         <img src={chrome.runtime.getURL('/static/media/default-avatar-2.png')} alt="User Profile" className="user-profile"/>
       </UserLogo>
       <CommentContent isCombined={isCombined}>
-        <p>{comment.text}</p>
+        <p>{comment?.text || ''}</p>
       </CommentContent>
     </CommentContainer>
   );

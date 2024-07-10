@@ -6,31 +6,46 @@ import './CommentThread.css';
 // import IMG from '../img/default-avatar-2.png';
 import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
+import axios from 'axios';
 
-const CommentThread = ({ topic, onBack, userLevel}) => {
-  const [comments, setComments] = useState([
-    // { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: ['101']},
-    // { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: ['102']},
-    // { id: '103', text: 'This is the third comment.', children: [], pendingReview: false, prevOrder: ['103']},
-  ]);
+const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
-  const [commentCounter, setCommentCounter] = useState(comments.length);
+  const [commentCounter, setCommentCounter] = useState(0);
   const [showReviewPage, setShowReviewPage] = useState(false);
   const [reviewsList, setReviewsList] = useState([]);
 
   const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
   useEffect(() => {
-    setCommentCounter(countAllComments(comments));
-  }, [comments]);
+    fetchComments();
+    // setCommentCounter(countAllComments(comments));
+  }, [threadId]);
 
-  const countAllComments = (comments) => {
-    let count = comments.length;
-    comments.forEach(comment => {
-      count += countAllComments(comment.children);
-    });
-    return count;
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      const data = response.data || []; 
+      console.log('Fetched comments:', data);
+      setComments(data);
+      // setCommentCounter(countAllComments(data));
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
   };
+
+
+  // const countAllComments = (comments) => {
+  //   let count = 0;
+  //   const countChildComments = (comment) => {
+  //     count++;
+  //     if (comment.children && comment.children.length > 0) {
+  //       comment.children.forEach(countChildComments);
+  //     }
+  //   };
+  //   comments.forEach(countChildComments);
+  //   return count;
+  // };
 
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -115,11 +130,27 @@ const CommentThread = ({ topic, onBack, userLevel}) => {
   };
   
 
-  const handleAddComment = () => {
+  // const handleAddComment = () => {
+  //   if (newComment.trim()) {
+  //     const newCommentId = (parseInt(comments[comments.length - 1]?.id || '100') + 1).toString();
+  //     setComments([...comments, { id: newCommentId.toString(), text: newComment, children: [], pendingReview: false }]);
+  //     setNewComment('');
+  //   }
+  // };
+
+  const handleAddComment = async () => {
     if (newComment.trim()) {
-      const newCommentId = (parseInt(comments[comments.length - 1]?.id || '100') + 1).toString();
-      setComments([...comments, { id: newCommentId.toString(), text: newComment, children: [], pendingReview: false }]);
-      setNewComment('');
+      try {
+        const response = await axios.post('http://localhost:8000/api/comments', {
+          thread_id: threadId,
+          text: newComment
+        });
+        setComments([...comments, response.data]);
+        setNewComment('');
+        setCommentCounter(commentCounter + 1);
+      } catch (error) {
+        console.error('Error adding comment:', error);
+      }
     }
   };
 
@@ -158,12 +189,12 @@ const CommentThread = ({ topic, onBack, userLevel}) => {
       <div className="heading-underline"></div>
       <div className="random-question">{randomQuestion}</div>
       <div style={{ display: 'flex', justifyContent:'space-between', alignItems: 'center' }}>
-      {comments.length > 0 && <div className="comment-count">{commentCounter} comments</div>}
+      {comments && comments.length > 0 && <div className="comment-count">{commentCounter} comments</div>}
       {userLevel === 1 && (
         <ReviewButton onClick={() => setShowReviewPage(true)}>Review clustered comments &gt;&gt;</ReviewButton>
       )} 
       </div>
-      {comments.length === 0 ? (
+      {comments && comments.length === 0 ? (
         <div className="no-comments">
           <p>No Comments</p>
         </div>
@@ -172,19 +203,27 @@ const CommentThread = ({ topic, onBack, userLevel}) => {
           <Droppable droppableId="droppable-comments">
             {(provided, snapshot) => (
               <CommentsContainer ref={provided.innerRef} {...provided.droppableProps}>
-                {comments.map((comment, index) => (
-                  comment.children.length > 0 ? (
-                    <CombinedCommentContainer key={comment.id}>
-                      <CommentBox comment={comment} index={index} />
-                      <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
-                      {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <SummarizeButton comment={comment} />
-                       </div> */}
-                    </CombinedCommentContainer>
+                {comments && comments.map((comment, index) => {
+                  // comment.children && comment.children.length > 0 ? (
+                  //   <CombinedCommentContainer key={comment.id}>
+                  //     <CommentBox comment={comment} index={index} />
+                  //     <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
+                  //     {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  //       <SummarizeButton comment={comment} />
+                  //      </div> */}
+                  //   </CombinedCommentContainer>
+                  console.log('Rendering comment:', comment);
+                  return (
+                    (comment.children && comment.children.length > 0) ? (
+                      <CombinedCommentContainer key={comment.id}>
+                        <CommentBox comment={comment} index={index} />
+                        <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
+                      </CombinedCommentContainer>
                   ) : (
                     <CommentBox key={comment.id} comment={comment} index={index} />
                   )
-                ))}
+                  );
+                })}
                 {provided.placeholder}
               </CommentsContainer>
             )}
