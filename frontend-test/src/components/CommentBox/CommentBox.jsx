@@ -17,7 +17,6 @@ const ClusteredCommentsContainer = styled.div`
 `;
 
 const CommentBox = ({ comment, index }) => {
-  console.log(`Comment ${comment.id} has ${comment.children.length} children`);
 
   return (
     <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 2}>

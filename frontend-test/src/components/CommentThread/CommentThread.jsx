@@ -6,125 +6,7 @@ import './CommentThread.css';
 import IMG from '../../assets/default-avatar-2.png';  
 import ReviewPage from '../level1/ReviewPage';
 
-const CommentBoxContainer = styled.div`
-  display: flex;
-  align-items: flex-start;
-  margin-top: 20px;
-  width: 100%;
-`;
-
-const CommentInputContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
-  width: 100%;
-`;
-
-const CommentInput = styled.textarea`
-  width: 100%;
-  height: 60px;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
-`;
-
-const CommentActions = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-`;
-
-const UserProfile = styled.img`
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-`;
-
-const AddCommentButton = styled.button`
-  width: 100%;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  box-sizing: border-box;
-`;
-
-const Separator = styled.hr`
-  width: 100%;
-  border: 0;
-  height: 1px;
-  background: #ccc;
-  margin: 20px 0;
-`;
-
-const ThreadHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-`;
-
-const BackButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-`;
-
-const BackIcon = styled.span`
-  margin-right: 5px;
-  font-size: 15px;
-`;
-
-const CombinedCommentContainer = styled.div`
-  padding: 10px;
-  margin: 10px 0;
-  background-color: #D9DBF4;
-  border: 1px solid lightgray;
-`;
-
-const ReviewMessage = styled.div`
-  font-size: 12px;
-  color: #555;
-  margin-top: 10px;
-  margin-right: 5px;
-  text-align: right;
-`;
-
-const CommentsContainer = styled.div`
-  margin-top: 10px;
-  // border-radius: 5px;
-  padding: 10px;
-  // background-color: ${(props) => (props.isDraggingOver ? 'lightblue' : 'lightgrey')};
-  background-color: #F2F2F2;
-  //  border: 2px solid #000;
-`;
-const ReviewButton = styled.button`
-  background-color: #5D6BE5;
-  color: white;
-  border: none;
-  padding: 4px 5px;
-  margin: 5px 0;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-`;
-
-const HeaderUnderline = styled.div`
-  width: 120%;
-  height: 2px;
-  background-color: #5D6BE5;
-  margin-bottom: 10px;
-`;
-
-
-const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
+const CommentThread = ({ topic, onBack, userLevel = 1}) => {
   const [comments, setComments] = useState([
     { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: ['101']},
     { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: ['102']},
@@ -149,77 +31,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1 }) => {
     return count;
   };
 
-  // const onDragEnd = (result) => {
-  //   console.log("onDragEnd result:", result);
-  //   const { destination, source, draggableId } = result;
-
-  //   if (source.droppableId == destination.droppableId) {
-  //     return;
-  //   }
-  
-  //   if (!destination) {
-  //     return;
-  //   }
-  
-  //   const draggedComment = comments.find((comment) => comment.id === draggableId);
-  //   const originalOrder = comments.map((comment) => comment.id);
-  //   let updatedComments = [...comments];
-  
-  //   console.log("hard clustering");
-  //   updatedComments = comments.map((comment) => {
-  //     if (comment.id === destination.droppableId) {
-  //       return {
-  //         ...comment,
-  //         children: [...comment.children, { ...draggedComment, prevOrder: originalOrder}],
-  //         pendingReview: true,
-  //       };
-  //     }
-  //     return comment;
-  //   }).filter((comment) => comment.id !== draggableId);
-  
-  //   // Set the destination comment (= parent) to pendingReview: true
-  //   updatedComments = updatedComments.map((comment) => {
-  //     if (comment.id === destination.droppableId) {
-  //       return {
-  //         ...comment,
-  //         pendingReview: true,
-  //       };
-  //     }
-  //     return comment;
-  //   });
-
-  //   const getNewOrder = (comments) => {
-  //     let newOrder = [];
-  //     for (const comment of comments) {
-  //       newOrder.push(comment.id);
-  //       if (comment.children.length > 0) {
-  //         newOrder = [...newOrder, ...getNewOrder(comment.children)];
-  //       }
-  //     }
-  //     return newOrder;
-  //   };
-  
-  //   const newOrder = getNewOrder(updatedComments);
-
-  //   const reviewObj = {
-  //     prevOrder: originalOrder,
-  //     newOrder: newOrder,
-  //     sourceId: source.droppableId,
-  //     destinationId: destination.droppableId,
-  //   };
-  //   console.log("Review object:", reviewObj);
-  
-
-  //   setReviewsList([...reviewsList, reviewObj]);
-  //   console.log("Original order:", originalOrder);
-  //   console.log("New order:", newOrder);  
-  
-  //   setComments(updatedComments);
-  //   setCommentCounter(countAllComments(updatedComments));
-  // };
-
   const onDragEnd = (result) => {
-    console.log("onDragEnd result:", result);
     const { destination, source, draggableId } = result;
   
     if (source.droppableId === destination.droppableId) {
@@ -400,3 +212,119 @@ export default CommentThread;
 
 
 
+const CommentBoxContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  margin-top: 20px;
+  width: 100%;
+`;
+
+const CommentInputContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  width: 100%;
+`;
+
+const CommentInput = styled.textarea`
+  width: 100%;
+  height: 60px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+`;
+
+const CommentActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+`;
+
+const UserProfile = styled.img`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+`;
+
+const AddCommentButton = styled.button`
+  width: 100%;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  box-sizing: border-box;
+`;
+
+const Separator = styled.hr`
+  width: 100%;
+  border: 0;
+  height: 1px;
+  background: #ccc;
+  margin: 20px 0;
+`;
+
+const ThreadHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+`;
+
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+`;
+
+const BackIcon = styled.span`
+  margin-right: 5px;
+  font-size: 15px;
+`;
+
+const CombinedCommentContainer = styled.div`
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #D9DBF4;
+  border: 1px solid lightgray;
+`;
+
+const ReviewMessage = styled.div`
+  font-size: 12px;
+  color: #555;
+  margin-top: 10px;
+  margin-right: 5px;
+  text-align: right;
+`;
+
+const CommentsContainer = styled.div`
+  margin-top: 10px;
+  // border-radius: 5px;
+  padding: 10px;
+  // background-color: ${(props) => (props.isDraggingOver ? 'lightblue' : 'lightgrey')};
+  background-color: #F2F2F2;
+  //  border: 2px solid #000;
+`;
+const ReviewButton = styled.button`
+  background-color: #5D6BE5;
+  color: white;
+  border: none;
+  padding: 4px 5px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+`;
+
+const HeaderUnderline = styled.div`
+  width: 120%;
+  height: 2px;
+  background-color: #5D6BE5;
+  margin-bottom: 10px;
+`;
