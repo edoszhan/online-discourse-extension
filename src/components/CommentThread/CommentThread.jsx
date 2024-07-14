@@ -8,7 +8,7 @@ import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
 import axios from 'axios';
 
-const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
+const CommentThread = ({ threadId, topic, onBack, userLevel= 1}) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
@@ -19,35 +19,36 @@ const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
 
   useEffect(() => {
     fetchComments();
-    // setCommentCounter(countAllComments(comments));
+    setCommentCounter(countAllComments(comments));
   }, [threadId]);
 
   const fetchComments = async () => {
     try {
       const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
       const data = response.data || []; 
-      console.log('Fetched comments:', data);
       setComments(data);
-      // setCommentCounter(countAllComments(data));
+      console.log(data);
+      setCommentCounter(countAllComments(data));
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
   };
 
 
-  // const countAllComments = (comments) => {
-  //   let count = 0;
-  //   const countChildComments = (comment) => {
-  //     count++;
-  //     if (comment.children && comment.children.length > 0) {
-  //       comment.children.forEach(countChildComments);
-  //     }
-  //   };
-  //   comments.forEach(countChildComments);
-  //   return count;
-  // };
+  const countAllComments = (comments) => {
+    let count = 0;
+    const countChildComments = (comment) => {
+      count++;
+      if (comment.children && comment.children.length > 0) {
+        comment.children.forEach(countChildComments);
+      }
+    };
+    comments.forEach(countChildComments);
+    return count;
+  };
 
   const onDragEnd = (result) => {
+    console.log('Drag ended:', result);
     const { destination, source, draggableId } = result;
   
     if (source.droppableId === destination.droppableId) {
@@ -129,15 +130,6 @@ const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
     setCommentCounter(countAllComments(updatedComments));
   };
   
-
-  // const handleAddComment = () => {
-  //   if (newComment.trim()) {
-  //     const newCommentId = (parseInt(comments[comments.length - 1]?.id || '100') + 1).toString();
-  //     setComments([...comments, { id: newCommentId.toString(), text: newComment, children: [], pendingReview: false }]);
-  //     setNewComment('');
-  //   }
-  // };
-
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
@@ -199,28 +191,19 @@ const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
           <p>No Comments</p>
         </div>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={onDragEnd} onDragStart={console.log("drag start")}>
           <Droppable droppableId="droppable-comments">
             {(provided, snapshot) => (
               <CommentsContainer ref={provided.innerRef} {...provided.droppableProps}>
                 {comments && comments.map((comment, index) => {
-                  // comment.children && comment.children.length > 0 ? (
-                  //   <CombinedCommentContainer key={comment.id}>
-                  //     <CommentBox comment={comment} index={index} />
-                  //     <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
-                  //     {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  //       <SummarizeButton comment={comment} />
-                  //      </div> */}
-                  //   </CombinedCommentContainer>
-                  console.log('Rendering comment:', comment);
                   return (
                     (comment.children && comment.children.length > 0) ? (
                       <CombinedCommentContainer key={comment.id}>
-                        <CommentBox comment={comment} index={index} />
+                        <CommentBox comment={comment} index={index} isDraggingOver={snapshot.isDraggingOver} />
                         <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
                       </CombinedCommentContainer>
                   ) : (
-                    <CommentBox key={comment.id} comment={comment} index={index} />
+                    <CommentBox key={comment.id} comment={comment} index={index} isDraggingOver={snapshot.isDraggingOver} />
                   )
                   );
                 })}
@@ -232,7 +215,6 @@ const CommentThread = ({ threadId, topic, onBack, userLevel}) => {
       )}
       <Separator />
       <CommentBoxContainer>
-        {/* <UserProfile  alt="User Profile" /> */}
         <UserProfile src={chrome.runtime.getURL('/static/media/default-avatar-2.png')} alt="User Profile" />
         <CommentInputContainer>
           <CommentInput

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Draggable, Droppable } from '@hello-pangea/dnd';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import Comment from './Comment';
 
 const CommentBoxContainer = styled.div`
@@ -16,38 +16,35 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ comment, index }) => {
+const CommentBox = ({ comment, index, isDraggingOver}) => {
 
-  if (!comment){
-    console.log("no comments in CommentBox");
-    return null;
-  }
+  const hasChildren = comment.children && Array.isArray(comment.children) && comment.children.length > 0;
 
   return (
-    <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 2}>
+    <Droppable droppableId={String(comment.id)} isDropDisabled={hasChildren && comment.children.length >= 10}>
       {(provided, snapshot) => (
         <CommentBoxContainer
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: comment.children.length > 0 ? 'transparent' : 'white' }}
+          style={{ backgroundColor: hasChildren ? 'transparent' : 'white' }}
         >
-          <Draggable draggableId={comment.id} index={index}>
+          <Draggable draggableId={String(comment.id)} index={index}>
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
               >
-                {comment.children && comment.children.length > 0 ? (
+                {hasChildren ? (
                   <ClusteredCommentsContainer>
-                    <Comment comment={comment} isCombined={true} isDragging={snapshot.isDragging}  />
+                    <Comment comment={comment} isCombined={true} isDraggingOver={snapshot.isDragging}  />
                     {comment.children.map((child, childIndex) => (
                       <CommentBox key={child.id} comment={child} index={childIndex} />
                     ))}
                   </ClusteredCommentsContainer>
                 ) : (
-                  <Comment comment={comment} isCombined={false} isDragging={snapshot.isDragging}  />
+                  <Comment comment={comment} isCombined={false} isDraggingOver={snapshot.isDragging}  />
                 )}
               </div>
             )}

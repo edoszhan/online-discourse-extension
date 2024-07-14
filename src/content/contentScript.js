@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
 import CommentSection from "../components/CommentSection/CommentSection";
+import { DragDropContext } from '@hello-pangea/dnd';
 
 
 function removeColorControl() {
@@ -16,7 +17,10 @@ function removeColorControl() {
       
       
       const root = createRoot(commentSectionContainer);
-      root.render(<CommentSection />);
+      root.render(
+        <DragDropContext>
+          <CommentSection/>
+        </DragDropContext>);
     }
   } else {
     console.error('Target div not found');
