@@ -18,6 +18,8 @@ const ClusteredCommentsContainer = styled.div`
 
 const CommentBox = ({ comment, index, isDraggingOver}) => {
 
+  console.log("author in box", comment.author);
+
   const hasChildren = comment.children && Array.isArray(comment.children) && comment.children.length > 0;
 
   return (

@@ -4,7 +4,8 @@ import { logEvent } from './utils/logger';
 
 function App() {
   const [role, setRole] = useState('L0');
-  const userId = 'user1';
+  const [userId, setUserId] = useState('');
+  const [isUserIdConfirmed, setIsUserIdConfirmed] = useState(false);
 
   useEffect(() => {
     if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -23,6 +24,10 @@ function App() {
       if (tab && tab.id !== undefined) {
         chrome.tabs.sendMessage(tab.id, {
           action: 'removeColorControl',
+          payload: {
+            userId: userId,
+            level: role,
+          },
         }, (response) => {
           console.log(response);
         });
@@ -55,10 +60,44 @@ function App() {
     }
   };
 
+  const handleUserIdChange = (e) => {
+    const newUserId = e.target.value;
+    setUserId(newUserId);
+  };
+
+  const confirmUserId = () => {
+    if (userId.trim() !== '') {
+      setIsUserIdConfirmed(true);
+      logEvent('UserId Confirmed', userId, 'userid_confirm');
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.sync.set({ userId: userId }, () => {
+          console.log('UserId saved:', userId);
+        });
+      }
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Start Discussion</h1>
+        <div className="userid-selection">
+          <h2>Select Name</h2>
+          <div className="userid-input">
+          <input
+            type="text"
+            value={userId}
+            onChange={handleUserIdChange}
+            placeholder="Enter name"
+          />
+          <button
+            onClick={confirmUserId}
+            style={{ backgroundColor: isUserIdConfirmed ? 'green' : 'blue' }}
+          >
+            {isUserIdConfirmed ? 'DONE' : 'SET'}
+          </button>
+          </div>
+        </div>
         <div className="role-selection">
           <h2>Select Role</h2>
           <select value={role} onChange={handleChange}>

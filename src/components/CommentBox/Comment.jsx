@@ -108,10 +108,9 @@ const Comment = ({ comment, isCombined, isDragging }) => {
   const [upvotes, setUpvotes] = useState(comment.upvotes || 0);
   const [hasUpvoted, setHasUpvoted] = useState(false);
 
-  comment.author = comment.author || 'edoszhan';
   const authorInitial = comment.author ? comment.author.charAt(0).toUpperCase() : 'A';
 
-  const formattedTimestamp = new Date(comment.timestamp || Date.now()).toLocaleString('kr-KO', {
+  const formattedTimestamp = new Date(comment.timestamp).toLocaleString('kr-KO', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',

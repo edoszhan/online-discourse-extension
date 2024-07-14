@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import CommentThread from '../CommentThread/CommentThread';
 import './CommentSection.css';
 
-function CommentSection() {
+function CommentSection({userId, level}) {
+
+  console.log('User ID in section:', userId);
+  console.log('User Level in section:', level);
   const topiclist = [
     { id: 1, topic: "Impact of Resident Absence on Healthcare Services" },
     { id: 2, topic: "Government's Response to Collective Action" },
@@ -46,7 +49,8 @@ function CommentSection() {
          threadId={selectedThread.id}
          topic={selectedThread.topic} 
          onBack={() => setSelectedThread(null)}
-         userLevel={0}/>
+         level={level}
+         userId={userId}/>
       )}
     </div>
   );

@@ -8,7 +8,10 @@ import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
 import axios from 'axios';
 
-const CommentThread = ({ threadId, topic, onBack, userLevel= 1}) => {
+const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
+  console.log('User ID in thread:', userId);
+  console.log('User Level in thread:', level);
+  
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
@@ -133,9 +136,15 @@ const CommentThread = ({ threadId, topic, onBack, userLevel= 1}) => {
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
+        console.log("user id when adding:", userId);
+        const timestamp = new Date().toISOString();
         const response = await axios.post('http://localhost:8000/api/comments', {
           thread_id: threadId,
-          text: newComment
+          text: newComment,
+          author: userId,
+          timestamp: timestamp,
+          upvotes: 0,
+          children: [],
         });
         setComments([...comments, response.data]);
         setNewComment('');
@@ -146,7 +155,7 @@ const CommentThread = ({ threadId, topic, onBack, userLevel= 1}) => {
     }
   };
 
-  if (showReviewPage && userLevel === 1) {
+  if (showReviewPage && level === "L1") {
     return (
       <ReviewPage 
         comments={comments} 
@@ -182,7 +191,7 @@ const CommentThread = ({ threadId, topic, onBack, userLevel= 1}) => {
       <div className="random-question">{randomQuestion}</div>
       <div style={{ display: 'flex', justifyContent:'space-between', alignItems: 'center' }}>
       {comments && comments.length > 0 && <div className="comment-count">{commentCounter} comments</div>}
-      {userLevel === 1 && (
+      {level === "L1" && (
         <ReviewButton onClick={() => setShowReviewPage(true)}>Review clustered comments &gt;&gt;</ReviewButton>
       )} 
       </div>
