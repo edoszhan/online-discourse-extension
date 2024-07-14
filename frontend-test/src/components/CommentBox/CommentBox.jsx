@@ -5,7 +5,6 @@ import Comment from './Comment';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
-  background-color: ${(props) => (props.isDragging ? 'lightgreen' : 'white')};
   border-radius: 5px;
 `;
 
@@ -19,13 +18,15 @@ const ClusteredCommentsContainer = styled.div`
 const CommentBox = ({ comment, index }) => {
 
   return (
-    <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 2}>
+    <Droppable droppableId={comment.id} isDropDisabled={comment.children.length >= 10} mode="child">
       {(provided, snapshot) => (
         <CommentBoxContainer
           ref={provided.innerRef}
           {...provided.droppableProps}
-          isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: comment.children.length > 0 ? 'transparent' : 'white' }}
+          style={{
+            backgroundColor: snapshot.isDraggingOver ? 'lightblue' : 'white',
+            borderRadius: '5px',
+          }}
         >
           <Draggable draggableId={comment.id} index={index}>
             {(provided, snapshot) => (

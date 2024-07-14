@@ -40,3 +40,18 @@ async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
 async def read_comments(thread_id: int, db: Session = Depends(get_db)):
     comments = db.query(Comment).filter(Comment.thread_id == thread_id).all()
     return comments
+
+
+@router.delete("/comments/{comment_id}")
+async def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    # Delete the comment with the specified ID from the database
+    db.query(Comment).filter(Comment.id == comment_id).delete()
+    db.commit()
+    return {"message": "Comment deleted 2 successfully"}
+
+@router.get("/comments/{thread_id}/{comment_id}", response_model=CommentResponse)
+async def read_comment(thread_id: int, comment_id: int, db: Session = Depends(get_db)):
+    comment = db.query(Comment).filter(Comment.thread_id == thread_id, Comment.id == comment_id).first()
+    if comment is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    return comment

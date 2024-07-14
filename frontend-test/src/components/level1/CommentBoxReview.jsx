@@ -11,7 +11,7 @@ const CommentBoxContainer = styled.div`
 const ClusteredCommentsContainer = styled.div`
   padding: 10px;
   border-radius: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 10px;  
 `;
 
 const CommentBox = ({ comment }) => {

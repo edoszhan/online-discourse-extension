@@ -1,0 +1,7 @@
+i have noticed that when we show the left side on the ReviewPage or old order basically
+using the getParentRelationship, there can be cases where new comments get added to the 
+comment thread and the left side of the page will become not updated. so left side should
+be showing the saved left order and new comments that were added to the thread. the good
+thing is that new comments added will always appear at the bottom of the thread so there
+is unlikely going to be any confusion (if i am not missing anything).
+

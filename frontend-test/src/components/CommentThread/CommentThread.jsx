@@ -9,7 +9,7 @@ import SummarizeButton from '../level1/SummarizeBox';
 
 const CommentThread = ({ topic, onBack, userLevel = 1}) => {
   const [comments, setComments] = useState([
-    { id: '101', text: 'This is the first comment.', children: [], pendingReview: false, prevOrder: ['101']},
+    { id: '101', text: 'My father is undergoing treatment for a chronic condition, and the absence of residents has made his care more fragmented. Theres less continuity, and weve seen different doctors at every visit. Its frustrating and worrisome, especially for those with serious health issues.', children: [], pendingReview: false, prevOrder: ['101']},
     { id: '102', text: 'This is the second comment.', children: [], pendingReview: false, prevOrder: ['102']},
     { id: '103', text: 'This is the third comment.', children: [], pendingReview: false, prevOrder: ['103']},
   ]);
@@ -18,7 +18,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
   const [showReviewPage, setShowReviewPage] = useState(false);
   const [reviewsList, setReviewsList] = useState([]);
 
-  const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
+  const randomQuestion = "How has the collective act  ion of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
   useEffect(() => {
     setCommentCounter(countAllComments(comments));
@@ -46,8 +46,9 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
     const draggedComment = comments.find((comment) => comment.id === draggableId);
     const originalOrder = comments.map((comment) => comment.id);
   
-    const getParentChildRelationship = (comments) => {
+    const getParentChildRelationship = (comments, newComments = []) => {
       const relationship = [];
+      const allComments = [...comments, ...newComments];
       for (const comment of comments) {
         const commentObj = {
           id: comment.id,
@@ -55,14 +56,14 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
           children: [],
         };
         if (comment.children.length > 0) {
-          commentObj.children = getParentChildRelationship(comment.children);
+          commentObj.children = getParentChildRelationship(comment.children, newComments);
         }
         relationship.push(commentObj);
       }
       return relationship;
     };
   
-    const parentChildRelationship = getParentChildRelationship(comments);
+    const parentChildRelationship = getParentChildRelationship(comments, newComments);
   
     let updatedComments = [...comments];
   
@@ -142,6 +143,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
             </div>
           </>
         }
+        newComments={newComments}
       />
     );
   }
@@ -176,10 +178,10 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
                   comment.children.length > 0 ? (
                     <CombinedCommentContainer key={comment.id}>
                       <CommentBox comment={comment} index={index} />
-                      <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
-                      {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      {/* <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage> */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <SummarizeButton comment={comment} />
-                       </div> */}
+                       </div>
                     </CombinedCommentContainer>
                   ) : (
                     <CommentBox key={comment.id} comment={comment} index={index} />

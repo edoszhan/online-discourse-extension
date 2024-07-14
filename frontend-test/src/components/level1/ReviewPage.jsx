@@ -4,7 +4,7 @@ import CommentBox from './CommentBoxReview';
 import './ReviewPage.css';
 import Comment from '../CommentBox/Comment';
 
-const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
+const ReviewPage = ({ comments, setComments, onBack, reviewsList, header,  newComments={newComments}}) => {
   const handleAccept = (commentId) => {
     const updatedComments = comments.map((comment) => {
       if (comment.id === commentId) {
@@ -44,10 +44,7 @@ const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
       {header}
       <ReviewSection>
         {reviewsList.map((reviewObj, index) => {
-          if (1 ==1 ){
-            console.log("comments length:", comments.length);
-          }
-          if (!comments || comments.length === 3) {
+          if (!comments) {
             console.log("nothing to display");
             return <div> Nothing to review </div>;
           }
@@ -59,7 +56,7 @@ const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
               <CombinedCommentContainer>
                 <div className="review-title">#{index + 1} Review</div>
                 <CommentWrapper>
-                  <CommentContent>
+                  {/* <CommentContent>
                     {reviewObj.parentChildRelationship.map((commentObj) => {
                       console.log("CommentObj in prevOrder:", commentObj);
                       return (
@@ -81,6 +78,21 @@ const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
                               comment={commentObj}
                             />
                           )}
+                        </div>
+                      );
+                    })}
+                  </CommentContent> */}
+                   <CommentContent>
+                    {getParentChildRelationship(reviewObj.newOrder, newComments).map((newCommentObj) => {
+                      return (
+                        <div
+                          key={newCommentObj.id}
+                          style={{
+                            backgroundColor: newCommentObj.id === reviewObj.destinationId ? '#DCF8E0' : 'inherit',
+                            padding: "8px",
+                          }}
+                        >
+                          <CommentBox key={newCommentObj.id} comment={newCommentObj} />
                         </div>
                       );
                     })}
