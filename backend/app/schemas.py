@@ -14,6 +14,10 @@ class LogEntry(BaseModel):
 
 class CommentBase(BaseModel):
     text: str
+    author: str
+    timestamp: datetime
+    upvotes: int
+    children: List = []
 
 class CommentCreate(CommentBase):
     thread_id: int

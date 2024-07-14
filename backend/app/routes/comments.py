@@ -30,7 +30,14 @@ async def read_thread(thread_id: int, db: Session = Depends(get_db)):
 
 @router.post("/comments", response_model=CommentResponse)
 async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
-    db_comment = Comment(thread_id=comment.thread_id, text=comment.text)
+    db_comment = Comment(
+        thread_id=comment.thread_id,
+        text=comment.text,
+        author=comment.author,
+        timestamp=comment.timestamp,
+        upvotes=comment.upvotes,
+        children=comment.children
+    )
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)

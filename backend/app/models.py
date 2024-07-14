@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON
 from .utils.database import Base
 from sqlalchemy.orm import relationship
-import datetime  
+from datetime import datetime, timezone, timedelta
 
 class Log(Base):
     __tablename__ = "logs"
@@ -9,7 +9,7 @@ class Log(Base):
     user_id = Column(String, index=True)
     action = Column(String, index=True)
     folder_name = Column(String, index=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow) #have to be update this to korean time
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9))))
     
 class Thread(Base):
     __tablename__ = "threads"
@@ -25,5 +25,9 @@ class Comment(Base):
     id = Column(Integer, primary_key=True, index=True)
     thread_id = Column(Integer, ForeignKey("threads.id"))
     text = Column(String)
+    author = Column(String, default="admin")
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9))))
+    upvotes = Column(Integer, default=0)
+    children = Column(JSON, default=[])
 
     thread = relationship("Thread", back_populates="comments")
