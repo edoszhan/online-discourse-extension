@@ -38,6 +38,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
         const updatedReviewObj = {
           ...reviewObj,
           acceptedBy: [...reviewObj.acceptedBy, userId],
+          pendingReview: reviewObj.acceptedBy.length + 1 < 2,
         };
   
         await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
@@ -62,30 +63,33 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
     }
   };
 
-  const handleDecline= async (reviewObj) => {
-    const updatedReviewObj = {
-      ...reviewObj,
-      deniedBy: [...reviewObj.deniedBy, userId],
-      pendingReview: reviewObj.deniedBy.length + 1 < 2,
-    };
+  const handleDecline = async (reviewObj) => {
+    if (!reviewObj.deniedBy.includes(userId) && !reviewObj.acceptedBy.includes(userId)) {
+      const updatedReviewObj = {
+        ...reviewObj,
+        deniedBy: [...reviewObj.deniedBy, userId],
+        pendingReview: reviewObj.deniedBy.length + 1 < 2,
+      };
   
-    if (updatedReviewObj.deniedBy.length >= 2) {
       try {
-        await axios.delete(`http://localhost:8000/api/reviews/${reviewObj.id}`);
-        setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
-        // Update the reviews state by removing the deleted reviewObj
-      } catch (error) {
-        console.error('Error deleting review:', error);
-      }
-    } else {
-      // Update the reviews state with the updated reviewObj
-      setReviews((prevReviews) =>
-        prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
-      );
-    }
+        await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
+        setReviews((prevReviews) =>
+          prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
+        );
   
+        if (updatedReviewObj.deniedBy.length >= 2) {
+          try {
+            await axios.delete(`http://localhost:8000/api/reviews/${reviewObj.id}`);
+            setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
+          } catch (error) {
+            console.error('Error deleting review:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating review:', error);
+      }
+    }
   };
-
 
   return (
     <ReviewPageContainer>
@@ -106,6 +110,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
                   {review.prevOrder.map((commentId) => {
                     const comment = comments.find((c) => c.id === commentId);
                     if (!comment) return null;
+                    const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
                     return (
                       <div
                         key={comment.id}
@@ -116,7 +121,8 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
                           padding: '8px',
                         }}
                       >
-                        <Comment comment={comment} />
+                        {/* <Comment comment={comment} /> */}
+                        <CommentBox comment={comment} clusteredComments={clusteredComments} />
                       </div>
                     );
                   })}
@@ -125,6 +131,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
                   {review.newOrder.map((commentId) => {
                     const comment = comments.find((c) => c.id === commentId);
                     if (!comment) return null;
+                    const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
                     return (
                       <div
                         key={comment.id}
@@ -135,7 +142,8 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
                           padding: '8px',
                         }}
                       >
-                        <Comment comment={comment} />
+                        {/* <Comment comment={comment} /> */}
+                        <CommentBox comment={comment} clusteredComments={clusteredComments} />
                       </div>
                     );
                   })}

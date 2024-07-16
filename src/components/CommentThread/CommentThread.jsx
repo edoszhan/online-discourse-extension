@@ -82,7 +82,14 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
     console.log('Updated comments:', updatedComments);
   
-    const newOrder = updatedComments.map((comment) => comment.id);
+    // const newOrder = updatedComments.map((comment) => comment.id);
+
+    const newOrder = updatedComments.map((comment) => {
+      if (comment.id === parseInt(destination.droppableId.split('-')[1])) {
+        return parseInt(draggableId);
+      }
+      return comment.id;
+    });
   
     const reviewObj = {
       prevOrder: originalOrder,
