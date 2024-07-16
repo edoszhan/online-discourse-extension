@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List;
+from typing import List, Optional
 
 class LogEntry(BaseModel):
     id: str
@@ -18,6 +18,7 @@ class CommentBase(BaseModel):
     timestamp: datetime
     upvotes: int
     children: List = []
+    cluster_id: Optional[int] = None 
 
 class CommentCreate(CommentBase):
     thread_id: int
@@ -39,6 +40,22 @@ class ThreadCreate(ThreadBase):
 class ThreadResponse(ThreadBase):
     id: int
     comments: List[CommentResponse] = []
+
+    class Config:
+        from_attributes = True
+        
+class ReviewBase(BaseModel):
+    prevOrder: List[int]
+    newOrder: List[int]
+    sourceId: int
+    destinationId: int
+    pendingReview: bool 
+    
+class ReviewCreate(ReviewBase):
+    pass
+
+class ReviewResponse(ReviewBase):
+    id: int
 
     class Config:
         from_attributes = True

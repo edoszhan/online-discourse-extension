@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, JSON, Boolean
 from .utils.database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone, timedelta
@@ -29,5 +29,16 @@ class Comment(Base):
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9))))
     upvotes = Column(Integer, default=0)
     children = Column(JSON, default=[])
+    cluster_id = Column(Integer, nullable=True) 
 
     thread = relationship("Thread", back_populates="comments")
+    
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    prev_order = Column(JSON)
+    new_order = Column(JSON)
+    source_id = Column(Integer)
+    destination_id = Column(Integer)
+    pending_review = Column(Boolean, default=True)
