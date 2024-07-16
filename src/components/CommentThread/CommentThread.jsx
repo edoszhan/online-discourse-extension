@@ -9,9 +9,6 @@ import SummarizeButton from '../level1/SummarizeBox';
 import axios from 'axios';
 
 const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
-  console.log('User ID in thread:', userId);
-  console.log('User Level in thread:', level);
-  
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
@@ -50,87 +47,57 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     return count;
   };
 
-  const onDragEnd = (result) => {
+  const onDragEnd = async (result) => {
     console.log('Drag ended:', result);
     const { destination, source, draggableId } = result;
   
-    if (source.droppableId === destination.droppableId) {
+    if (!destination || source.droppableId === destination.droppableId) {
       return;
     }
-  
-    if (!destination) {
+    const draggedCommentId = parseInt(draggableId, 10);
+    const draggedComment = comments.find((comment) => comment.id === draggedCommentId);
+
+    if (!draggedComment){
+      console.log('Dragged comment not found');
       return;
     }
-  
-    const draggedComment = comments.find((comment) => comment.id === draggableId);
+
+    console.log('Dragged comment:', draggedComment);
+
     const originalOrder = comments.map((comment) => comment.id);
-  
-    const getParentChildRelationship = (comments) => {
-      const relationship = [];
-      for (const comment of comments) {
-        const commentObj = {
-          id: comment.id,
-          text: comment.text,
-          children: [],
-        };
-        if (comment.children.length > 0) {
-          commentObj.children = getParentChildRelationship(comment.children);
-        }
-        relationship.push(commentObj);
-      }
-      return relationship;
-    };
-  
-    const parentChildRelationship = getParentChildRelationship(comments);
-  
-    let updatedComments = [...comments];
-  
-    console.log("hard clustering");
-    updatedComments = comments.map((comment) => {
-      if (comment.id === destination.droppableId) {
+
+    const updatedComments = comments.map((comment) => {
+      if (comment.id === parseInt(destination.droppableId.split('-')[1])) {
         return {
           ...comment,
-          children: [...comment.children, { ...draggedComment, prevOrder: originalOrder }],
-          pendingReview: true,
+          cluster_id: parseInt(draggableId),
         };
       }
       return comment;
-    }).filter((comment) => comment.id !== draggableId);
+    })
+
+    console.log('Updated comments:', updatedComments);
   
-    updatedComments = updatedComments.map((comment) => {
-      if (comment.id === destination.droppableId) {
-        return {
-          ...comment,
-          pendingReview: true,
-        };
-      }
-      return comment;
-    });
-  
-    const getNewOrder = (comments) => {
-      let newOrder = [];
-      for (const comment of comments) {
-        newOrder.push(comment.id);
-        if (comment.children.length > 0) {
-          newOrder = [...newOrder, ...getNewOrder(comment.children)];
-        }
-      }
-      return newOrder;
-    };
-  
-    const newOrder = getNewOrder(updatedComments);
+    const newOrder = updatedComments.map((comment) => comment.id);
   
     const reviewObj = {
       prevOrder: originalOrder,
       newOrder: newOrder,
-      sourceId: source.droppableId,
-      destinationId: destination.droppableId,
-      parentChildRelationship: parentChildRelationship,
+      sourceId: parseInt(draggableId),
+      destinationId: parseInt(destination.droppableId.split('-')[1]),
+      pendingReview: true,
     };
-  
-    setReviewsList([...reviewsList, reviewObj]);
-    setComments(updatedComments);
-    setCommentCounter(countAllComments(updatedComments));
+    console.log("reviewObJ in thread", reviewObj);
+
+    try {
+      await axios.post('http://localhost:8000/api/reviews', reviewObj);
+      await axios.put(`http://localhost:8000/api/comments/${threadId}/${draggableId}`, { cluster_id: destination.droppableId.split('-')[1] }); 
+      setReviewsList([...reviewsList, reviewObj]);
+      setComments(updatedComments);
+      setCommentCounter(countAllComments(updatedComments));
+    } catch (error) {
+      console.error('Error sending review data:', error);
+    }
   };
   
   const handleAddComment = async () => {
@@ -145,6 +112,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
           timestamp: timestamp,
           upvotes: 0,
           children: [],
+          cluster_id: null,
         });
         setComments([...comments, response.data]);
         setNewComment('');
@@ -200,27 +168,69 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
           <p>No Comments</p>
         </div>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd} onDragStart={console.log("drag start")}>
-          <Droppable droppableId="droppable-comments">
-            {(provided, snapshot) => (
-              <CommentsContainer ref={provided.innerRef} {...provided.droppableProps}>
-                {comments && comments.map((comment, index) => {
-                  return (
-                    (comment.children && comment.children.length > 0) ? (
-                      <CombinedCommentContainer key={comment.id}>
-                        <CommentBox comment={comment} index={index} isDraggingOver={snapshot.isDraggingOver} />
-                        <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage>
-                      </CombinedCommentContainer>
-                  ) : (
-                    <CommentBox key={comment.id} comment={comment} index={index} isDraggingOver={snapshot.isDraggingOver} />
-                  )
-                  );
-                })}
-                {provided.placeholder}
-              </CommentsContainer>
+        <DragDropContext onDragEnd={onDragEnd}>
+  <CommentsContainer>
+    {comments
+      .filter((comment) => comment.cluster_id === null)
+      .map((comment, index) => {
+        const clusteredComments = comments.filter(
+          (c) => c.cluster_id === comment.id
+        );
+        return (
+          <React.Fragment key={comment.id}>
+            {clusteredComments.length > 0 ? (
+              <CombinedCommentContainer>
+                <CommentBox
+                  comment={comment}
+                  index={index}
+                  clusteredComments={clusteredComments}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <SummarizeButton comment={comment} />
+                </div>
+              </CombinedCommentContainer>
+            ) : (
+              <CommentBox
+                comment={comment}
+                index={index}
+                clusteredComments={[]}
+              />
             )}
-          </Droppable>
-        </DragDropContext>
+          </React.Fragment>
+        );
+      })}
+  </CommentsContainer>
+</DragDropContext>
+      //   <DragDropContext onDragEnd={onDragEnd}>
+      //   <CommentsContainer>
+      //     {comments
+      //       .filter((comment) => comment.cluster_id === null)
+      //       .map((comment, index) => {
+      //         const clusteredComments = comments.filter(
+      //           (c) => c.cluster_id === comment.id
+      //         );
+      //         return (
+      //           <React.Fragment key={comment.id}>
+      //             {clusteredComments.length > 0 ? (
+      //               <CommentBox
+      //                 comment={comment}
+      //                 index={index}
+      //                 isDraggingOver={false}
+      //                 clusteredComments={clusteredComments}
+      //               />
+      //             ) : (
+      //               <CommentBox
+      //                 comment={comment}
+      //                 isCombined={false}
+      //                 isDraggingOver={false}
+      //                 clusteredComments={[]}
+      //               />
+      //             )}
+      //           </React.Fragment>
+      //         );
+      //       })}
+      //   </CommentsContainer>
+      // </DragDropContext>
       )}
       <Separator />
       <CommentBoxContainer>

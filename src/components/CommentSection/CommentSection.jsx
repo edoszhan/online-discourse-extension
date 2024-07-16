@@ -3,9 +3,6 @@ import CommentThread from '../CommentThread/CommentThread';
 import './CommentSection.css';
 
 function CommentSection({userId, level}) {
-
-  console.log('User ID in section:', userId);
-  console.log('User Level in section:', level);
   const topiclist = [
     { id: 1, topic: "Impact of Resident Absence on Healthcare Services" },
     { id: 2, topic: "Government's Response to Collective Action" },

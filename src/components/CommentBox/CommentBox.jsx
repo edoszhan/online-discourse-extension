@@ -16,14 +16,11 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ comment, index, isDraggingOver}) => {
-
-  console.log("author in box", comment.author);
-
-  const hasChildren = comment.children && Array.isArray(comment.children) && comment.children.length > 0;
+const CommentBox = ({ comment, index, isDraggingOver, clusteredComments }) => {
+  const hasChildren = clusteredComments && clusteredComments.length > 0;
 
   return (
-    <Droppable droppableId={String(comment.id)} isDropDisabled={hasChildren && comment.children.length >= 10}>
+    <Droppable droppableId={`droppable-${comment.id}`}>
       {(provided, snapshot) => (
         <CommentBoxContainer
           ref={provided.innerRef}
@@ -31,22 +28,35 @@ const CommentBox = ({ comment, index, isDraggingOver}) => {
           isDragging={snapshot.isDraggingOver}
           style={{ backgroundColor: hasChildren ? 'transparent' : 'white' }}
         >
-          <Draggable draggableId={String(comment.id)} index={index}>
+        <Draggable draggableId={String(comment.id)} index={index}>
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
               >
-                {hasChildren ? (
+                {clusteredComments.length > 0 ? (
                   <ClusteredCommentsContainer>
-                    <Comment comment={comment} isCombined={true} isDraggingOver={snapshot.isDragging}  />
-                    {comment.children.map((child, childIndex) => (
-                      <CommentBox key={child.id} comment={child} index={childIndex} />
+                    <Comment
+                      comment={comment}
+                      isCombined={true}
+                      isDragging={snapshot.isDragging}
+                    />
+                    {clusteredComments.map((child, childIndex) => (
+                      <CommentBox
+                        key={child.id}
+                        comment={child}
+                        index={childIndex}
+                        clusteredComments={[]}
+                      />
                     ))}
                   </ClusteredCommentsContainer>
                 ) : (
-                  <Comment comment={comment} isCombined={false} isDraggingOver={snapshot.isDragging}  />
+                  <Comment
+                    comment={comment}
+                    isCombined={false}
+                    isDragging={snapshot.isDragging}
+                  />
                 )}
               </div>
             )}
@@ -59,3 +69,4 @@ const CommentBox = ({ comment, index, isDraggingOver}) => {
 };
 
 export default CommentBox;
+
