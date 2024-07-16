@@ -42,3 +42,7 @@ class Review(Base):
     source_id = Column(Integer)
     destination_id = Column(Integer)
     pending_review = Column(Boolean, default=True)
+    accepted_by = Column(JSON, default=[])
+    denied_by = Column(JSON, default=[])
+    author = Column(String)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9))))

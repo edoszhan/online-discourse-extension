@@ -28,6 +28,7 @@ async def read_thread(thread_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Thread not found")
     return db_thread
 
+# COMMENTS CALLS
 @router.post("/comments", response_model=CommentResponse)
 async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
     db_comment = Comment(
@@ -86,6 +87,8 @@ async def read_comment(thread_id: int, comment_id: int, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
 
+
+# REVIEWS CALLS
 @router.post("/reviews", response_model=ReviewResponse)
 async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     print(f"Received review data: {review}")
@@ -95,7 +98,11 @@ async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
         new_order=review.newOrder,
         source_id=review.sourceId,
         destination_id=review.destinationId,
-        pending_review=review.pendingReview
+        pending_review=review.pendingReview,
+        accepted_by=review.acceptedBy,
+        denied_by=review.deniedBy,
+        author=review.author,
+        timestamp=review.timestamp
     )
     db.add(db_review)
     db.commit()
@@ -107,9 +114,32 @@ async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
         newOrder=db_review.new_order,
         sourceId=db_review.source_id,
         destinationId=db_review.destination_id,
-        pendingReview=db_review.pending_review
+        pendingReview=db_review.pending_review,
+        acceptedBy=db_review.accepted_by,
+        deniedBy=db_review.denied_by,
+        author=db_review.author,
+        timestamp=db_review.timestamp
     )
 
+@router.get("/reviews", response_model=List[ReviewResponse])
+async def get_reviews(db: Session = Depends(get_db)):
+    reviews = db.query(Review).all()
+    return [
+        ReviewResponse(
+            id=review.id,
+            prevOrder=review.prev_order,
+            newOrder=review.new_order,
+            sourceId=review.source_id,
+            destinationId=review.destination_id,
+            pendingReview=review.pending_review,
+            acceptedBy=review.accepted_by,
+            deniedBy=review.denied_by,
+            author=review.author,
+            timestamp=review.timestamp
+        )
+        for review in reviews
+    ]
+    
 @router.get("/reviews/{review_id}", response_model=ReviewResponse)
 async def get_review(review_id: int, db: Session = Depends(get_db)):
     review = db.query(Review).filter(Review.id == review_id).first()
@@ -122,4 +152,37 @@ async def get_review(review_id: int, db: Session = Depends(get_db)):
         sourceId=review.source_id,
         destinationId=review.destination_id,
         pendingReview=review.pending_review
+    )
+    
+@router.delete("/reviews/{review_id}")
+async def delete_review(review_id: int, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(Review.id == review_id).first()
+    if review is None:
+        raise HTTPException(status_code=404, detail="Review not found")
+    db.delete(review)
+    db.commit()
+    return {"message": "Review deleted successfully"}
+
+@router.put("/reviews/{review_id}", response_model=ReviewResponse)
+async def update_review(review_id: int, updated_review: ReviewCreate, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(Review.id == review_id).first()
+    if review is None:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.accepted_by = updated_review.acceptedBy
+    review.denied_by = updated_review.deniedBy
+    db.commit()
+    db.refresh(review)
+
+    return ReviewResponse(
+        id=review.id,
+        prevOrder=review.prev_order,
+        newOrder=review.new_order,
+        sourceId=review.source_id,
+        destinationId=review.destination_id,
+        pendingReview=review.pending_review,
+        acceptedBy=review.accepted_by,
+        deniedBy=review.denied_by,
+        author=review.author,
+        timestamp=review.timestamp
     )

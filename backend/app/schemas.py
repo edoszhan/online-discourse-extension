@@ -52,10 +52,17 @@ class ReviewBase(BaseModel):
     pendingReview: bool 
     
 class ReviewCreate(ReviewBase):
-    pass
+    acceptedBy: List[str] = []
+    deniedBy: List[str] = []
+    author: str
+    timestamp: datetime
 
 class ReviewResponse(ReviewBase):
     id: int
+    acceptedBy: List[str] = []
+    deniedBy: List[str] = []
+    author: str
+    timestamp: datetime
 
     class Config:
         from_attributes = True
