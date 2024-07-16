@@ -19,8 +19,12 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
   useEffect(() => {
     fetchComments();
+    const clusteringData = window.localStorage.getItem('clusteringData');
+    if (clusteringData) {
+      setComments(JSON.parse(clusteringData));
+    }
     setCommentCounter(countAllComments(comments));
-  }, [threadId]);
+  }, []);
 
   const fetchComments = async () => {
     try {
@@ -86,15 +90,21 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       sourceId: parseInt(draggableId),
       destinationId: parseInt(destination.droppableId.split('-')[1]),
       pendingReview: true,
+      acceptedBy: [],
+      deniedBy: [],
+      author: userId,
+      timestamp: new Date().toISOString(),
     };
     console.log("reviewObJ in thread", reviewObj);
 
     try {
       await axios.post('http://localhost:8000/api/reviews', reviewObj);
-      await axios.put(`http://localhost:8000/api/comments/${threadId}/${draggableId}`, { cluster_id: destination.droppableId.split('-')[1] }); 
+      // await axios.put(`http://localhost:8000/api/comments/${threadId}/${draggableId}`, { cluster_id: destination.droppableId.split('-')[1] }); 
+      window.localStorage.setItem('clusteringData', JSON.stringify(updatedComments));
       setReviewsList([...reviewsList, reviewObj]);
       setComments(updatedComments);
       setCommentCounter(countAllComments(updatedComments));
+      fetchComments(); // needs to be checked
     } catch (error) {
       console.error('Error sending review data:', error);
     }
@@ -126,10 +136,9 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   if (showReviewPage && level === "L1") {
     return (
       <ReviewPage 
-        comments={comments} 
-        setComments={setComments} 
         onBack={() => setShowReviewPage(false)} 
-        reviewsList={reviewsList}
+        threadId={threadId}
+        userId={userId}
         header={
           <>
             <h2>{topic}</h2>
@@ -185,9 +194,10 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
                   index={index}
                   clusteredComments={clusteredComments}
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <SummarizeButton comment={comment} />
-                </div>
+                </div> */}
+                <ReviewMessage> This change will be reviewed by a person in charge</ReviewMessage>
               </CombinedCommentContainer>
             ) : (
               <CommentBox
@@ -201,36 +211,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       })}
   </CommentsContainer>
 </DragDropContext>
-      //   <DragDropContext onDragEnd={onDragEnd}>
-      //   <CommentsContainer>
-      //     {comments
-      //       .filter((comment) => comment.cluster_id === null)
-      //       .map((comment, index) => {
-      //         const clusteredComments = comments.filter(
-      //           (c) => c.cluster_id === comment.id
-      //         );
-      //         return (
-      //           <React.Fragment key={comment.id}>
-      //             {clusteredComments.length > 0 ? (
-      //               <CommentBox
-      //                 comment={comment}
-      //                 index={index}
-      //                 isDraggingOver={false}
-      //                 clusteredComments={clusteredComments}
-      //               />
-      //             ) : (
-      //               <CommentBox
-      //                 comment={comment}
-      //                 isCombined={false}
-      //                 isDraggingOver={false}
-      //                 clusteredComments={[]}
-      //               />
-      //             )}
-      //           </React.Fragment>
-      //         );
-      //       })}
-      //   </CommentsContainer>
-      // </DragDropContext>
       )}
       <Separator />
       <CommentBoxContainer>

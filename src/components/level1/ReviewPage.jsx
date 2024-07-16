@@ -1,37 +1,91 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 import CommentBox from './CommentBoxReview';
 import './ReviewPage.css';
 import Comment from '../CommentBox/Comment';
 
-const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
-  const handleAccept = (commentId) => {
-    const updatedComments = comments.map((comment) => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          pendingReview: false,
-        };
-      }
-      return comment;
-    });
-    setComments(updatedComments);
-    // setAcceptedComments((prevAcceptedComments) => [...prevAcceptedComments, reviewObj.destinationId]);
+const ReviewPage = ({ onBack, header, threadId, userId}) => {
+  const [reviews, setReviews] = useState([]);
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    fetchReviews();
+    fetchComments();
+  }, [threadId]);
+
+  const fetchReviews = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/reviews`);
+      setReviews(response.data);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
   };
 
-  const handleDecline = (commentId) => {
-    const updatedComments = comments.map((comment) => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          children: [],
-          pendingReview: false,
-        };
-      }
-      return comment;
-    });
-    setComments(updatedComments);
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
   };
+
+  const handleAccept = async (reviewObj) => {
+    if (!reviewObj.acceptedBy.includes(userId)) {
+      try {
+        const updatedReviewObj = {
+          ...reviewObj,
+          acceptedBy: [...reviewObj.acceptedBy, userId],
+        };
+  
+        await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
+  
+        setReviews((prevReviews) =>
+          prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
+        );
+  
+        if (updatedReviewObj.acceptedBy.length >= 2) {
+          try {
+            await axios.put(`http://localhost:8000/api/comments/${threadId}/${reviewObj.destinationId}`, {
+              cluster_id: reviewObj.sourceId,
+            });
+            fetchComments();
+          } catch (error) {
+            console.error('Error updating comment:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating review:', error);
+      }
+    }
+  };
+
+  const handleDecline= async (reviewObj) => {
+    const updatedReviewObj = {
+      ...reviewObj,
+      deniedBy: [...reviewObj.deniedBy, userId],
+      pendingReview: reviewObj.deniedBy.length + 1 < 2,
+    };
+  
+    if (updatedReviewObj.deniedBy.length >= 2) {
+      try {
+        await axios.delete(`http://localhost:8000/api/reviews/${reviewObj.id}`);
+        setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
+        // Update the reviews state by removing the deleted reviewObj
+      } catch (error) {
+        console.error('Error deleting review:', error);
+      }
+    } else {
+      // Update the reviews state with the updated reviewObj
+      setReviews((prevReviews) =>
+        prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
+      );
+    }
+  
+  };
+
 
   return (
     <ReviewPageContainer>
@@ -43,91 +97,74 @@ const ReviewPage = ({ comments, setComments, onBack, reviewsList, header }) => {
       </ReviewHeader>
       {header}
       <ReviewSection>
-        {reviewsList.map((reviewObj, index) => {
-          if (1 ==1 ){
-            console.log("comments length:", comments.length);
-          }
-          if (!comments || comments.length === 3) {
-            console.log("nothing to display");
-            return <div> Nothing to review </div>;
-          }
-
-          console.log("ReviewObj:", reviewObj);
-
-          return (
-            <div key={index}>
-              <CombinedCommentContainer>
-                <div className="review-title">#{index + 1} Review</div>
-                <CommentWrapper>
-                  <CommentContent>
-                    {reviewObj.parentChildRelationship.map((commentObj) => {
-                      console.log("CommentObj in prevOrder:", commentObj);
-                      return (
-                        <div key={commentObj.id}  style={{
+        {reviews.map((review, index) => (
+          <div key={review.id}>
+            <CombinedCommentContainer>
+              <div className="review-title">#{index + 1} Review</div>
+              <CommentWrapper>
+                <CommentContent>
+                  {review.prevOrder.map((commentId) => {
+                    const comment = comments.find((c) => c.id === commentId);
+                    if (!comment) return null;
+                    return (
+                      <div
+                        key={comment.id}
+                        style={{
                           backgroundColor:
-                          commentObj.id === reviewObj.sourceId || commentObj.id === reviewObj.destinationId
-                            ? '#FEE8E8'
-                            : 'inherit',
-                          padding: "8px",
-                        }}>
-                          {commentObj.children.length > 0 ? (
-                            <CommentBox
-                              key={commentObj.id}
-                              comment={commentObj}
-                            />
-                          ) : (
-                            <Comment
-                              key={commentObj.id}
-                              comment={commentObj}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </CommentContent>
-                  <CommentContent>
-                    {reviewObj.newOrder.map((newCommentId) => {
-                      const newComment = comments.find((c) => c.id === newCommentId);
-                      if (!newComment) {
-                        return null; 
-                      }
-                      return (
-                        <div
-                          key={newComment.id}
-                          style={{
-                            backgroundColor: newComment.id === reviewObj.destinationId ? '#DCF8E0' : 'inherit',
-                            padding: "8px",
-                          }}
-                        >
-                          <CommentBox
-                            key={newComment.id}
-                            comment={newComment}
-                          />
-                        </div>
-                      );
-                    })}
-                  </CommentContent>
-                </CommentWrapper>
-                <div style={{ display: 'flex', justifyContent:'flex-end' }}>
+                            comment.id === review.sourceId || comment.id === review.destinationId
+                            ? '#FEE8E8' : 'inherit',
+                          padding: '8px',
+                        }}
+                      >
+                        <Comment comment={comment} />
+                      </div>
+                    );
+                  })}
+                </CommentContent>
+                <CommentContent>
+                  {review.newOrder.map((commentId) => {
+                    const comment = comments.find((c) => c.id === commentId);
+                    if (!comment) return null;
+                    return (
+                      <div
+                        key={comment.id}
+                        style={{
+                          backgroundColor:
+                            comment.id === review.sourceId || comment.id === review.destinationId
+                            ? '#DCF8E0' : 'inherit',
+                          padding: '8px',
+                        }}
+                      >
+                        <Comment comment={comment} />
+                      </div>
+                    );
+                  })}
+                </CommentContent>
+              </CommentWrapper>
+              <div style={{ display: 'flex', justifyContent:'flex-end' }}>
+              {review.pendingReview && (
+                <>
                   <ReviewButton
                     style={{ backgroundColor: 'green' }}
-                    onClick={() => handleAccept(reviewObj)}
+                    onClick={() => handleAccept(review)}
                   >
-                    Accept
+                    Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/2)
                   </ReviewButton>
-                  <ReviewButton onClick={() => handleDecline(reviewObj)}>Decline</ReviewButton>
+                  <ReviewButton onClick={() => handleDecline(review)}>
+                    Decline ({review.deniedBy ? review.deniedBy.length : 0}/2)
+                    </ReviewButton>
+                </>
+                )}
                 </div>
-              </CombinedCommentContainer>
-            </div>
-          );
-        })}
+            </CombinedCommentContainer>
+          </div>
+        ))}
       </ReviewSection>
     </ReviewPageContainer>
   );
 };
 
 export default ReviewPage;
-
 
 
 const ReviewPageContainer = styled.div`
