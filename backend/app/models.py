@@ -37,8 +37,8 @@ class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)
-    prev_order = Column(JSON)
-    new_order = Column(JSON)
+    prev_order = Column(JSON, default = [])
+    new_order = Column(JSON, default = [])
     source_id = Column(Integer)
     destination_id = Column(Integer)
     pending_review = Column(Boolean, default=True)

@@ -6,6 +6,7 @@ from app.models import Comment
 from app.schemas import CommentCreate, CommentResponse
 from app.models import Thread, Comment, Review
 from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse
+from datetime import datetime
 
 router = APIRouter()
 
@@ -92,34 +93,42 @@ async def read_comment(thread_id: int, comment_id: int, db: Session = Depends(ge
 @router.post("/reviews", response_model=ReviewResponse)
 async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     print(f"Received review data: {review}")
+    
+    review.new_order_dicts = [comment.model_dump() for comment in review.newOrder]
+    for comment_dict in review.new_order_dicts:
+        comment_dict['timestamp'] = comment_dict['timestamp'].isoformat()
+    
+    try:
+        db_review = Review(
+            prev_order=review.prevOrder,
+            new_order=review.new_order_dicts,
+            source_id=review.sourceId,
+            destination_id=review.destinationId,
+            pending_review=review.pendingReview,
+            accepted_by=review.acceptedBy,
+            denied_by=review.deniedBy,
+            author=review.author,
+            timestamp=review.timestamp
+        )
+        db.add(db_review)
+        db.commit()
+        db.refresh(db_review)
 
-    db_review = Review(
-        prev_order=review.prevOrder,
-        new_order=review.newOrder,
-        source_id=review.sourceId,
-        destination_id=review.destinationId,
-        pending_review=review.pendingReview,
-        accepted_by=review.acceptedBy,
-        denied_by=review.deniedBy,
-        author=review.author,
-        timestamp=review.timestamp
-    )
-    db.add(db_review)
-    db.commit()
-    db.refresh(db_review)
-
-    return ReviewResponse(
-        id=db_review.id,
-        prevOrder=db_review.prev_order,
-        newOrder=db_review.new_order,
-        sourceId=db_review.source_id,
-        destinationId=db_review.destination_id,
-        pendingReview=db_review.pending_review,
-        acceptedBy=db_review.accepted_by,
-        deniedBy=db_review.denied_by,
-        author=db_review.author,
-        timestamp=db_review.timestamp
-    )
+        return ReviewResponse(
+            id=db_review.id,
+            prevOrder=db_review.prev_order,
+            newOrder=db_review.new_order,
+            sourceId=db_review.source_id,
+            destinationId=db_review.destination_id,
+            pendingReview=db_review.pending_review,
+            acceptedBy=db_review.accepted_by,
+            deniedBy=db_review.denied_by,
+            author=db_review.author,
+            timestamp=db_review.timestamp
+        )
+    except Exception as e:
+        print(f"Error creating review: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
 
 @router.get("/reviews", response_model=List[ReviewResponse])
 async def get_reviews(db: Session = Depends(get_db)):

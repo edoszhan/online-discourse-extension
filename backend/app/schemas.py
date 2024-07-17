@@ -46,7 +46,7 @@ class ThreadResponse(ThreadBase):
         
 class ReviewBase(BaseModel):
     prevOrder: List[int]
-    newOrder: List[int]
+    newOrder: List[CommentBase]
     sourceId: int
     destinationId: int
     pendingReview: bool 
@@ -56,6 +56,7 @@ class ReviewCreate(ReviewBase):
     deniedBy: List[str] = []
     author: str
     timestamp: datetime
+    new_order_dicts: List[dict] = []
 
 class ReviewResponse(ReviewBase):
     id: int
