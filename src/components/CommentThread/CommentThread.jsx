@@ -70,6 +70,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
     const originalOrder = comments.map((comment) => comment.id);
 
+
     const updatedComments = comments.map((comment) => {
       if (comment.id === parseInt(destination.droppableId.split('-')[1])) {
         return {
@@ -81,15 +82,18 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     })
 
     console.log('Updated comments:', updatedComments);
-  
-    // const newOrder = updatedComments.map((comment) => comment.id);
 
-    const newOrder = updatedComments.map((comment) => {
-      if (comment.id === parseInt(destination.droppableId.split('-')[1])) {
-        return parseInt(draggableId);
+    const newOrder = comments.map((comment) => {
+      if (comment.id === parseInt(draggableId)) {
+        return {
+          ...comment,
+          cluster_id: parseInt(destination.droppableId.split('-')[1]),
+        };
       }
-      return comment.id;
-    });
+      return comment;
+    })
+
+    console.log('New order:', newOrder);
   
     const reviewObj = {
       prevOrder: originalOrder,

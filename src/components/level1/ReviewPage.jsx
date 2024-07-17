@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import CommentBox from './CommentBoxReview';
+// import CommentBox from './CommentBoxReview';
+import CommentBox from '../CommentBox/CommentBox';
 import './ReviewPage.css';
 import Comment from '../CommentBox/Comment';
 
@@ -18,6 +19,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
     try {
       const response = await axios.get(`http://localhost:8000/api/reviews`);
       setReviews(response.data);
+      console.log("Reviews:", response.data);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
@@ -27,12 +29,14 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
     try {
       const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
       setComments(response.data);
+      console.log('Comments:', response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
   };
 
   const handleAccept = async (reviewObj) => {
+    console.log("Accepting review:", reviewObj);
     if (!reviewObj.acceptedBy.includes(userId)) {
       try {
         const updatedReviewObj = {
@@ -106,48 +110,76 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
             <CombinedCommentContainer>
               <div className="review-title">#{index + 1} Review</div>
               <CommentWrapper>
-                <CommentContent>
-                  {review.prevOrder.map((commentId) => {
-                    const comment = comments.find((c) => c.id === commentId);
-                    if (!comment) return null;
-                    const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
-                    return (
-                      <div
-                        key={comment.id}
-                        style={{
-                          backgroundColor:
-                            comment.id === review.sourceId || comment.id === review.destinationId
-                            ? '#FEE8E8' : 'inherit',
-                          padding: '8px',
-                        }}
-                      >
-                        {/* <Comment comment={comment} /> */}
-                        <CommentBox comment={comment} clusteredComments={clusteredComments} />
-                      </div>
-                    );
-                  })}
-                </CommentContent>
-                <CommentContent>
-                  {review.newOrder.map((commentId) => {
-                    const comment = comments.find((c) => c.id === commentId);
-                    if (!comment) return null;
-                    const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
-                    return (
-                      <div
-                        key={comment.id}
-                        style={{
-                          backgroundColor:
-                            comment.id === review.sourceId || comment.id === review.destinationId
-                            ? '#DCF8E0' : 'inherit',
-                          padding: '8px',
-                        }}
-                      >
-                        {/* <Comment comment={comment} /> */}
-                        <CommentBox comment={comment} clusteredComments={clusteredComments} />
-                      </div>
-                    );
-                  })}
-                </CommentContent>
+              <CommentContent>
+                {review.prevOrder.map((commentId) => {
+                  const originalComment = comments.find((c) => c.id === commentId);
+                  if (!originalComment) return null;
+                  const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
+                  return (
+                    <div
+                      key={commentId}
+                      style={{
+                        backgroundColor:
+                          commentId === review.sourceId || commentId === review.destinationId
+                          ? '#FEE8E8' : 'inherit',
+                        padding: '8px',
+                      }}
+                    >
+                      <CommentBox comment={originalComment} clusteredComments={clusteredComments} />
+                    </div>
+                  );
+                })}
+              </CommentContent>
+              <CommentContent>
+  {review.newOrder.map((commentData, idx) => {
+    const originalComment = comments.find(
+      (c) =>
+        c.text === commentData.text &&
+        c.author === commentData.author &&
+        c.timestamp === commentData.timestamp
+    );
+    if (!originalComment) return null;
+
+    const modifiedCommentData = {
+      ...commentData,
+      id: originalComment.id,
+    };
+
+    if (modifiedCommentData.cluster_id === null) {
+      const clusteredComments = review.newOrder.filter(
+        (cd) => cd.cluster_id === modifiedCommentData.id
+      );
+
+      const clusteredCommentObjects = clusteredComments.map((cd) =>
+        comments.find(
+          (c) =>
+            c.text === cd.text && c.author === cd.author && c.timestamp === cd.timestamp
+        )
+      ).filter((c) => c !== undefined);
+
+      return (
+        <div
+          key={idx}
+          style={{
+            backgroundColor:
+              originalComment.id === review.sourceId ||
+              originalComment.id === review.destinationId
+                ? '#DCF8E0'
+                : 'inherit',
+            padding: '8px',
+          }}
+        >
+          <CommentBox
+            comment={originalComment}
+            clusteredComments={clusteredCommentObjects}
+          />
+        </div>
+      );
+    }
+
+    return null;
+  })}
+</CommentContent>
               </CommentWrapper>
               <div style={{ display: 'flex', justifyContent:'flex-end' }}>
               {review.pendingReview && (
