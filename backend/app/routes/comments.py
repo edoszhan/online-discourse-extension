@@ -144,7 +144,8 @@ async def get_reviews(db: Session = Depends(get_db)):
             acceptedBy=review.accepted_by,
             deniedBy=review.denied_by,
             author=review.author,
-            timestamp=review.timestamp
+            timestamp=review.timestamp,
+            summary=review.summary
         )
         for review in reviews
     ]
@@ -160,7 +161,12 @@ async def get_review(review_id: int, db: Session = Depends(get_db)):
         newOrder=review.new_order,
         sourceId=review.source_id,
         destinationId=review.destination_id,
-        pendingReview=review.pending_review
+        pendingReview=review.pending_review,
+        acceptedBy=review.accepted_by,
+        deniedBy=review.denied_by,
+        author=review.author,
+        timestamp=review.timestamp,
+        summary=review.summary
     )
     
 @router.delete("/reviews/{review_id}")
@@ -178,16 +184,25 @@ async def update_review(review_id: int, updated_review: ReviewUpdate, db: Sessio
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
 
+    print(f"Updating review with ID: {review_id}")
+    print(f"Updated review data: {updated_review}")
+
     if updated_review.acceptedBy is not None:
-        review.accepted_by = updated_review.acceptedBy 
+        review.accepted_by = updated_review.acceptedBy
         review.pending_review = len(updated_review.acceptedBy) < 2
+        print(f"Updated acceptedBy: {review.accepted_by}")
+        print(f"Updated pendingReview: {review.pending_review}")
     if updated_review.deniedBy is not None:
         review.denied_by = updated_review.deniedBy
+        print(f"Updated deniedBy: {review.denied_by}")
     if updated_review.summary is not None:
         review.summary = updated_review.summary
+        print(f"Updated summary: {review.summary}")
 
     db.commit()
     db.refresh(review)
+
+    print(f"Updated review: {review}")
 
     return ReviewResponse(
         id=review.id,
@@ -202,4 +217,5 @@ async def update_review(review_id: int, updated_review: ReviewUpdate, db: Sessio
         timestamp=review.timestamp,
         summary=review.summary
     )
+
 
