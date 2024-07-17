@@ -4,7 +4,7 @@ from .utils.database import engine, Base
 import logging
 from app.routes import comments
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import generate
+from app.routes import generate, summarize
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -27,6 +27,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(logs.router)  
 app.include_router(comments.router, prefix="/api")
 app.include_router(generate.router)
+app.include_router(summarize.router)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

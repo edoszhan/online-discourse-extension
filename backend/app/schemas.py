@@ -58,12 +58,19 @@ class ReviewCreate(ReviewBase):
     timestamp: datetime
     new_order_dicts: List[dict] = []
 
+class ReviewUpdate(BaseModel):
+    acceptedBy: Optional[List[str]] = None
+    deniedBy: Optional[List[str]] = None
+    summary: Optional[str] = None
+
+
 class ReviewResponse(ReviewBase):
     id: int
     acceptedBy: List[str] = []
     deniedBy: List[str] = []
     author: str
-    timestamp: datetime
+    timestamp: datetime 
+    summary: Optional[str] = None
 
     class Config:
         from_attributes = True

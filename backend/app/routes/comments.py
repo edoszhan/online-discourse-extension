@@ -5,7 +5,7 @@ from app.utils.database import get_db
 from app.models import Comment
 from app.schemas import CommentCreate, CommentResponse
 from app.models import Thread, Comment, Review
-from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse
+from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse, ReviewUpdate
 from datetime import datetime
 
 router = APIRouter()
@@ -173,13 +173,19 @@ async def delete_review(review_id: int, db: Session = Depends(get_db)):
     return {"message": "Review deleted successfully"}
 
 @router.put("/reviews/{review_id}", response_model=ReviewResponse)
-async def update_review(review_id: int, updated_review: ReviewCreate, db: Session = Depends(get_db)):
+async def update_review(review_id: int, updated_review: ReviewUpdate, db: Session = Depends(get_db)):
     review = db.query(Review).filter(Review.id == review_id).first()
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
 
-    review.accepted_by = updated_review.acceptedBy
-    review.denied_by = updated_review.deniedBy
+    if updated_review.acceptedBy is not None:
+        review.accepted_by = updated_review.acceptedBy 
+        review.pending_review = len(updated_review.acceptedBy) < 2
+    if updated_review.deniedBy is not None:
+        review.denied_by = updated_review.deniedBy
+    if updated_review.summary is not None:
+        review.summary = updated_review.summary
+
     db.commit()
     db.refresh(review)
 
@@ -193,5 +199,7 @@ async def update_review(review_id: int, updated_review: ReviewCreate, db: Sessio
         acceptedBy=review.accepted_by,
         deniedBy=review.denied_by,
         author=review.author,
-        timestamp=review.timestamp
+        timestamp=review.timestamp,
+        summary=review.summary
     )
+

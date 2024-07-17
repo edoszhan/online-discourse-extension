@@ -46,3 +46,4 @@ class Review(Base):
     denied_by = Column(JSON, default=[])
     author = Column(String)
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9))))
+    summary = Column(String)
