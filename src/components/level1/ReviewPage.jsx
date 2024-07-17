@@ -42,7 +42,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
         const updatedReviewObj = {
           ...reviewObj,
           acceptedBy: [...reviewObj.acceptedBy, userId],
-          pendingReview: reviewObj.acceptedBy.length + 1 < 2,
+          pendingReview:[...reviewObj.acceptedBy, userId].length < 2,
         };
   
         await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
@@ -72,7 +72,6 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
       const updatedReviewObj = {
         ...reviewObj,
         deniedBy: [...reviewObj.deniedBy, userId],
-        pendingReview: reviewObj.deniedBy.length + 1 < 2,
       };
   
       try {
@@ -105,7 +104,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
       </ReviewHeader>
       {header}
       <ReviewSection>
-        {reviews.map((review, index) => (
+        {reviews.filter((review) => review.pendingReview).map((review, index) => (
           <div key={review.id}>
             <CombinedCommentContainer>
               <div className="review-title">#{index + 1} Review</div>

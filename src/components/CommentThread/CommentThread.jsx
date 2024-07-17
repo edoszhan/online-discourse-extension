@@ -15,10 +15,13 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   const [showReviewPage, setShowReviewPage] = useState(false);
   const [reviewsList, setReviewsList] = useState([]);
 
+  const [acceptedReviews, setAcceptedReviews] = useState([]);
+
   const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
   useEffect(() => {
     fetchComments();
+    fetchAcceptedReviews();
     const clusteringData = window.localStorage.getItem('clusteringData');
     if (clusteringData) {
       setComments(JSON.parse(clusteringData));
@@ -35,6 +38,16 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       setCommentCounter(countAllComments(data));
     } catch (error) {
       console.error('Error fetching comments:', error);
+    }
+  };
+
+  const fetchAcceptedReviews = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/reviews');
+      const acceptedReviews = response.data.filter((review) => !review.pendingReview);
+      setAcceptedReviews(acceptedReviews);
+    } catch (error) {
+      console.error('Error fetching accepted reviews:', error);
     }
   };
 
@@ -189,39 +202,69 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
         </div>
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
-  <CommentsContainer>
-    {comments
-      .filter((comment) => comment.cluster_id === null)
-      .map((comment, index) => {
-        const clusteredComments = comments.filter(
-          (c) => c.cluster_id === comment.id
-        );
-        return (
-          <React.Fragment key={comment.id}>
-            {clusteredComments.length > 0 ? (
-              <CombinedCommentContainer>
-                <CommentBox
-                  comment={comment}
-                  index={index}
-                  clusteredComments={clusteredComments}
-                />
-                {/* <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <SummarizeButton comment={comment} />
-                </div> */}
-                <ReviewMessage> This change will be reviewed by a person in charge</ReviewMessage>
-              </CombinedCommentContainer>
-            ) : (
-              <CommentBox
-                comment={comment}
-                index={index}
-                clusteredComments={[]}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-  </CommentsContainer>
-</DragDropContext>
+        <CommentsContainer>
+        {comments
+          .filter((comment) => comment.cluster_id === null)
+          .map((comment, index) => {
+            const clusteredComments = comments.filter(
+              (c) => c.cluster_id === comment.id
+            );
+            
+            // Check if the cluster is accepted
+            const isClusterAccepted = acceptedReviews.some(
+              (review) => review.sourceId === comment.id
+            );
+
+            // Find the accepted review that matches the comment's sourceId
+            const acceptedReview = acceptedReviews.find(
+              (review) => review.sourceId === comment.id
+            );
+
+            return (
+              <React.Fragment key={comment.id}>
+                {clusteredComments.length > 0 ? (
+                  <CombinedCommentContainer>
+                    <CommentBox
+                      comment={comment}
+                      index={index}
+                      clusteredComments={clusteredComments}
+                    />
+                    {level === 'L0' ? (
+                      isClusterAccepted ? (
+                        <ReviewMessage>This change has been accepted and can be summarized by person in charge</ReviewMessage>
+                      ) : (
+                        <div>Summarization L0 view</div>
+                      )
+                    ) : (
+                      isClusterAccepted ? (
+                        acceptedReview ? (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <SummarizeButton
+                              comment={comment}
+                              clusteredComments={clusteredComments}
+                              reviewId={acceptedReview.id}
+                            />
+                          </div>
+                        ) : (
+                          <div>Summarization L1 view - Accepted but no review found</div>
+                        )
+                      ) : (
+                        <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
+                      )
+                    )}
+                  </CombinedCommentContainer>
+                ) : (
+                  <CommentBox
+                    comment={comment}
+                    index={index}
+                    clusteredComments={[]}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </CommentsContainer>
+        </DragDropContext>
       )}
       <Separator />
       <CommentBoxContainer>

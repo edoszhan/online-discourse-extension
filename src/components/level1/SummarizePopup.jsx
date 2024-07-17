@@ -1,5 +1,7 @@
 import React, { useState} from "react";
 import styled from "styled-components";
+import axios from "axios";
+
 
 const PopupContainer = styled.div`
   position: absolute;
@@ -31,12 +33,20 @@ const Header = styled.div`
   height: 30px;
 `;
 
-const SummarizePopup = ({ comment, onClose, buttonRef }) => {
-  const [summary, setSummary] = useState("");
+const SummarizePopup = ({ comment, onClose, buttonRef, summary, reviewId}) => {
+  const [localSummary, setSummary] = useState("");
 
-  const handleSummarize = () => {
-    // OpenAI call here
-    onClose();
+
+  const saveSummary = async () => {
+    try {
+      await axios.put(`http://localhost:8000/api/reviews/${reviewId}`, {
+        summary: summary,
+      });
+      console.log('Summary saved successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error saving summary:', error);
+    }
   };
 
   return (
@@ -52,7 +62,7 @@ const SummarizePopup = ({ comment, onClose, buttonRef }) => {
         <CloseButton onClick={onClose}>X</CloseButton>
       </Header>
       <p>
-        <strong>Suggested Summary:</strong> There was a general consensus that this is not the case in the article.
+        <strong>AI Suggested Summary:</strong> {summary || "There was a general consensus that this is not the case in the article."}
       </p>
       <textarea
         placeholder="Revise a summary"
@@ -61,7 +71,7 @@ const SummarizePopup = ({ comment, onClose, buttonRef }) => {
         style={{ width: "100%", height: "60px" }}
       />
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button style={{background:'#B5B5B5', color:'white'}} onClick={handleSummarize}>Summarize</button>
+        <button style={{background:'#B5B5B5', color:'white'}} onClick={saveSummary}>Save Summary</button>
       </div>
 
     </PopupContainer>
