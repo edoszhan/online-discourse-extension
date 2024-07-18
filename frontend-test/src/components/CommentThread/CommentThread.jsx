@@ -46,9 +46,9 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
     const draggedComment = comments.find((comment) => comment.id === draggableId);
     const originalOrder = comments.map((comment) => comment.id);
   
-    const getParentChildRelationship = (comments, newComments = []) => {
+    const getParentChildRelationship = (comments) => {
       const relationship = [];
-      const allComments = [...comments, ...newComments];
+      const allComments = [...comments];
       for (const comment of comments) {
         const commentObj = {
           id: comment.id,
@@ -56,14 +56,14 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
           children: [],
         };
         if (comment.children.length > 0) {
-          commentObj.children = getParentChildRelationship(comment.children, newComments);
+          commentObj.children = getParentChildRelationship(comment.children);
         }
         relationship.push(commentObj);
       }
       return relationship;
     };
   
-    const parentChildRelationship = getParentChildRelationship(comments, newComments);
+    const parentChildRelationship = getParentChildRelationship(comments);
   
     let updatedComments = [...comments];
   
@@ -143,7 +143,6 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
             </div>
           </>
         }
-        newComments={newComments}
       />
     );
   }
@@ -171,26 +170,20 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
         </div>
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="droppable-comments">
-            {(provided, snapshot) => (
-              <CommentsContainer ref={provided.innerRef} {...provided.droppableProps}>
-                {comments.map((comment, index) => (
-                  comment.children.length > 0 ? (
-                    <CombinedCommentContainer key={comment.id}>
-                      <CommentBox comment={comment} index={index} />
-                      {/* <ReviewMessage>This change will be reviewed by the person in charge.</ReviewMessage> */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <SummarizeButton comment={comment} />
-                       </div>
-                    </CombinedCommentContainer>
-                  ) : (
-                    <CommentBox key={comment.id} comment={comment} index={index} />
-                  )
-                ))}
-                {provided.placeholder}
-              </CommentsContainer>
-            )}
-          </Droppable>
+          <CommentsContainer>
+            {comments.map((comment, index) => (
+              comment.children.length > 0 ? (
+                <CombinedCommentContainer key={comment.id}>
+                  <CommentBox comment={comment} index={index} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <SummarizeButton comment={comment} />
+                  </div>
+                </CombinedCommentContainer>
+              ) : (
+                <CommentBox key={comment.id} comment={comment} index={index} />
+              )
+            ))}
+          </CommentsContainer>
         </DragDropContext>
       )}
       <Separator />
@@ -212,6 +205,7 @@ const CommentThread = ({ topic, onBack, userLevel = 1}) => {
     </div>
   );
 };
+
 
 export default CommentThread;
 
