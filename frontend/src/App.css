@@ -1,0 +1,63 @@
+.App {
+  text-align: center;
+  width: 300px;
+}
+
+.App-header {
+  background-color: #F0F1FA;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column; /*stack on top of each other*/
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: black;
+  width: 170px;
+  padding: 70px;
+}
+
+.role-selection {
+  margin-top: 20px;
+}
+
+.role-selection h2 {
+  margin-bottom: 10px;
+}
+
+.role-selection select {
+  margin-bottom: 20px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.userid-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px;
+}
+
+.userid-input input {
+  flex: 1;
+  margin-top: -10px;
+}
+
+.userid-input button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 28px;
+}
+
+.userid-selection {
+  margin-top: -10px;
+  margin-bottom: -30px;
+}
