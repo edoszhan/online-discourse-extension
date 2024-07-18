@@ -2,7 +2,6 @@ import React, { useState} from "react";
 import styled from "styled-components";
 import axios from "axios";
 
-
 const PopupContainer = styled.div`
   position: absolute;
   background-color: white;
@@ -66,7 +65,7 @@ const SummarizePopup = ({ comment, onClose, buttonRef, summary, reviewId}) => {
       </p>
       <textarea
         placeholder="Revise a summary"
-        value={summary}
+        value={localSummary}
         onChange={(e) => setSummary(e.target.value)}
         style={{ width: "100%", height: "60px" }}
       />

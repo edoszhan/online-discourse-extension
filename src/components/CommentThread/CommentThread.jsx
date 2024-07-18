@@ -3,10 +3,11 @@ import styled from 'styled-components';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import CommentBox from '../CommentBox/CommentBox';
 import './CommentThread.css';
-// import IMG from '../img/default-avatar-2.png';
 import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
+import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
+
 
 const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   const [comments, setComments] = useState([]);
@@ -28,6 +29,23 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     }
     setCommentCounter(countAllComments(comments));
   }, []);
+
+  const handleRefresh = async () => {
+    try {
+      // Fetch updated comments
+      const commentsResponse = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      const updatedComments = commentsResponse.data || [];
+      setComments(updatedComments);
+      setCommentCounter(countAllComments(updatedComments));
+  
+      // Fetch updated accepted reviews
+      const reviewsResponse = await axios.get('http://localhost:8000/api/reviews');
+      const updatedAcceptedReviews = reviewsResponse.data.filter((review) => !review.pendingReview);
+      setAcceptedReviews(updatedAcceptedReviews);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  };
 
   const fetchComments = async () => {
     try {
@@ -185,6 +203,10 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
         <BackIcon>&larr;</BackIcon>
         Back
       </BackButton>
+      {/* <RefreshButton onClick={handleRefresh}>
+        <RefreshIcon>&#x21bb;</RefreshIcon>
+        Refresh
+      </RefreshButton> */}
       <ThreadHeader className="thread-header">
         <h2>{topic}</h2>
       </ThreadHeader>
@@ -219,48 +241,67 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
             const acceptedReview = acceptedReviews.find(
               (review) => review.sourceId === comment.id
             );
+            if (acceptedReview) {
+              console.log("acceptedReview: ", acceptedReview);
+              if (acceptedReview.summary) {
+              console.log("acceptedReview.summary: ", acceptedReview.summary);
+              } else {
+                console.log("acceptedReview.summary: ", "No summary");
+              }
+            }
 
             return (
               <React.Fragment key={comment.id}>
-                {clusteredComments.length > 0 ? (
-                  <CombinedCommentContainer>
-                    <CommentBox
+        {clusteredComments.length > 0 ? (
+          <CombinedCommentContainer>
+            {acceptedReview && acceptedReview.summary ? (
+              <>
+              {console.log("Comment is accepted and has review")}
+              <SummaryCollapse
+                summary={acceptedReview.summary}
+                comment={comment}
+                clusteredComments={clusteredComments}
+              />
+              </>
+            ) : (
+              <CommentBox
+                comment={comment}
+                index={index}
+                clusteredComments={clusteredComments}
+              />
+            )}
+            {level === 'L0' ? (
+              isClusterAccepted ? (
+                <ReviewMessage>This change has been accepted and can be summarized by person in charge</ReviewMessage>
+              ) : (
+                <div>Summarization L0 view</div>
+              )
+            ) : (
+              isClusterAccepted ? (
+                acceptedReview ? (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <SummarizeButton
                       comment={comment}
-                      index={index}
                       clusteredComments={clusteredComments}
+                      reviewId={acceptedReview.id}
                     />
-                    {level === 'L0' ? (
-                      isClusterAccepted ? (
-                        <ReviewMessage>This change has been accepted and can be summarized by person in charge</ReviewMessage>
-                      ) : (
-                        <div>Summarization L0 view</div>
-                      )
-                    ) : (
-                      isClusterAccepted ? (
-                        acceptedReview ? (
-                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <SummarizeButton
-                              comment={comment}
-                              clusteredComments={clusteredComments}
-                              reviewId={acceptedReview.id}
-                            />
-                          </div>
-                        ) : (
-                          <div>Summarization L1 view - Accepted but no review found</div>
-                        )
-                      ) : (
-                        <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
-                      )
-                    )}
-                  </CombinedCommentContainer>
+                  </div>
                 ) : (
-                  <CommentBox
-                    comment={comment}
-                    index={index}
-                    clusteredComments={[]}
-                  />
-                )}
-              </React.Fragment>
+                  <div>Summarization L1 view - Accepted but no review found</div>
+                )
+              ) : (
+                <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
+              )
+            )}
+          </CombinedCommentContainer>
+        ) : (
+          <CommentBox
+            comment={comment}
+            index={index}
+            clusteredComments={[]}
+          />
+        )}
+      </React.Fragment>
             );
           })}
         </CommentsContainer>
@@ -406,4 +447,19 @@ const HeaderUnderline = styled.div`
   height: 2px;
   background-color: #5D6BE5;
   margin-bottom: 10px;
+`;
+
+const RefreshButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+`;
+
+const RefreshIcon = styled.span`
+  margin-right: 5px;
+  font-size: 15px;
 `;

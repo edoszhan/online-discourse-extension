@@ -32,7 +32,7 @@ const SummarizeButton = ({ comment, clusteredComments, reviewId}) => {
       <button ref={buttonRef} style={{ background: "green", color: "white" }} onClick={handleSummarize}>
         Summarize
       </button>
-      {showPopup && <SummarizePopup comment={comment} onClose={handlePopupClose} buttonRef={buttonRef} summary={summary} reviewId={reviewId}  />}
+      {showPopup && <SummarizePopup comment={comment} onClose={handlePopupClose} buttonRef={buttonRef} summary={summary} reviewId={reviewId} />}
     </div>
   );
 };
