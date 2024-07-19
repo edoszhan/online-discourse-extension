@@ -16,7 +16,7 @@ const SummarizeButton = ({ comment, clusteredComments, reviewId}) => {
       const commentsString = [comment.text, ...clusteredComments.map(comment => comment.text)].join('\n');
       console.log('Comments being sent to OpenAI:', commentsString);
 
-      const response = await axios.post('http://localhost:8000/summarize', {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/summarize`, {
         comments: commentsString,
       });
       const generatedSummary = response.data.summary;

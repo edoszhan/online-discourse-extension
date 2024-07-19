@@ -38,7 +38,7 @@ const SummarizePopup = ({ comment, onClose, buttonRef, summary, reviewId}) => {
 
   const saveSummary = async () => {
     try {
-      await axios.put(`http://localhost:8000/api/reviews/${reviewId}`, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewId}`, {
         summary: summary,
       });
       console.log('Summary saved successfully');

@@ -17,7 +17,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/reviews`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
       setReviews(response.data);
       console.log("Reviews:", response.data);
     } catch (error) {
@@ -27,7 +27,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
       setComments(response.data);
       console.log('Comments:', response.data);
     } catch (error) {
@@ -45,7 +45,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
           pendingReview:[...reviewObj.acceptedBy, userId].length < 2,
         };
   
-        await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`, updatedReviewObj);
   
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
@@ -53,7 +53,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
   
         if (updatedReviewObj.acceptedBy.length >= 2) {
           try {
-            await axios.put(`http://localhost:8000/api/comments/${threadId}/${reviewObj.destinationId}`, {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}/${reviewObj.destinationId}`, {
               cluster_id: reviewObj.sourceId,
             });
             fetchComments();
@@ -75,14 +75,14 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
       };
   
       try {
-        await axios.put(`http://localhost:8000/api/reviews/${reviewObj.id}`, updatedReviewObj);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`, updatedReviewObj);
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
   
         if (updatedReviewObj.deniedBy.length >= 2) {
           try {
-            await axios.delete(`http://localhost:8000/api/reviews/${reviewObj.id}`);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`);
             setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
           } catch (error) {
             console.error('Error deleting review:', error);

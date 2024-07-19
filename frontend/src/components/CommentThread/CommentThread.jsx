@@ -33,13 +33,13 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   const handleRefresh = async () => {
     try {
       // Fetch updated comments
-      const commentsResponse = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      const commentsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
       const updatedComments = commentsResponse.data || [];
       setComments(updatedComments);
       setCommentCounter(countAllComments(updatedComments));
   
       // Fetch updated accepted reviews
-      const reviewsResponse = await axios.get('http://localhost:8000/api/reviews');
+      const reviewsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
       const updatedAcceptedReviews = reviewsResponse.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(updatedAcceptedReviews);
     } catch (error) {
@@ -49,19 +49,20 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/comments/${threadId}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
       const data = response.data || []; 
       setComments(data);
       console.log(data);
       setCommentCounter(countAllComments(data));
     } catch (error) {
+      console.log('API URL:', process.env.REACT_APP_BACKEND_URL);
       console.error('Error fetching comments:', error);
     }
   };
 
   const fetchAcceptedReviews = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/reviews');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
     } catch (error) {
@@ -140,7 +141,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     console.log("reviewObJ in thread", reviewObj);
 
     try {
-      await axios.post('http://localhost:8000/api/reviews', reviewObj);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`, reviewObj);
       // await axios.put(`http://localhost:8000/api/comments/${threadId}/${draggableId}`, { cluster_id: destination.droppableId.split('-')[1] }); 
       window.localStorage.setItem('clusteringData', JSON.stringify(updatedComments));
       setReviewsList([...reviewsList, reviewObj]);
@@ -157,7 +158,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       try {
         console.log("user id when adding:", userId);
         const timestamp = new Date().toISOString();
-        const response = await axios.post('http://localhost:8000/api/comments', {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/comments`, {
           thread_id: threadId,
           text: newComment,
           author: userId,
@@ -252,56 +253,56 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
             return (
               <React.Fragment key={comment.id}>
-        {clusteredComments.length > 0 ? (
-          <CombinedCommentContainer>
-            {acceptedReview && acceptedReview.summary ? (
-              <>
-              {console.log("Comment is accepted and has review")}
-              <SummaryCollapse
-                summary={acceptedReview.summary}
-                comment={comment}
-                clusteredComments={clusteredComments}
-              />
-              </>
-            ) : (
-              <CommentBox
-                comment={comment}
-                index={index}
-                clusteredComments={clusteredComments}
-              />
-            )}
-            {level === 'L0' ? (
-              isClusterAccepted ? (
-                <ReviewMessage>This change has been accepted and can be summarized by person in charge</ReviewMessage>
-              ) : (
-                <div>Summarization L0 view</div>
-              )
-            ) : (
-              isClusterAccepted ? (
-                acceptedReview ? (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <SummarizeButton
-                      comment={comment}
-                      clusteredComments={clusteredComments}
-                      reviewId={acceptedReview.id}
-                    />
-                  </div>
+                {clusteredComments.length > 0 ? (
+                  <CombinedCommentContainer>
+                    {acceptedReview && acceptedReview.summary ? (
+                      <>
+                      {console.log("Comment is accepted and has review")}
+                      <SummaryCollapse
+                        summary={acceptedReview.summary}
+                        comment={comment}
+                        clusteredComments={clusteredComments}
+                      />
+                      </>
+                    ) : (
+                      <CommentBox
+                        comment={comment}
+                        index={index}
+                        clusteredComments={clusteredComments}
+                      />
+                    )}
+                    {level === 'L0' ? (
+                      isClusterAccepted ? (
+                        <ReviewMessage>This change has been accepted and summarized by person in charge</ReviewMessage>
+                      ) : (
+                        <div>This change is waiting acceptance and summarization </div>
+                      )
+                    ) : (
+                      isClusterAccepted ? (
+                        acceptedReview ? (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <SummarizeButton
+                              comment={comment}
+                              clusteredComments={clusteredComments}
+                              reviewId={acceptedReview.id}
+                            />
+                          </div>
+                        ) : (
+                          <div>Summarization L1 view - Accepted but no review found</div>
+                        )
+                      ) : (
+                        <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
+                      )
+                    )}
+                  </CombinedCommentContainer>
                 ) : (
-                  <div>Summarization L1 view - Accepted but no review found</div>
-                )
-              ) : (
-                <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
-              )
-            )}
-          </CombinedCommentContainer>
-        ) : (
-          <CommentBox
-            comment={comment}
-            index={index}
-            clusteredComments={[]}
-          />
-        )}
-      </React.Fragment>
+                  <CommentBox
+                    comment={comment}
+                    index={index}
+                    clusteredComments={[]}
+                  />
+                )}
+              </React.Fragment>
             );
           })}
         </CommentsContainer>
