@@ -40,6 +40,7 @@ async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
         upvotes=comment.upvotes,
         children=comment.children,
         cluster_id=comment.cluster_id
+        
     )
     db.add(db_comment)
     db.commit()
