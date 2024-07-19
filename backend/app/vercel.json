@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "app/main.py",
+      "src": "backend/app/main.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
@@ -11,7 +11,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "app/main.py" }
+    { "source": "/(.*)", "destination": "backend/app/main.py" }
   ],
   "headers": [
     {
