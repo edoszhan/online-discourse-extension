@@ -4,18 +4,19 @@ from typing import List  # Import List from typing
 from app.utils.database import get_db
 from app.models import Log
 from app.schemas import LogEntry
-import datetime
+from datetime import datetime
+from pytz import timezone
 
 router = APIRouter()
 
 @router.post("/log", response_model=LogEntry)
 async def create_log(log: LogEntry, db: Session = Depends(get_db)):
     db_log = Log(
-        id=str(datetime.datetime.now().timestamp()),
+        id=str(datetime.now(timezone('Asia/Seoul')).timestamp()),
         user_id=log.user_id,
         action=log.action,
         folder_name=log.folder_name,
-        timestamp=log.timestamp
+        timestamp=datetime.now(timezone('Asia/Seoul'))
     )
     db.add(db_log)
     db.commit()
