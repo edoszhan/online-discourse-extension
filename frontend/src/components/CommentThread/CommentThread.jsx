@@ -55,7 +55,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       console.log(data);
       setCommentCounter(countAllComments(data));
     } catch (error) {
-      console.log('API URL:', process.env.REACT_APP_BACKEND_URL);
       console.error('Error fetching comments:', error);
     }
   };
@@ -84,7 +83,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   };
 
   const onDragEnd = async (result) => {
-    console.log('Drag ended:', result);
     const { destination, source, draggableId } = result;
   
     if (!destination || source.droppableId === destination.droppableId) {
@@ -97,8 +95,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       console.log('Dragged comment not found');
       return;
     }
-
-    console.log('Dragged comment:', draggedComment);
 
     const originalOrder = comments.map((comment) => comment.id);
 
@@ -113,8 +109,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       return comment;
     })
 
-    console.log('Updated comments:', updatedComments);
-
     const newOrder = comments.map((comment) => {
       if (comment.id === parseInt(draggableId)) {
         return {
@@ -124,8 +118,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       }
       return comment;
     })
-
-    console.log('New order:', newOrder);
   
     const reviewObj = {
       prevOrder: originalOrder,
@@ -136,9 +128,8 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       acceptedBy: [],
       deniedBy: [],
       author: userId,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     };
-    console.log("reviewObJ in thread", reviewObj);
 
     try {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`, reviewObj);
@@ -156,8 +147,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
-        console.log("user id when adding:", userId);
-        const timestamp = new Date().toISOString();
+        const timestamp = new Date();
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/comments`, {
           thread_id: threadId,
           text: newComment,
@@ -242,13 +232,8 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
             const acceptedReview = acceptedReviews.find(
               (review) => review.sourceId === comment.id
             );
-            if (acceptedReview) {
-              console.log("acceptedReview: ", acceptedReview);
-              if (acceptedReview.summary) {
+            if (acceptedReview && acceptedReview.summary) {
               console.log("acceptedReview.summary: ", acceptedReview.summary);
-              } else {
-                console.log("acceptedReview.summary: ", "No summary");
-              }
             }
 
             return (
@@ -257,7 +242,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
                   <CombinedCommentContainer>
                     {acceptedReview && acceptedReview.summary ? (
                       <>
-                      {console.log("Comment is accepted and has review")}
                       <SummaryCollapse
                         summary={acceptedReview.summary}
                         comment={comment}

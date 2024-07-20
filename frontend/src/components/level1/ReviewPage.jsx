@@ -19,7 +19,6 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
       setReviews(response.data);
-      console.log("Reviews:", response.data);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
@@ -29,14 +28,12 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
       setComments(response.data);
-      console.log('Comments:', response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
   };
 
   const handleAccept = async (reviewObj) => {
-    console.log("Accepting review:", reviewObj);
     if (!reviewObj.acceptedBy.includes(userId)) {
       try {
         const updatedReviewObj = {
