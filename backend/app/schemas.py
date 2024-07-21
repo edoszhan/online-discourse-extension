@@ -32,7 +32,9 @@ class CommentResponse(CommentBase):
         
 
 class ThreadBase(BaseModel):
-    topic: str
+    website_url: str
+    topics: List[str]
+    questions: List[str]
 
 class ThreadCreate(ThreadBase):
     pass

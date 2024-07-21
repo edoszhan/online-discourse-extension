@@ -16,7 +16,9 @@ class Thread(Base):
     __tablename__ = "threads"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    topic = Column(String)
+    website_url = Column(String, index=True)
+    topics = Column(JSON)
+    questions = Column(JSON)
 
     comments = relationship("Comment", back_populates="thread")
     

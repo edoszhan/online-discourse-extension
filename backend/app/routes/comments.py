@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
 from typing import List
 from app.utils.database import get_db
@@ -7,8 +7,24 @@ from app.schemas import CommentCreate, CommentResponse
 from app.models import Thread, Comment, Review
 from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse, ReviewUpdate
 from datetime import datetime
+from urllib.parse import urlparse, unquote
 
 router = APIRouter()
+
+@router.get("/articles/{website_url:path}")
+async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
+    parsed_url = urlparse(website_url)
+    full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+    print(f"Received full website_url: {full_url}")
+
+    thread = db.query(Thread).filter(Thread.website_url == full_url).first()
+    if thread:
+        print(f"Found matching thread: {thread}")
+        return {"topics": thread.topics, "questions": thread.questions}
+    else:
+        print("No matching thread found")
+    
+    return {"topics": [], "questions": []}
 
 @router.options("/api/comments")
 async def comments_options():
