@@ -1,11 +1,4 @@
-// chrome.action.onClicked.addListener((tab) => {
-//     chrome.scripting.executeScript({
-//       target: { tabId: tab.id },
-//       files: ['./content/contentScript.js']
-//     });
-//   });
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request) => {
   console.log('Message received in background:', request);
 
   if (request.action === 'EXTRACT_ARTICLE_TEXT') {
@@ -31,16 +24,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true; 
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request) => {
   if (request.type === 'ARTICLE_TEXT_EXTRACTED') {
-    const extractedText = request.text;
-    console.log('reached extraction');
+    const { text, url } = request;
     fetch('http://localhost:8000/generate-topics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ text: extractedText })
+      body: JSON.stringify({ text, url})
     })
     .then(response => response.json())
     .then(data => {
