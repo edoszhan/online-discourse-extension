@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import CommentBox from '../CommentBox/CommentBox';
@@ -7,7 +7,6 @@ import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
 import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
-
 
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
 
@@ -19,6 +18,9 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const [acceptedReviews, setAcceptedReviews] = useState([]);
 
+  const [replyingTo, setReplyingTo] = useState(null);
+  const commentInputRef = useRef(null); // textarea
+
   useEffect(() => {
     fetchComments();
     fetchAcceptedReviews();
@@ -28,6 +30,13 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     }
     setCommentCounter(countAllComments(comments));
   }, []);
+
+
+  useEffect(() => {
+    if (replyingTo) {
+      commentInputRef.current.focus();
+    }
+  }, [replyingTo]);
 
   const fetchComments = async () => {
     try {
@@ -134,18 +143,27 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           text: newComment,
           author: userId,
           timestamp: timestamp,
-          upvotes: 0,
+          upvotes: [],
           children: [],
           cluster_id: null,
-          article_id: articleId
+          article_id: articleId,
+          children_id: replyingTo ? replyingTo : null,
         });
         setComments([...comments, response.data]);
         setNewComment('');
         setCommentCounter(commentCounter + 1);
+        setReplyingTo(null);
       } catch (error) {
         console.error('Error adding comment:', error);
       }
     }
+  };
+   
+  // for replies
+  const handleReplyClick = (commentId) => {
+    console.log("replying to", commentId || null);
+    setTimeout(() => commentInputRef.current.focus(), 0);
+    setReplyingTo(commentId);
   };
 
   if (showReviewPage && level === "L1") {
@@ -226,16 +244,20 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       </>
                     ) : (
                       <CommentBox
+                        articleId={articleId}
+                        threadId={threadId}
                         comment={comment}
                         index={index}
                         clusteredComments={clusteredComments}
+                        userId={userId}
+                        onReplyClick={handleReplyClick}
                       />
                     )}
                     {level === 'L0' ? (
                       isClusterAccepted ? (
                         <ReviewMessage>This change has been accepted and summarized by person in charge</ReviewMessage>
                       ) : (
-                        <div>This change is waiting acceptance and summarization </div>
+                        <ReviewMessage>This change is waiting acceptance and summarization </ReviewMessage>
                       )
                     ) : (
                       isClusterAccepted ? (
@@ -250,7 +272,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                             />
                           </div>
                         ) : (
-                          <div>Summarization L1 view - Accepted but no review found</div>
+                          <ReviewMessage>Summarization L1 view - Accepted but no review found</ReviewMessage>
                         )
                       ) : (
                         <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
@@ -259,9 +281,13 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                   </CombinedCommentContainer>
                 ) : (
                   <CommentBox
+                    articleId={articleId}
+                    threadId={threadId}
                     comment={comment}
                     index={index}
                     clusteredComments={[]}
+                    userId={userId}
+                    onReplyClick={handleReplyClick}
                   />
                 )}
               </React.Fragment>
@@ -275,6 +301,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         <UserProfile src={chrome.runtime.getURL('/static/media/default-avatar-2.png')} alt="User Profile" />
         <CommentInputContainer>
           <CommentInput
+           ref={commentInputRef}
             placeholder="Add a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AiOutlineLike, AiFillLike, AiOutlineMessage } from "react-icons/ai";
+import axios from 'axios';
 
 const CommentContainer = styled.div`
   display: flex;
@@ -9,7 +10,8 @@ const CommentContainer = styled.div`
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: ${(props) => (props.isCombined ? 'transparent' : 'white')}; 
+  background-color: ${(props) =>
+    props.isReplying ? '#9bbcc7' : props.isCombined ? 'transparent' : 'white'};
   opacity: ${(props) => (props.isDragging ? '0.5' : '1')}; 
 `;
 
@@ -100,13 +102,16 @@ const IconWrapper = styled.span`
   justify-content: flex-end;
 `;
 
-const Comment = ({ comment, isCombined, isDragging, isReplyDisabled }) => {
+const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick  }) => {
   if (!comment) {
     return null;
   }
 
-  const [upvotes, setUpvotes] = useState(comment.upvotes || 0);
-  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvotes, setUpvotes] = useState(comment.upvotes || []);
+  const [hasUpvoted, setHasUpvoted] = useState(
+    Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
+  );  
+  const [isReplying, setIsReplying] = useState(false);
 
   const authorInitial = comment.author ? comment.author.charAt(0).toUpperCase() : 'A';
 
@@ -119,13 +124,50 @@ const Comment = ({ comment, isCombined, isDragging, isReplyDisabled }) => {
     hour12: true
   });
 
-  const handleUpvote = () => {
+  const addUpvote = async () => {
+    const updatedUpvotes = Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
+    ? comment.upvotes.filter((id) => id !== userId)
+    : Array.isArray(comment.upvotes)
+      ? [...comment.upvotes, userId]
+      : [userId];
+
     setHasUpvoted(!hasUpvoted);
-    setUpvotes(hasUpvoted ? upvotes - 1 : upvotes + 1);
+    setUpvotes(updatedUpvotes);
+  
+    try {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${comment.id}`, {
+        upvotes: updatedUpvotes,
+      });
+    } catch (error) {
+      console.error('Error updating upvotes:', error);
+    }
   };
 
+
+  const handleReplyClick = () => {
+    setIsReplying(true);
+    onReplyClick(comment.id); 
+  };
+  const handleCancelReply = () => {
+    setIsReplying(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isReplying && !event.target.closest(".comment-container") && !event.target.closest(".comment-input")) {
+        handleCancelReply();
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+  
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isReplying]);
+
   return (
-    <CommentContainer isDragging={isDragging}>
+    <CommentContainer isDragging={isDragging} isReplying={isReplying}>
       <UserLogo>{authorInitial}</UserLogo>
       <CommentContent isCombined={isCombined} isDragging={isDragging}>
         <CommentDetails>
@@ -136,13 +178,13 @@ const Comment = ({ comment, isCombined, isDragging, isReplyDisabled }) => {
         <CommentText>{comment?.text || ''}</CommentText>
         <CommentActions>
           {!isReplyDisabled && (
-            <ReplyButton>
+             <ReplyButton onClick={handleReplyClick}>
               <AiOutlineMessage style={{ marginRight: '5px' }} />
               Reply
             </ReplyButton>
           )}
-          <UpvoteButton onClick={handleUpvote} className={hasUpvoted ? 'active' : ''}>
-           <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes} </IconWrapper> 
+          <UpvoteButton onClick={addUpvote} className={hasUpvoted ? 'active' : ''}>
+           <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes.length || 0} </IconWrapper> 
           </UpvoteButton>
         </CommentActions>
       </CommentContent>

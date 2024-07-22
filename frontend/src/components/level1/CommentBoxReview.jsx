@@ -14,7 +14,7 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ comment, clusteredComments, isReplyDisabled }) => {
+const CommentBox = ({comment, clusteredComments, isReplyDisabled }) => {
   // remember that we are not changing isReplayDisabled
   return (
     <CommentBoxContainer>

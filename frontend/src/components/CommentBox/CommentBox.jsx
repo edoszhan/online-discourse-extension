@@ -16,7 +16,7 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ comment, index, isDraggingOver, clusteredComments }) => {
+const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clusteredComments, userId,  onReplyClick }) => {
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
   return (
@@ -38,26 +38,37 @@ const CommentBox = ({ comment, index, isDraggingOver, clusteredComments }) => {
                 {clusteredComments.length > 0 ? (
                   <ClusteredCommentsContainer>
                     <Comment
+                      articleId={articleId}
+                      threadId={threadId}
                       comment={comment}
                       isCombined={true}
                       isDragging={snapshot.isDragging}
                       isReplyDisabled={false}
+                      userId={userId}
+                      onReplyClick={onReplyClick}
                     />
                     {clusteredComments.map((child, childIndex) => (
                       <CommentBox
                         key={child.id}
+                        articleId={articleId}
+                        threadId={threadId}
                         comment={child}
                         index={childIndex}
                         clusteredComments={[]}
+                        userId={userId}
                       />
                     ))}
                   </ClusteredCommentsContainer>
                 ) : (
                   <Comment
+                    articleId={articleId}
+                    threadId={threadId}
                     comment={comment}
                     isCombined={false}
                     isDragging={snapshot.isDragging}
                     isReplyDisabled={false}
+                    userId={userId}
+                    onReplyClick={onReplyClick}
                   />
                 )}
               </div>
