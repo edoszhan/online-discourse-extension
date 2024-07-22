@@ -33,6 +33,7 @@ class Comment(Base):
     upvotes = Column(Integer, default=0)
     children = Column(JSON, default=[])
     cluster_id = Column(Integer, nullable=True) 
+    article_id = Column(Integer, nullable=True)
 
     thread = relationship("Thread", back_populates="comments")
     
@@ -50,3 +51,5 @@ class Review(Base):
     author = Column(String)
     timestamp = Column(TIMESTAMP, default=lambda: datetime.now(timezone('Asia/Seoul')))
     summary = Column(String)
+    article_id= Column(Integer)
+    thread_id= Column(Integer)

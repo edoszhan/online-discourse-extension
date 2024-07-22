@@ -19,6 +19,7 @@ class CommentBase(BaseModel):
     upvotes: int
     children: List = []
     cluster_id: Optional[int] = None 
+    article_id: Optional[int] = None
 
 class CommentCreate(CommentBase):
     thread_id: int
@@ -73,6 +74,8 @@ class ReviewResponse(ReviewBase):
     author: str
     timestamp: datetime 
     summary: Optional[str] = None
+    article_id: int
+    thread_id: int
 
     class Config:
         from_attributes = True

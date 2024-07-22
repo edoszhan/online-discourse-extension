@@ -11,43 +11,54 @@ from urllib.parse import urlparse, unquote
 
 router = APIRouter()
 
-@router.get("/articles/{website_url:path}")
-async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
-    parsed_url = urlparse(website_url)
-    full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
-    print(f"Received full website_url: {full_url}")
+@router.get("/articles/{article_id}/comments/{thread_id}", response_model=List[CommentResponse])
+async def read_comments(article_id: int, thread_id: int, db: Session = Depends(get_db)):
+    comments = db.query(Comment).filter(Comment.article_id == article_id, Comment.thread_id == thread_id).all()
+    return comments
 
-    thread = db.query(Thread).filter(Thread.website_url == full_url).first()
-    if thread:
-        print(f"Found matching thread: {thread}")
-        return {"topics": thread.topics, "questions": thread.questions}
-    else:
-        print("No matching thread found")
-    
-    return {"topics": [], "questions": []}
+@router.get("/articles/{article_id}/reviews/{thread_id}", response_model=List[ReviewResponse]) #updated
+async def get_reviews(article_id: int, thread_id: int, db: Session = Depends(get_db)):
+    reviews = db.query(Review).filter(Review.article_id== article_id, Review.thread_id == thread_id).all()
+    return [
+        ReviewResponse(
+            id=review.id,
+            prevOrder=review.prev_order,
+            newOrder=review.new_order,
+            sourceId=review.source_id,
+            destinationId=review.destination_id,
+            pendingReview=review.pending_review,
+            acceptedBy=review.accepted_by,
+            deniedBy=review.denied_by,
+            author=review.author,
+            timestamp=review.timestamp,
+            summary=review.summary,
+            article_id = review.article_id,
+            thread_id=review.thread_id
+        )
+        for review in reviews
+    ]
+
 
 @router.options("/api/comments")
 async def comments_options():
     return Response(status_code=200)
 
-@router.post("/threads", response_model=ThreadResponse)
+@router.post("/threads", response_model=ThreadResponse) #updated
 async def create_thread(thread: ThreadCreate, db: Session = Depends(get_db)):
-    db_thread = Thread(topic=thread.topic)
+    db_thread = Thread(
+        website_url=thread.website_url,
+        topics=thread.topics,
+        questions=thread.questions
+    )
     db.add(db_thread)
     db.commit()
     db.refresh(db_thread)
     return db_thread
 
-@router.get("/threads/{thread_id}", response_model=ThreadResponse)
-async def read_thread(thread_id: int, db: Session = Depends(get_db)):
-    db_thread = db.query(Thread).filter(Thread.id == thread_id).first()
-    if db_thread is None:
-        raise HTTPException(status_code=404, detail="Thread not found")
-    return db_thread
 
 # COMMENTS CALLS
-@router.post("/comments", response_model=CommentResponse)
-async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
+@router.post("/articles/{article_id}/{thread_id}/comments", response_model=CommentResponse) #updated
+async def create_comment(article_id: int, thread_id: int, comment: CommentCreate, db: Session = Depends(get_db)):
     db_comment = Comment(
         thread_id=comment.thread_id,
         text=comment.text,
@@ -55,7 +66,8 @@ async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
         timestamp=comment.timestamp,
         upvotes=comment.upvotes,
         children=comment.children,
-        cluster_id=comment.cluster_id
+        cluster_id=comment.cluster_id,
+        article_id=article_id
         
     )
     db.add(db_comment)
@@ -63,9 +75,9 @@ async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
     db.refresh(db_comment)
     return db_comment
 
-@router.get("/comments/{thread_id}", response_model=List[CommentResponse])
-async def read_comments(thread_id: int, db: Session = Depends(get_db)):
-    comments = db.query(Comment).filter(Comment.thread_id == thread_id).all()
+@router.get("/articles/{article_id}/comments/{thread_id}", response_model=List[CommentResponse]) #updated
+async def read_comments(article_id: int, thread_id: int, db: Session = Depends(get_db)):
+    comments = db.query(Comment).filter(Comment.article_id == article_id, Comment.thread_id == thread_id).all()
     return comments
 
 
@@ -75,9 +87,13 @@ async def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Comment deleted 2 successfully"}
 
-@router.put("/comments/{thread_id}/{comment_id}", response_model=CommentResponse)
-async def update_comment(thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
-    db_comment = db.query(Comment).filter(Comment.thread_id == thread_id, Comment.id == comment_id).first()
+@router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
+async def update_comment(article_id: int, thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
+    db_comment = db.query(Comment).filter(
+        Comment.article_id == article_id,
+        Comment.thread_id == thread_id,
+        Comment.id == comment_id
+    ).first()
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
 
@@ -99,17 +115,17 @@ async def update_comment(thread_id: int, comment_id: int, update_data: dict, db:
     return db_comment
 
 
-@router.get("/comments/{thread_id}/{comment_id}", response_model=CommentResponse)
-async def read_comment(thread_id: int, comment_id: int, db: Session = Depends(get_db)):
-    comment = db.query(Comment).filter(Comment.thread_id == thread_id, Comment.id == comment_id).first()
+@router.get("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
+async def read_comment(article_id: int, thread_id: int, comment_id: int, db: Session = Depends(get_db)):
+    comment = db.query(Comment).filter(Comment.thread_id == thread_id, Comment.id == comment_id, Comment.article_id == article_id).first()
     if comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
 
 
 # REVIEWS CALLS
-@router.post("/reviews", response_model=ReviewResponse)
-async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
+@router.post("/articles/{article_id}/reviews/{thread_id}", response_model=ReviewResponse) #updated
+async def create_review(article_id: int, thread_id: int, review: ReviewCreate, db: Session = Depends(get_db)):
     print(f"Received review data: {review}")
     
     review.new_order_dicts = [comment.model_dump() for comment in review.newOrder]
@@ -118,6 +134,8 @@ async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     
     try:
         db_review = Review(
+            article_id=article_id,
+            thread_id=thread_id,
             prev_order=review.prevOrder,
             new_order=review.new_order_dicts,
             source_id=review.sourceId,
@@ -142,35 +160,21 @@ async def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
             acceptedBy=db_review.accepted_by,
             deniedBy=db_review.denied_by,
             author=db_review.author,
-            timestamp=db_review.timestamp
+            timestamp=db_review.timestamp,
+            article_id=db_review.article_id,
+            thread_id=db_review.thread_id
         )
     except Exception as e:
         print(f"Error creating review: {e}")
         raise HTTPException(status_code=422, detail=str(e))
 
-@router.get("/reviews", response_model=List[ReviewResponse])
-async def get_reviews(db: Session = Depends(get_db)):
-    reviews = db.query(Review).all()
-    return [
-        ReviewResponse(
-            id=review.id,
-            prevOrder=review.prev_order,
-            newOrder=review.new_order,
-            sourceId=review.source_id,
-            destinationId=review.destination_id,
-            pendingReview=review.pending_review,
-            acceptedBy=review.accepted_by,
-            deniedBy=review.denied_by,
-            author=review.author,
-            timestamp=review.timestamp,
-            summary=review.summary
-        )
-        for review in reviews
-    ]
     
-@router.get("/reviews/{review_id}", response_model=ReviewResponse)
-async def get_review(review_id: int, db: Session = Depends(get_db)):
-    review = db.query(Review).filter(Review.id == review_id).first()
+@router.get("/articles/{article_id}/thread_id/reviews/{review_id}", response_model=ReviewResponse) #updated
+async def get_review(article_id: int, thread_id: int, review_id: int, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(Review.id == review_id,
+                                     Review.article_id == article_id,
+                                     Review.thread_id == thread_id
+                                     ).first()
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
     return ReviewResponse(
@@ -196,9 +200,13 @@ async def delete_review(review_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Review deleted successfully"}
 
-@router.put("/reviews/{review_id}", response_model=ReviewResponse)
-async def update_review(review_id: int, updated_review: ReviewUpdate, db: Session = Depends(get_db)):
-    review = db.query(Review).filter(Review.id == review_id).first()
+@router.put("/articles/{article_id}/{thread_id}/reviews/{review_id}", response_model=ReviewResponse) #updated
+async def update_review(article_id: int, thread_id: int, review_id: int, updated_review: ReviewUpdate, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(
+        Review.id == review_id,
+        Review.article_id == article_id,
+        Review.thread_id == thread_id
+    ).first()
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
 
@@ -208,19 +216,13 @@ async def update_review(review_id: int, updated_review: ReviewUpdate, db: Sessio
     if updated_review.acceptedBy is not None:
         review.accepted_by = updated_review.acceptedBy
         review.pending_review = len(updated_review.acceptedBy) < 2
-        print(f"Updated acceptedBy: {review.accepted_by}")
-        print(f"Updated pendingReview: {review.pending_review}")
     if updated_review.deniedBy is not None:
         review.denied_by = updated_review.deniedBy
-        print(f"Updated deniedBy: {review.denied_by}")
     if updated_review.summary is not None:
         review.summary = updated_review.summary
-        print(f"Updated summary: {review.summary}")
 
     db.commit()
     db.refresh(review)
-
-    print(f"Updated review: {review}")
 
     return ReviewResponse(
         id=review.id,
@@ -233,7 +235,19 @@ async def update_review(review_id: int, updated_review: ReviewUpdate, db: Sessio
         deniedBy=review.denied_by,
         author=review.author,
         timestamp=review.timestamp,
-        summary=review.summary
+        summary=review.summary,
+        article_id=review.article_id,
+        thread_id=review.thread_id
     )
 
+@router.get("/{website_url:path}")
+async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
+    parsed_url = urlparse(website_url)
+    full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
 
+    thread = db.query(Thread).filter(Thread.website_url == full_url).first()
+    if thread:
+        print(f"Thread found: {thread.id}")
+        return {"topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
+    
+    return {"topics": [], "questions": [], "article_id": None}
