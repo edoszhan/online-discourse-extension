@@ -6,15 +6,18 @@ import axios from 'axios';
 function CommentSection({userId, level}) {
   const [topics, setTopics] = useState([]);
   const [articleId, setArticleId] = useState(null);
-  const colors = ["#5D6BE5", "#84D2C4", "#FC9CF2"];
+  const colors = ["#5D6BE5", "#84D2C4", "#FC9CF2", "#2596be"];
   const [selectedThread, setSelectedThread] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
     const fetchTopics = async () => {
       try {
         const currentUrl = window.location.href;
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/${encodeURIComponent(currentUrl)}`);
-        setTopics(response.data.topics);
+        setTopics(response.data.topics || []);
+        setQuestions(response.data.questions|| [])
+        console.log("response questions:", response.data.questions);
         console.log("response article_id:", response.data.article_id);
         setArticleId(response.data.article_id);
       } catch (error) {
@@ -26,7 +29,7 @@ function CommentSection({userId, level}) {
   }, []);
 
   const handleThreadClick = (topic) => {
-    setSelectedThread({ id: topic.id, topic: topic.text });
+    setSelectedThread({ id: topic.id, topic: topic.text, question: questions[topic.id-1] || "Question Placeholder", color: topic.color || "#FFFFFF" });
   };
 
 
@@ -38,12 +41,12 @@ function CommentSection({userId, level}) {
           <div className="thread-list" style={{ display: 'flex' }}>
             {topics.map((topic, idx) => (
               <div key={idx} style={{ display: "flex", flexDirection: "column", width: '33%', margin: "5px" }}>
-                <div style={{ display: "flex", borderBottom: `3px solid ${colors[idx]}`, height: "50px", alignItems: "center", marginBottom: "15px" }}>
+                <div style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px" }}>
                   {topic}
                 </div>
                 <div
                   className="thread-box"
-                  onClick={() => handleThreadClick({ id: idx, text: topic })}
+                  onClick={() => handleThreadClick({id: idx + 1, text: topic, color: colors[idx % colors.length]})}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9" }}
                 >
                   <b>No Comments</b>
@@ -56,13 +59,15 @@ function CommentSection({userId, level}) {
         </div>
       ) : (
         <CommentThread
-         articleId={articleId} 
-         question={selectedThread.question}
-         threadId={selectedThread.id}
-         topic={selectedThread.topic} 
-         onBack={() => setSelectedThread(null)}
-         level={level}
-         userId={userId}/>
+          articleId={articleId}
+          question={selectedThread.question}
+          threadId={selectedThread.id}
+          topic={selectedThread.topic}
+          onBack={() => setSelectedThread(null)}
+          level={level}
+          userId={userId}
+          color={selectedThread.color}
+        />
       )}
     </div>
   );

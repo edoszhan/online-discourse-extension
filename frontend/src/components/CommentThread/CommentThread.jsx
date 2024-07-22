@@ -9,7 +9,8 @@ import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
 
 
-const CommentThread = ({ articleId, threadId, topic, onBack, level, userId}) => {
+const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
+
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
@@ -17,8 +18,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId}) => 
   const [reviewsList, setReviewsList] = useState([]);
 
   const [acceptedReviews, setAcceptedReviews] = useState([]);
-
-  const randomQuestion = "How has the collective action of doctors, particularly residents, affected patient care and hospital operations over the past three months?";
 
   useEffect(() => {
     fetchComments();
@@ -29,23 +28,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId}) => 
     }
     setCommentCounter(countAllComments(comments));
   }, []);
-
-  // const handleRefresh = async () => {
-  //   try {
-  //     // Fetch updated comments
-  //     const commentsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
-  //     const updatedComments = commentsResponse.data || [];
-  //     setComments(updatedComments);
-  //     setCommentCounter(countAllComments(updatedComments));
-  
-  //     // Fetch updated accepted reviews
-  //     const reviewsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews`);
-  //     const updatedAcceptedReviews = reviewsResponse.data.filter((review) => !review.pendingReview);
-  //     setAcceptedReviews(updatedAcceptedReviews);
-  //   } catch (error) {
-  //     console.error('Error refreshing data:', error);
-  //   }
-  // };
 
   const fetchComments = async () => {
     try {
@@ -195,15 +177,11 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId}) => 
         <BackIcon>&larr;</BackIcon>
         Back
       </BackButton>
-      {/* <RefreshButton onClick={handleRefresh}>
-        <RefreshIcon>&#x21bb;</RefreshIcon>
-        Refresh
-      </RefreshButton> */}
       <ThreadHeader className="thread-header">
         <h2>{topic}</h2>
       </ThreadHeader>
-      <div className="heading-underline"></div>
-      <div className="random-question">{randomQuestion}</div>
+      <div className="heading-underline" style={{ backgroundColor: color }}></div>
+      <div className="random-question">{question}</div>
       <div style={{ display: 'flex', justifyContent:'space-between', alignItems: 'center' }}>
       {comments && comments.length > 0 && <div className="comment-count">{commentCounter} comments</div>}
       {level === "L1" && (
@@ -430,7 +408,7 @@ const ReviewButton = styled.button`
 const HeaderUnderline = styled.div`
   width: 120%;
   height: 2px;
-  background-color: #5D6BE5;
+  background-color: ${(props) => props.color};
   margin-bottom: 10px;
 `;
 

@@ -41,6 +41,7 @@ const CommentBox = ({ comment, index, isDraggingOver, clusteredComments }) => {
                       comment={comment}
                       isCombined={true}
                       isDragging={snapshot.isDragging}
+                      isReplyDisabled={false}
                     />
                     {clusteredComments.map((child, childIndex) => (
                       <CommentBox
@@ -56,6 +57,7 @@ const CommentBox = ({ comment, index, isDraggingOver, clusteredComments }) => {
                     comment={comment}
                     isCombined={false}
                     isDragging={snapshot.isDragging}
+                    isReplyDisabled={false}
                   />
                 )}
               </div>

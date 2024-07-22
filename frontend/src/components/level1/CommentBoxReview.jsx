@@ -14,19 +14,19 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ comment }) => {
-
+const CommentBox = ({ comment, clusteredComments, isReplyDisabled }) => {
+  // remember that we are not changing isReplayDisabled
   return (
     <CommentBoxContainer>
-      {comment.children.length > 0 ? (
+      {clusteredComments.length > 0 ? (
         <ClusteredCommentsContainer>
-          <Comment comment={comment} isCombined={true} isDragging={false} />
-          {comment.children.map((child) => (
-            <CommentBox key={child.id} comment={child} />
+          <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={isReplyDisabled} />
+          {clusteredComments.map((child) => (
+            <CommentBox key={child.id} comment={child} clusteredComments={[]} isReplyDisabled={isReplyDisabled} />
           ))}
         </ClusteredCommentsContainer>
       ) : (
-        <Comment comment={comment} isCombined={false} isDragging={false} />
+        <Comment comment={comment} isCombined={false} isDragging={false} isReplyDisabled={isReplyDisabled} />
       )}
     </CommentBoxContainer>
   );

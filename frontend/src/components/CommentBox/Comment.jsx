@@ -100,7 +100,7 @@ const IconWrapper = styled.span`
   justify-content: flex-end;
 `;
 
-const Comment = ({ comment, isCombined, isDragging }) => {
+const Comment = ({ comment, isCombined, isDragging, isReplyDisabled }) => {
   if (!comment) {
     return null;
   }
@@ -120,7 +120,6 @@ const Comment = ({ comment, isCombined, isDragging }) => {
   });
 
   const handleUpvote = () => {
-    console.log('Upvote clicked');
     setHasUpvoted(!hasUpvoted);
     setUpvotes(hasUpvoted ? upvotes - 1 : upvotes + 1);
   };
@@ -136,10 +135,12 @@ const Comment = ({ comment, isCombined, isDragging }) => {
         </CommentDetails>
         <CommentText>{comment?.text || ''}</CommentText>
         <CommentActions>
-          <ReplyButton>
-            <AiOutlineMessage style={{ marginRight: '5px' }} />
-            Reply
-          </ReplyButton>
+          {!isReplyDisabled && (
+            <ReplyButton>
+              <AiOutlineMessage style={{ marginRight: '5px' }} />
+              Reply
+            </ReplyButton>
+          )}
           <UpvoteButton onClick={handleUpvote} className={hasUpvoted ? 'active' : ''}>
            <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes} </IconWrapper> 
           </UpvoteButton>

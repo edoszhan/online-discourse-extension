@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-// import CommentBox from './CommentBoxReview';
-import CommentBox from '../CommentBox/CommentBox';
+import CommentBox from './CommentBoxReview';
+// import CommentBox from '../CommentBox/CommentBox';
 import './ReviewPage.css';
+import AcceptedPopup from './AcceptedPopup';
 
 const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [reviews, setReviews] = useState([]);
   const [comments, setComments] = useState([]);
+  const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
 
   useEffect(() => {
     fetchReviews();
@@ -53,6 +55,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
               cluster_id: reviewObj.sourceId,
             });
             fetchComments();
+            setShowAcceptedPopup(true); 
           } catch (error) {
             console.error('Error updating comment:', error);
           }
@@ -88,6 +91,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         console.error('Error updating review:', error);
       }
     }
+  };
+
+  const handleClosePopup = () => {
+    setShowAcceptedPopup(false);
   };
 
   return (
@@ -195,6 +202,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           </div>
         ))}
       </ReviewSection>
+      {showAcceptedPopup && <AcceptedPopup onClose={handleClosePopup} />}
     </ReviewPageContainer>
   );
 };
