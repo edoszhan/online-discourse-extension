@@ -9,7 +9,7 @@ import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
 
 
-const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
+const CommentThread = ({ articleId, threadId, topic, onBack, level, userId}) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
@@ -30,29 +30,28 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     setCommentCounter(countAllComments(comments));
   }, []);
 
-  const handleRefresh = async () => {
-    try {
-      // Fetch updated comments
-      const commentsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
-      const updatedComments = commentsResponse.data || [];
-      setComments(updatedComments);
-      setCommentCounter(countAllComments(updatedComments));
+  // const handleRefresh = async () => {
+  //   try {
+  //     // Fetch updated comments
+  //     const commentsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
+  //     const updatedComments = commentsResponse.data || [];
+  //     setComments(updatedComments);
+  //     setCommentCounter(countAllComments(updatedComments));
   
-      // Fetch updated accepted reviews
-      const reviewsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
-      const updatedAcceptedReviews = reviewsResponse.data.filter((review) => !review.pendingReview);
-      setAcceptedReviews(updatedAcceptedReviews);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  };
+  //     // Fetch updated accepted reviews
+  //     const reviewsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews`);
+  //     const updatedAcceptedReviews = reviewsResponse.data.filter((review) => !review.pendingReview);
+  //     setAcceptedReviews(updatedAcceptedReviews);
+  //   } catch (error) {
+  //     console.error('Error refreshing data:', error);
+  //   }
+  // };
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       const data = response.data || []; 
       setComments(data);
-      console.log(data);
       setCommentCounter(countAllComments(data));
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -61,7 +60,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
 
   const fetchAcceptedReviews = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
     } catch (error) {
@@ -92,7 +91,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     const draggedComment = comments.find((comment) => comment.id === draggedCommentId);
 
     if (!draggedComment){
-      console.log('Dragged comment not found');
       return;
     }
 
@@ -129,11 +127,12 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
       deniedBy: [],
       author: userId,
       timestamp: new Date(),
+      article_id: articleId, 
+      thread_id: threadId 
     };
 
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`, reviewObj);
-      // await axios.put(`http://localhost:8000/api/comments/${threadId}/${draggableId}`, { cluster_id: destination.droppableId.split('-')[1] }); 
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
       window.localStorage.setItem('clusteringData', JSON.stringify(updatedComments));
       setReviewsList([...reviewsList, reviewObj]);
       setComments(updatedComments);
@@ -148,7 +147,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
     if (newComment.trim()) {
       try {
         const timestamp = new Date();
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/comments`, {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/comments`, {
           thread_id: threadId,
           text: newComment,
           author: userId,
@@ -156,6 +155,7 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
           upvotes: 0,
           children: [],
           cluster_id: null,
+          article_id: articleId
         });
         setComments([...comments, response.data]);
         setNewComment('');
@@ -169,8 +169,9 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
   if (showReviewPage && level === "L1") {
     return (
       <ReviewPage 
-        onBack={() => setShowReviewPage(false)} 
+        articleId={articleId}
         threadId={threadId}
+        onBack={() => setShowReviewPage(false)} 
         userId={userId}
         header={
           <>
@@ -232,9 +233,6 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
             const acceptedReview = acceptedReviews.find(
               (review) => review.sourceId === comment.id
             );
-            if (acceptedReview && acceptedReview.summary) {
-              console.log("acceptedReview.summary: ", acceptedReview.summary);
-            }
 
             return (
               <React.Fragment key={comment.id}>
@@ -266,6 +264,8 @@ const CommentThread = ({ threadId, topic, onBack, level, userId}) => {
                         acceptedReview ? (
                           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <SummarizeButton
+                              articleId={articleId}
+                              threadId={threadId}
                               comment={comment}
                               clusteredComments={clusteredComments}
                               reviewId={acceptedReview.id}

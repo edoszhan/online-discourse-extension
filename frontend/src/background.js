@@ -1,8 +1,5 @@
 chrome.runtime.onMessage.addListener((request) => {
-  console.log('Message received in background:', request);
-
   if (request.action === 'EXTRACT_ARTICLE_TEXT') {
-    console.log('Action to extract article text recognized.');
 
     // Get the active tab and inject the extraction script
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
@@ -14,7 +11,6 @@ chrome.runtime.onMessage.addListener((request) => {
         if (chrome.runtime.lastError) {
           console.error('Failed to inject script:', chrome.runtime.lastError);
         } else {
-          console.log('extractionScript.js injected successfully');
           chrome.tabs.sendMessage(activeTab.id, {action: 'START_EXTRACTION'});
         }
       });
@@ -37,6 +33,7 @@ chrome.runtime.onMessage.addListener((request) => {
     .then(response => response.json())
     .then(data => {
       console.log('Generated Topics:', data.topics);
+      console.log('Generated Questions:', data.questions);
     })
     .catch(error => {
       console.error('Error:', error);

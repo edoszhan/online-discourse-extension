@@ -2,7 +2,7 @@ import React, { useState, useRef} from "react";
 import SummarizePopup from "./SummarizePopup";
 import axios from "axios";
 
-const SummarizeButton = ({ comment, clusteredComments, reviewId}) => {
+const SummarizeButton = ({ articleId, threadId, comment, clusteredComments, reviewId}) => {
   const [showPopup, setShowPopup] = useState(false);
   const [summary, setSummary] = useState(null);
   const buttonRef = useRef(null);
@@ -32,7 +32,8 @@ const SummarizeButton = ({ comment, clusteredComments, reviewId}) => {
       <button ref={buttonRef} style={{ background: "green", color: "white" }} onClick={handleSummarize}>
         Summarize
       </button>
-      {showPopup && <SummarizePopup comment={comment} onClose={handlePopupClose} buttonRef={buttonRef} summary={summary} reviewId={reviewId} />}
+      {showPopup && <SummarizePopup articleId={articleId} threadId={threadId}
+      comment={comment} onClose={handlePopupClose} buttonRef={buttonRef} summary={summary} reviewId={reviewId} />}
     </div>
   );
 };

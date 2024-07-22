@@ -5,16 +5,15 @@ function extractArticleText() {
     articleContent.forEach(paragraph => {
       articleText += paragraph.innerText + '\n';
     });
-
-    const websiteUrl = window.location.href;
   
-    return{ text: articleText.trim(), url: websiteUrl };
+    return{ text: articleText.trim(), url: window.location.href};
   }
-  
+
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'START_EXTRACTION') {
     const { text, url } = extractArticleText(); 
     chrome.runtime.sendMessage({ type: 'ARTICLE_TEXT_EXTRACTED', text, url });
   }
 });
+
   

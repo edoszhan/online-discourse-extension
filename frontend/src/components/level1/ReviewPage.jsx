@@ -4,9 +4,8 @@ import axios from 'axios';
 // import CommentBox from './CommentBoxReview';
 import CommentBox from '../CommentBox/CommentBox';
 import './ReviewPage.css';
-import Comment from '../CommentBox/Comment';
 
-const ReviewPage = ({ onBack, header, threadId, userId}) => {
+const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [reviews, setReviews] = useState([]);
   const [comments, setComments] = useState([]);
 
@@ -17,7 +16,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/reviews`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       setReviews(response.data);
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -26,7 +25,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -42,7 +41,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
           pendingReview:[...reviewObj.acceptedBy, userId].length < 2,
         };
   
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`, updatedReviewObj);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`, updatedReviewObj);
   
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
@@ -50,7 +49,7 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
   
         if (updatedReviewObj.acceptedBy.length >= 2) {
           try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${threadId}/${reviewObj.destinationId}`, {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.destinationId}`, {
               cluster_id: reviewObj.sourceId,
             });
             fetchComments();
@@ -72,14 +71,14 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
       };
   
       try {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`, updatedReviewObj);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`, updatedReviewObj);
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
   
         if (updatedReviewObj.deniedBy.length >= 2) {
           try {
-            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewObj.id}`);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}reviews/${reviewObj.id}`);
             setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
           } catch (error) {
             console.error('Error deleting review:', error);
@@ -127,55 +126,55 @@ const ReviewPage = ({ onBack, header, threadId, userId}) => {
                 })}
               </CommentContent>
               <CommentContent>
-  {review.newOrder.map((commentData, idx) => {
-    const originalComment = comments.find(
-      (c) =>
-        c.text === commentData.text &&
-        c.author === commentData.author &&
-        c.timestamp === commentData.timestamp
-    );
-    if (!originalComment) return null;
+                  {review.newOrder.map((commentData, idx) => {
+                    const originalComment = comments.find(
+                      (c) =>
+                        c.text === commentData.text &&
+                        c.author === commentData.author &&
+                        c.timestamp === commentData.timestamp
+                    );
+                    if (!originalComment) return null;
 
-    const modifiedCommentData = {
-      ...commentData,
-      id: originalComment.id,
-    };
+                    const modifiedCommentData = {
+                      ...commentData,
+                      id: originalComment.id,
+                    };
 
-    if (modifiedCommentData.cluster_id === null) {
-      const clusteredComments = review.newOrder.filter(
-        (cd) => cd.cluster_id === modifiedCommentData.id
-      );
+                    if (modifiedCommentData.cluster_id === null) {
+                      const clusteredComments = review.newOrder.filter(
+                        (cd) => cd.cluster_id === modifiedCommentData.id
+                      );
 
-      const clusteredCommentObjects = clusteredComments.map((cd) =>
-        comments.find(
-          (c) =>
-            c.text === cd.text && c.author === cd.author && c.timestamp === cd.timestamp
-        )
-      ).filter((c) => c !== undefined);
+                      const clusteredCommentObjects = clusteredComments.map((cd) =>
+                        comments.find(
+                          (c) =>
+                            c.text === cd.text && c.author === cd.author && c.timestamp === cd.timestamp
+                        )
+                      ).filter((c) => c !== undefined);
 
-      return (
-        <div
-          key={idx}
-          style={{
-            backgroundColor:
-              originalComment.id === review.sourceId ||
-              originalComment.id === review.destinationId
-                ? '#DCF8E0'
-                : 'inherit',
-            padding: '8px',
-          }}
-        >
-          <CommentBox
-            comment={originalComment}
-            clusteredComments={clusteredCommentObjects}
-          />
-        </div>
-      );
-    }
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            backgroundColor:
+                              originalComment.id === review.sourceId ||
+                              originalComment.id === review.destinationId
+                                ? '#DCF8E0'
+                                : 'inherit',
+                            padding: '8px',
+                          }}
+                        >
+                          <CommentBox
+                            comment={originalComment}
+                            clusteredComments={clusteredCommentObjects}
+                          />
+                        </div>
+                      );
+                    }
 
-    return null;
-  })}
-</CommentContent>
+                    return null;
+                  })}
+                </CommentContent>
               </CommentWrapper>
               <div style={{ display: 'flex', justifyContent:'flex-end' }}>
               {review.pendingReview && (

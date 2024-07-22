@@ -32,13 +32,12 @@ const Header = styled.div`
   height: 30px;
 `;
 
-const SummarizePopup = ({ comment, onClose, buttonRef, summary, reviewId}) => {
+const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summary, reviewId}) => {
   const [localSummary, setSummary] = useState("");
-
 
   const saveSummary = async () => {
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/reviews/${reviewId}`, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles//${articleId}/${threadId}/reviews/${reviewId}`, {
         summary: summary,
       });
       console.log('Summary saved successfully');
