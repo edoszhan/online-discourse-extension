@@ -30,7 +30,7 @@ class Comment(Base):
     text = Column(String)
     author = Column(String, default="admin")
     timestamp = Column(TIMESTAMP, default=lambda: datetime.now(timezone('Asia/Seoul')))
-    upvotes = Column(Integer, default=0)
+    upvotes = Column(JSON, default=[])
     children = Column(JSON, default=[])
     cluster_id = Column(Integer, nullable=True) 
     article_id = Column(Integer, nullable=True)

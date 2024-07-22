@@ -16,7 +16,7 @@ class CommentBase(BaseModel):
     text: str
     author: str
     timestamp: datetime
-    upvotes: int
+    upvotes: Optional[List[str]] = []
     children: List = []
     cluster_id: Optional[int] = None 
     article_id: Optional[int] = None

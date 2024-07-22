@@ -8,6 +8,7 @@ from app.models import Thread, Comment, Review
 from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse, ReviewUpdate
 from datetime import datetime
 from urllib.parse import urlparse, unquote
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -68,7 +69,6 @@ async def create_comment(article_id: int, thread_id: int, comment: CommentCreate
         children=comment.children,
         cluster_id=comment.cluster_id,
         article_id=article_id
-        
     )
     db.add(db_comment)
     db.commit()
@@ -87,32 +87,69 @@ async def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Comment deleted 2 successfully"}
 
-@router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
+# @router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
+# async def update_comment(article_id: int, thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
+#     db_comment = db.query(Comment).filter(
+#         Comment.article_id == article_id,
+#         Comment.thread_id == thread_id,
+#         Comment.id == comment_id
+#     ).first()
+#     if db_comment is None:
+#         raise HTTPException(status_code=404, detail="Comment not found")
+
+#     print(f"Updating comment: {db_comment.id} with data: {update_data}")
+#     print(f"Before update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
+
+#     # Only update the cluster_id field
+#     if 'cluster_id' in update_data:
+#         db_comment.cluster_id = update_data['cluster_id']
+#         print(f"After update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
+#     else:
+#         raise HTTPException(status_code=400, detail="No valid fields provided for update")
+
+#     db.commit()
+#     db.refresh(db_comment)
+
+#     print(f"Updated comment: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
+
+#     return db_comment
+
+@router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) # here, we can update cluster_id, children_id, upvotes
 async def update_comment(article_id: int, thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
     db_comment = db.query(Comment).filter(
         Comment.article_id == article_id,
         Comment.thread_id == thread_id,
         Comment.id == comment_id
     ).first()
+
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
 
-    print(f"Updating comment: {db_comment.id} with data: {update_data}")
-    print(f"Before update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
+    updated = False
 
-    # Only update the cluster_id field
     if 'cluster_id' in update_data:
         db_comment.cluster_id = update_data['cluster_id']
-        print(f"After update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
-    else:
+        updated = True
+
+    if 'children_id' in update_data:
+        if db_comment.children_id is None:
+            db_comment.children_id = update_data['children_id']
+            updated = True
+
+    if 'upvotes' in update_data:
+        print('Received upvotes:', update_data['upvotes'])
+        if isinstance(update_data['upvotes'], list):
+            db_comment.upvotes = update_data['upvotes']
+            updated = True
+
+    if not updated:
         raise HTTPException(status_code=400, detail="No valid fields provided for update")
 
     db.commit()
     db.refresh(db_comment)
 
-    print(f"Updated comment: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
-
     return db_comment
+
 
 
 @router.get("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
@@ -251,3 +288,23 @@ async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
         return {"topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
     
     return {"topics": [], "questions": [], "article_id": None}
+
+class TopicUpdateRequest(BaseModel):
+    topic: str
+
+@router.put("/{website_url:path}")
+async def update_topics_by_url(website_url: str, request: TopicUpdateRequest, db: Session = Depends(get_db)):
+    print("Received URL:", website_url)
+    print("Received topic:", request.topic)
+    
+    thread = db.query(Thread).filter(Thread.website_url == website_url).first()
+    if thread:
+        if thread.topics:
+            updated_topics = thread.topics + [request.topic]
+        else:
+            updated_topics = [request.topic]
+        thread.topics = updated_topics
+        db.commit()
+        return {"message": "Topic updated successfully", "topics": thread.topics}
+
+    raise HTTPException(status_code=404, detail="Thread not found")
