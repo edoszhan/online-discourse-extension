@@ -21,6 +21,7 @@ class CommentBase(BaseModel):
     cluster_id: Optional[int] = None 
     article_id: Optional[int] = None
     children_id:  Optional[int] = None
+    hasChildren: bool = False
 
 class CommentCreate(CommentBase):
     thread_id: int

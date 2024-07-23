@@ -69,7 +69,8 @@ async def create_comment(article_id: int, thread_id: int, comment: CommentCreate
         children=comment.children,
         cluster_id=comment.cluster_id,
         article_id=article_id,
-        children_id =comment.children_id
+        children_id =comment.children_id,
+        hasClusters=comment.hasClusters
     )
     db.add(db_comment)
     db.commit()
@@ -142,6 +143,10 @@ async def update_comment(article_id: int, thread_id: int, comment_id: int, updat
         if isinstance(update_data['upvotes'], list):
             db_comment.upvotes = update_data['upvotes']
             updated = True
+    
+    if 'hasClusters' in update_data:
+        db_comment.hasClusters = update_data['hasClusters']
+        updated = True
 
     if not updated:
         raise HTTPException(status_code=400, detail="No valid fields provided for update")
@@ -253,7 +258,7 @@ async def update_review(article_id: int, thread_id: int, review_id: int, updated
 
     if updated_review.acceptedBy is not None:
         review.accepted_by = updated_review.acceptedBy
-        review.pending_review = len(updated_review.acceptedBy) < 2
+        review.pending_review = len(updated_review.acceptedBy) < 1
     if updated_review.deniedBy is not None:
         review.denied_by = updated_review.deniedBy
     if updated_review.summary is not None:
