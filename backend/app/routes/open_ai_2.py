@@ -9,7 +9,7 @@ def generate_summary(comments, max_retries=2, delay=1):
     
     client = OpenAI(api_key=api_key) 
 
-    prompt = f"Please summarize the following comments from the third perspective while paraphrasing bad words:\n\n{comments}\n\nSummary:"
+    prompt = f"Please summarize the following comments from multiple users from the third perspective while paraphrasing bad words, provide a general overview of what the comment thread is saying, and limit the summary to 20 words:\n\n{comments}\n\nSummary:"
 
     retries = 0
     while retries < max_retries:

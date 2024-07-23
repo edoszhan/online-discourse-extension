@@ -34,6 +34,7 @@ class Comment(Base):
     children = Column(JSON, default=[])
     cluster_id = Column(Integer, nullable=True) 
     article_id = Column(Integer, nullable=True)
+    children_id = Column(Integer, nullable=True)
 
     thread = relationship("Thread", back_populates="comments")
     

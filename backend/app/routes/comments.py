@@ -68,7 +68,8 @@ async def create_comment(article_id: int, thread_id: int, comment: CommentCreate
         upvotes=comment.upvotes,
         children=comment.children,
         cluster_id=comment.cluster_id,
-        article_id=article_id
+        article_id=article_id,
+        children_id =comment.children_id
     )
     db.add(db_comment)
     db.commit()
