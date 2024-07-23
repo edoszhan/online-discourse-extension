@@ -14,6 +14,9 @@ function CommentSection({userId, level}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [newTopic, setNewTopic] = useState('');
 
+  const [summaries, setSummaries] = useState([]);
+  const [timestamps, setTimestamps] = useState([]);
+
   useEffect(() => {
     const fetchTopics = async () => {
       try {
@@ -29,6 +32,35 @@ function CommentSection({userId, level}) {
   
     fetchTopics();
   }, []);
+
+  useEffect(() => {
+    const fetchAllAcceptedReviews = async () => {
+      const summariesTemp = [];
+      const timestampsTemp = [];
+      for (let threadId = 1; threadId <= 4; threadId++) {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
+          const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
+            summary: review.summary,
+            timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric' })
+          }));
+          summariesTemp[threadId] = reviews.map(review => review.summary);
+          timestampsTemp[threadId] = reviews.map(review => review.timestamp);
+        } catch (error) {
+          console.error(`Error fetching accepted reviews for threadId ${threadId}:`, error);
+          summariesTemp[threadId] = [];
+          timestampsTemp[threadId] = [];
+        }
+      }
+      setSummaries(summariesTemp);
+      setTimestamps(timestampsTemp);
+    };
+
+    if (articleId) {
+      fetchAllAcceptedReviews();
+    }
+  }, [articleId]);
+
 
   const handleThreadClick = (topic) => {
     setSelectedThread({ id: topic.id, topic: topic.text, question: questions[topic.id-1] || "Question Placeholder", color: topic.color || "#FFFFFF" });
@@ -76,13 +108,31 @@ function CommentSection({userId, level}) {
                   {topic}
                 </div>
                 <div
-                  className="thread-box"
+                  className={`thread-box ${!summaries[idx + 1] || summaries[idx + 1].length === 0 ? 'no-comments' : ''}`}
                   onClick={() => handleThreadClick({ id: idx + 1, text: topic, color: colors[idx % colors.length] })}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: '100%', height: '400px', backgroundColor: "#E9E9E9" }}
                 >
-                  <b>No Comments</b>
-                  <br />
-                  Click here to write comments
+                  {summaries[idx + 1] && summaries[idx + 1].length > 0 ? (
+                     <div className="timeline">
+                     {summaries[idx + 1].map((summary, index) => (
+                       summary ? (
+                        <div key={index} className="timeline-item" style={{ position: 'relative', paddingLeft: '20px', marginBottom: '10px' }}>
+                        <div className="timeline-date" style={{ padding: '5px 10px', background: colors[idx % colors.length], color: 'white', borderRadius: '5px', marginBottom: '5px' }}>
+                          {timestamps[idx + 1][index]}
+                        </div>
+                        <div className="timeline-content">{summary}</div>
+                        <div style={{ position: 'absolute', left: '-12px', top: '0', width: '6px', height: '100%', backgroundColor: colors[idx % colors.length] }}></div>
+                      </div>
+                       ) : null
+                     ))}
+                   </div>
+                  ) : (
+                    <>
+                      <b>No Comments</b>
+                      <br />
+                      Click here to write comments
+                    </>
+                  )}
                 </div>
               </div>
             ))}

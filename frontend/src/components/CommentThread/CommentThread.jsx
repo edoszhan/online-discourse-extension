@@ -22,6 +22,12 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const commentInputRef = useRef(null); // textarea
 
   useEffect(() => {
+    if (replyingTo) {
+      commentInputRef.current.focus();
+    }
+  }, [replyingTo]);
+
+  useEffect(() => {
     fetchComments();
     fetchAcceptedReviews();
     const clusteringData = window.localStorage.getItem('clusteringData');
@@ -31,12 +37,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     setCommentCounter(countAllComments(comments));
   }, []);
 
-
-  useEffect(() => {
-    if (replyingTo) {
-      commentInputRef.current.focus();
-    }
-  }, [replyingTo]);
 
   const fetchComments = async () => {
     try {
@@ -162,8 +162,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   // for replies
   const handleReplyClick = (commentId) => {
     console.log("replying to", commentId || null);
-    setTimeout(() => commentInputRef.current.focus(), 0);
     setReplyingTo(commentId);
+    setTimeout(() => commentInputRef.current.focus(), 0);
   };
 
   if (showReviewPage && level === "L1") {
@@ -234,51 +234,45 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
               <React.Fragment key={comment.id}>
                 {clusteredComments.length > 0 ? (
                   <CombinedCommentContainer>
-                    {acceptedReview && acceptedReview.summary ? (
-                      <>
+                  {acceptedReview && acceptedReview.summary ? (
+                    <>
                       <SummaryCollapse
                         summary={acceptedReview.summary}
                         comment={comment}
                         clusteredComments={clusteredComments}
                       />
-                      </>
-                    ) : (
-                      <CommentBox
-                        articleId={articleId}
-                        threadId={threadId}
-                        comment={comment}
-                        index={index}
-                        clusteredComments={clusteredComments}
-                        userId={userId}
-                        onReplyClick={handleReplyClick}
-                      />
-                    )}
-                    {level === 'L0' ? (
-                      isClusterAccepted ? (
-                        <ReviewMessage>This change has been accepted and summarized by person in charge</ReviewMessage>
-                      ) : (
-                        <ReviewMessage>This change is waiting acceptance and summarization </ReviewMessage>
-                      )
-                    ) : (
-                      isClusterAccepted ? (
-                        acceptedReview ? (
-                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <SummarizeButton
-                              articleId={articleId}
-                              threadId={threadId}
-                              comment={comment}
-                              clusteredComments={clusteredComments}
-                              reviewId={acceptedReview.id}
-                            />
-                          </div>
-                        ) : (
-                          <ReviewMessage>Summarization L1 view - Accepted but no review found</ReviewMessage>
-                        )
-                      ) : (
-                        <ReviewMessage>This change will be reviewed by a person in charge</ReviewMessage>
-                      )
-                    )}
-                  </CombinedCommentContainer>
+                      <ReviewMessage>This change has been accepted and summarized</ReviewMessage>
+                    </>
+                  ) : (
+                    <CommentBox
+                      articleId={articleId}
+                      threadId={threadId}
+                      comment={comment}
+                      index={index}
+                      clusteredComments={clusteredComments}
+                      userId={userId}
+                      onReplyClick={handleReplyClick}
+                    />
+                  )}
+                  {level === 'L0' || level === 'L2' ? (
+                    isClusterAccepted && !acceptedReview?.summary ? (
+                      <ReviewMessage>This change has been accepted but not summarized</ReviewMessage>
+                    ) : null
+                  ) : (
+                    level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <SummarizeButton
+                          articleId={articleId}
+                          threadId={threadId}
+                          comment={comment}
+                          clusteredComments={clusteredComments}
+                          reviewId={acceptedReview.id}
+                        />
+                      </div>
+                    )
+                  )}
+                </CombinedCommentContainer>
+
                 ) : (
                   <CommentBox
                     articleId={articleId}

@@ -20,3 +20,46 @@
     width: 150px;
     height: 50px;
 }
+
+.thread-box .timeline {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.thread-box .timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.thread-box .timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 0;
+  width: 6px;
+  height: 100%;
+}
+
+.thread-box .timeline-date {
+  padding: 5px 10px;
+  color: white;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.thread-box .timeline-content {
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.thread-box.no-comments .timeline-content {
+  background: #E9E9E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+  

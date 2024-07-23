@@ -1,6 +1,7 @@
 import React, { useState} from "react";
 import styled from "styled-components";
 import axios from "axios";
+import Popup from "./Popup";
 
 const PopupContainer = styled.div`
   position: absolute;
@@ -34,13 +35,15 @@ const Header = styled.div`
 
 const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summary, reviewId}) => {
   const [localSummary, setSummary] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
 
   const saveSummary = async () => {
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles//${articleId}/${threadId}/reviews/${reviewId}`, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewId}`, {
         summary: summary,
       });
       console.log('Summary saved successfully');
+      setShowPopup(true);
       onClose();
     } catch (error) {
       console.error('Error saving summary:', error);
@@ -71,6 +74,7 @@ const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summ
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button style={{background:'#B5B5B5', color:'white'}} onClick={saveSummary}>Save Summary</button>
       </div>
+      {showPopup && <Popup onClose={() => setShowPopup(false)} />}
 
     </PopupContainer>
   );
