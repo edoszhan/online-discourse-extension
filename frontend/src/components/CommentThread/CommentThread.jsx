@@ -214,8 +214,11 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         <DragDropContext onDragEnd={onDragEnd}>
         <CommentsContainer>
         {comments
-          .filter((comment) => comment.cluster_id === null)
+          .filter((comment) => comment.children_id === null)
           .map((comment, index) => {
+            const replies = comments.filter(
+              (c) => c.children_id === comment.id
+            );
             const clusteredComments = comments.filter(
               (c) => c.cluster_id === comment.id
             );
@@ -250,6 +253,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       comment={comment}
                       index={index}
                       clusteredComments={clusteredComments}
+                      childrenComments={replies}
                       userId={userId}
                       onReplyClick={handleReplyClick}
                     />
@@ -279,6 +283,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                     threadId={threadId}
                     comment={comment}
                     index={index}
+                    childrenComments={replies}
                     clusteredComments={[]}
                     userId={userId}
                     onReplyClick={handleReplyClick}

@@ -23,7 +23,7 @@ chrome.runtime.onMessage.addListener((request) => {
 chrome.runtime.onMessage.addListener((request) => {
   if (request.type === 'ARTICLE_TEXT_EXTRACTED') {
     const { text, url } = request;
-    fetch('http://localhost:8000/generate-topics', {
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-topics`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

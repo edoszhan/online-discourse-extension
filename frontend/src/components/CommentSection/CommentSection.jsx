@@ -21,7 +21,8 @@ function CommentSection({userId, level}) {
     const fetchTopics = async () => {
       try {
         const currentUrl = window.location.href;
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/${encodeURIComponent(currentUrl)}`);
+        const encodedUrl = encodeURIComponent(currentUrl);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodedUrl}`);
         setTopics(response.data.topics || []);
         setQuestions(response.data.questions|| [])
         setArticleId(response.data.article_id);
@@ -81,10 +82,11 @@ function CommentSection({userId, level}) {
       try {
         // Update the backend with the new topic
         const currentUrl = window.location.href;
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/${encodeURIComponent(currentUrl)}`, { topic: newTopicText });
+        console.log("enviroment", process.env.REACT_APP_BACKEND_URL);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${currentUrl}`, { topic: newTopicText });
 
         // Refetch the updated topics list
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/${encodeURIComponent(currentUrl)}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodeURIComponent(currentUrl)}`);
         setTopics(response.data.topics);
       } catch (error) {
         console.error('Error creating new discussion thread:', error);

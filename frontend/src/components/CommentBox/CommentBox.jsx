@@ -16,7 +16,7 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clusteredComments, userId,  onReplyClick }) => {
+const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clusteredComments, childrenComments, userId, onReplyClick }) => {
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
   return (
@@ -28,25 +28,47 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
           isDragging={snapshot.isDraggingOver}
           style={{ backgroundColor: hasChildren ? 'transparent' : 'white' }}
         >
-        <Draggable draggableId={String(comment.id)} index={index}>
+          <Draggable draggableId={String(comment.id)} index={index}>
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
               >
-                {clusteredComments.length > 0 ? (
-                  <ClusteredCommentsContainer>
-                    <Comment
-                      articleId={articleId}
-                      threadId={threadId}
-                      comment={comment}
-                      isCombined={true}
-                      isDragging={snapshot.isDragging}
-                      isReplyDisabled={false}
-                      userId={userId}
-                      onReplyClick={onReplyClick}
-                    />
+                <Comment
+                  articleId={articleId}
+                  threadId={threadId}
+                  comment={comment}
+                  isCombined={clusteredComments.length > 0}
+                  isDragging={snapshot.isDragging}
+                  isReplyDisabled={false}
+                  userId={userId}
+                  onReplyClick={onReplyClick}
+                />
+
+                {/* Render the replies */}
+                {childrenComments && childrenComments.length > 0 && (
+                  <div>
+                    {childrenComments.map((childComment, childIndex) => (
+                      <div key={childComment.id} style={{ marginLeft: '20px' }}>
+                        <CommentBox
+                          articleId={articleId}
+                          threadId={threadId}
+                          comment={childComment}
+                          index={childIndex}
+                          clusteredComments={[]}
+                          childrenComments={[]}
+                          userId={userId}
+                          onReplyClick={onReplyClick}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Render the clusteredComments */}
+                {clusteredComments && clusteredComments.length > 0 && (
+                  <div>
                     {clusteredComments.map((child, childIndex) => (
                       <CommentBox
                         key={child.id}
@@ -55,21 +77,12 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
                         comment={child}
                         index={childIndex}
                         clusteredComments={[]}
+                        childrenComments={[]}
                         userId={userId}
+                        onReplyClick={onReplyClick}
                       />
                     ))}
-                  </ClusteredCommentsContainer>
-                ) : (
-                  <Comment
-                    articleId={articleId}
-                    threadId={threadId}
-                    comment={comment}
-                    isCombined={false}
-                    isDragging={snapshot.isDragging}
-                    isReplyDisabled={false}
-                    userId={userId}
-                    onReplyClick={onReplyClick}
-                  />
+                  </div>
                 )}
               </div>
             )}
@@ -82,4 +95,3 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
 };
 
 export default CommentBox;
-
