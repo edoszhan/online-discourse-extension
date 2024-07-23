@@ -278,17 +278,17 @@ async def update_review(article_id: int, thread_id: int, review_id: int, updated
         thread_id=review.thread_id
     )
 
-@router.get("/{website_url:path}")
+@router.get("/website_check/{website_url:path}")
 async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
-    parsed_url = urlparse(website_url)
-    full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
-
-    thread = db.query(Thread).filter(Thread.website_url == full_url).first()
+    decoded_url = unquote(website_url)
+    
+    thread = db.query(Thread).filter(Thread.website_url == decoded_url).first()
     if thread:
         print(f"Thread found: {thread.id}")
+        print(f"Website link found: {thread.website_url}")
         return {"topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
     
-    return {"topics": [], "questions": [], "article_id": None}
+    return {"website_url": decoded_url, "message": "Discussion not found probably due to link"}
 
 class TopicUpdateRequest(BaseModel):
     topic: str
