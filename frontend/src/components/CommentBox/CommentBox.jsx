@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
+import {Draggable, Droppable } from '@hello-pangea/dnd';
 import Comment from './Comment';
 
 const CommentBoxContainer = styled.div`
@@ -16,7 +16,13 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clusteredComments, childrenComments, userId, onReplyClick }) => {
+const ReplyContainer = styled.div`
+  border-left: 2px solid #ccc;
+  margin-left: 20px;
+  padding-left: 10px;
+`;
+
+const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick }) => {
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
   return (
@@ -26,7 +32,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? 'transparent' : 'white' }}
+          style={{ backgroundColor: hasChildren ? 'transparent' : 'white'}}
         >
           <Draggable draggableId={String(comment.id)} index={index}>
             {(provided, snapshot) => (
@@ -46,11 +52,11 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
                   onReplyClick={onReplyClick}
                 />
 
-                {/* Render the replies */}
-                {childrenComments && childrenComments.length > 0 && (
-                  <div>
+                 {/* Render the replies */}
+                 {childrenComments && childrenComments.length > 0 && (
+                  <ReplyContainer>
                     {childrenComments.map((childComment, childIndex) => (
-                      <div key={childComment.id} style={{ marginLeft: '20px' }}>
+                      <div key={childComment.id}>
                         <CommentBox
                           articleId={articleId}
                           threadId={threadId}
@@ -63,7 +69,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isDraggingOver, clust
                         />
                       </div>
                     ))}
-                  </div>
+                  </ReplyContainer>
                 )}
 
                 {/* Render the clusteredComments */}

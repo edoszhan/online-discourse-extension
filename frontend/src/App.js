@@ -6,12 +6,17 @@ function App() {
   const [role, setRole] = useState('L0');
   const [userId, setUserId] = useState('');
   const [isUserIdConfirmed, setIsUserIdConfirmed] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
     if (typeof chrome !== 'undefined' && chrome.storage) {
-      chrome.storage.sync.get(['selectedRole'], (result) => {
+      chrome.storage.sync.get(['selectedRole', 'userId'], (result) => {
         if (result.selectedRole) {
           setRole(result.selectedRole);
+        }
+        if (result.userId) {
+          setUserId(result.userId);
+          setIsUserIdConfirmed(true);
         }
       });
     }
@@ -77,6 +82,19 @@ function App() {
     }
   };
 
+  const handleAddThreads = () => {
+    if (!userId.trim()) {
+      setShowWarning(true);
+    } else {
+      extractArticleText();
+      injectThreads();
+    }
+  };
+
+  const closeWarning = () => {
+    setShowWarning(false);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -84,18 +102,18 @@ function App() {
         <div className="userid-selection">
           <h2>Select Name</h2>
           <div className="userid-input">
-          <input
-            type="text"
-            value={userId}
-            onChange={handleUserIdChange}
-            placeholder="Enter name"
-          />
-          <button
-            onClick={confirmUserId}
-            style={{ backgroundColor: isUserIdConfirmed ? 'green' : 'blue' }}
-          >
-            {isUserIdConfirmed ? 'DONE' : 'SET'}
-          </button>
+            <input
+              type="text"
+              value={userId}
+              onChange={handleUserIdChange}
+              placeholder="Enter name"
+            />
+            <button
+              onClick={confirmUserId}
+              style={{ backgroundColor: isUserIdConfirmed ? 'green' : 'blue' }}
+            >
+              {isUserIdConfirmed ? 'DONE' : 'SET'}
+            </button>
           </div>
         </div>
         <div className="role-selection">
@@ -106,8 +124,13 @@ function App() {
             <option value="L2">Level 2 (L2)</option>
           </select>
         </div>
-        <button onClick={injectThreads}>Add Threads</button>
-        <button onClick={extractArticleText}>Extract Article Text</button>
+        <button onClick={handleAddThreads}>Add Threads</button>
+        {showWarning && (
+          <div className="warning-popup">
+            <p>Please fill out the name.</p>
+            <button onClick={closeWarning}>OK</button>
+          </div>
+        )}
       </header>
     </div>
   );

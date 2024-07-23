@@ -34,28 +34,44 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
     }
   };
 
+
   const handleAccept = async (reviewObj) => {
     if (!reviewObj.acceptedBy.includes(userId)) {
+      console.log(reviewObj.acceptedBy);
       try {
         const updatedReviewObj = {
           ...reviewObj,
           acceptedBy: [...reviewObj.acceptedBy, userId],
-          pendingReview:[...reviewObj.acceptedBy, userId].length < 2,
+          pendingReview: [...reviewObj.acceptedBy, userId].length < 1,
         };
-  
+
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`, updatedReviewObj);
-  
+
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
-  
-        if (updatedReviewObj.acceptedBy.length >= 2) {
+
+        if (updatedReviewObj.acceptedBy.length >= 1) {
+          // Update the cluster_id of the source comment
           try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.destinationId}`, {
-              cluster_id: reviewObj.sourceId,
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.sourceId}`, {
+              cluster_id: reviewObj.destinationId,
             });
+
+          // Update the cluster_id of the source comment's children
+          const childrenComments = comments.filter((c) => c.cluster_id === reviewObj.sourceId);
+          if (childrenComments.length > 0) {
+            await Promise.all(
+            childrenComments.map((comment) =>
+              axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${comment.id}`, {
+                cluster_id: reviewObj.destinationId,
+              })
+            )
+           );
+          }
+
             fetchComments();
-            setShowAcceptedPopup(true); 
+            setShowAcceptedPopup(true);
           } catch (error) {
             console.error('Error updating comment:', error);
           }
@@ -79,7 +95,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
   
-        if (updatedReviewObj.deniedBy.length >= 2) {
+        if (updatedReviewObj.deniedBy.length >= 1) {
           try {
             await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}reviews/${reviewObj.id}`);
             setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
@@ -97,10 +113,19 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
     setShowAcceptedPopup(false);
   };
 
+  const handleBack = async () => {
+    try {
+      await onBack();
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      onBack();
+    }
+  };
+
   return (
     <ReviewPageContainer>
       <ReviewHeader>
-        <BackButton onClick={onBack}>
+        <BackButton onClick={handleBack}> 
           <BackIcon>&larr;</BackIcon>
           Back
         </BackButton>
@@ -109,96 +134,75 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       <ReviewSection>
         {reviews.filter((review) => review.pendingReview).map((review, index) => (
           <div key={review.id}>
-            <CombinedCommentContainer>
-              <div className="review-title">#{index + 1} Review</div>
+             <CombinedCommentContainer>
+             <div className="review-title">#{index + 1} Review</div>
               <CommentWrapper>
-              <CommentContent>
-                {review.prevOrder.map((commentId) => {
-                  const originalComment = comments.find((c) => c.id === commentId);
-                  if (!originalComment) return null;
-                  const clusteredComments = comments.filter((c) => c.cluster_id === commentId);
-                  return (
-                    <div
-                      key={commentId}
-                      style={{
-                        backgroundColor:
-                          commentId === review.sourceId || commentId === review.destinationId
-                          ? '#FEE8E8' : 'inherit',
-                        padding: '8px',
-                      }}
-                    >
-                      <CommentBox comment={originalComment} clusteredComments={clusteredComments} />
-                    </div>
-                  );
-                })}
-              </CommentContent>
-              <CommentContent>
-                  {review.newOrder.map((commentData, idx) => {
-                    const originalComment = comments.find(
-                      (c) =>
-                        c.text === commentData.text &&
-                        c.author === commentData.author &&
-                        c.timestamp === commentData.timestamp
-                    );
-                    if (!originalComment) return null;
-
-                    const modifiedCommentData = {
-                      ...commentData,
-                      id: originalComment.id,
-                    };
-
-                    if (modifiedCommentData.cluster_id === null) {
-                      const clusteredComments = review.newOrder.filter(
-                        (cd) => cd.cluster_id === modifiedCommentData.id
-                      );
-
-                      const clusteredCommentObjects = clusteredComments.map((cd) =>
-                        comments.find(
-                          (c) =>
-                            c.text === cd.text && c.author === cd.author && c.timestamp === cd.timestamp
-                        )
-                      ).filter((c) => c !== undefined);
-
+                <CommentContent>
+                  {comments
+                    .filter((c) => c.id === review.sourceId || c.id === review.destinationId)
+                    .map((comment) => {
+                      const clusteredComments = comments.filter((c) => c.cluster_id === comment.id);
                       return (
                         <div
-                          key={idx}
+                        key={comment.id}
+                        style={{
+                        backgroundColor:
+                          comment.id === review.sourceId || comment.id === review.destinationId
+                          ? '#FEE8E8' : 'inherit',
+                        padding: '8px',
+                        }}
+                      >
+                          <CommentBox comment={comment} clusteredComments={clusteredComments} />
+                        </div>
+                      );
+                    })}
+                </CommentContent>
+                <CommentContent>
+                  {comments
+                    .filter((c) => c.id === review.destinationId)
+                    .map((comment) => {
+                      const modifiedComments = comments.map((c) => {
+                        if (c.id === review.sourceId || c.cluster_id === review.sourceId) {
+                          return {
+                            ...c,
+                            cluster_id: review.destinationId,
+                          };
+                        }
+                        return c;
+                      });
+                      const clusteredComments = modifiedComments.filter(
+                        (c) => c.cluster_id === comment.id
+                      );
+
+                      return (
+                        <div key={comment.id}
                           style={{
                             backgroundColor:
-                              originalComment.id === review.sourceId ||
-                              originalComment.id === review.destinationId
+                              comment.id === review.sourceId || comment.id === review.destinationId
                                 ? '#DCF8E0'
                                 : 'inherit',
                             padding: '8px',
                           }}
                         >
-                          <CommentBox
-                            comment={originalComment}
-                            clusteredComments={clusteredCommentObjects}
-                          />
+                          <CommentBox comment={comment} clusteredComments={clusteredComments} />
                         </div>
                       );
-                    }
-
-                    return null;
-                  })}
+                    })}
                 </CommentContent>
               </CommentWrapper>
               <div style={{ display: 'flex', justifyContent:'flex-end' }}>
-              {review.pendingReview && (
-                <>
-                  <ReviewButton
-                    style={{ backgroundColor: 'green' }}
-                    onClick={() => handleAccept(review)}
-                  >
-                    Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/2)
-                  </ReviewButton>
-                  <ReviewButton onClick={() => handleDecline(review)}>
-                    Decline ({review.deniedBy ? review.deniedBy.length : 0}/2)
+                {review.pendingReview && (
+                  <>
+                    <ReviewButton style={{ backgroundColor: 'green' }} onClick={() => handleAccept(review)}>
+                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/1)
                     </ReviewButton>
-                </>
+                    <ReviewButton onClick={() => handleDecline(review)}>
+                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/1)
+                    </ReviewButton>
+                  </>
                 )}
-                </div>
-            </CombinedCommentContainer>
+              </div>
+              </CombinedCommentContainer>
           </div>
         ))}
       </ReviewSection>
@@ -206,6 +210,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
     </ReviewPageContainer>
   );
 };
+
 
 export default ReviewPage;
 
@@ -270,4 +275,11 @@ const CommentWrapper = styled.div`
 
 const CommentContent = styled.div`
   width: 48%;
+`;
+
+const NoReviewsMessage = styled.div`
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  margin-top: 50px;
 `;
