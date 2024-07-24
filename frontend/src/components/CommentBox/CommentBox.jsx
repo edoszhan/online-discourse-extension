@@ -82,9 +82,10 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
                         threadId={threadId}
                         comment={child}
                         index={childIndex}
-                        clusteredComments={[]}
+                        clusteredComments={child.clusteredComments || []}
                         childrenComments={[]}
                         userId={userId}
+                        isReplyDisabled={false}
                         onReplyClick={onReplyClick}
                       />
                     ))}

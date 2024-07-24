@@ -40,8 +40,8 @@ const AcceptedPopup = ({ onClose }) => {
   return (
     <Overlay>
       <PopupContainer>
-        <PopupText>The review has been accepted and saved.</PopupText>
-        <PopupText>Go back and refresh the thread to see the change</PopupText>
+        <PopupText>The cluster has been sent for review</PopupText>
+        <PopupText>Wait until L1 accepts the cluster suggestion</PopupText>
         <OkayButton onClick={onClose}>Okay</OkayButton>
       </PopupContainer>
     </Overlay>

@@ -41,7 +41,7 @@ const Popup = ({ onClose }) => {
     <Overlay>
       <PopupContainer>
         <PopupText>The review has been summarized and saved.</PopupText>
-        <PopupText>Go to the main page and join thread again to see the change</PopupText>
+        <PopupText>Go to the main page and refresh the thread to see the change</PopupText>
         <OkayButton onClick={onClose}>Okay</OkayButton>
       </PopupContainer>
     </Overlay>

@@ -42,7 +42,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         const updatedReviewObj = {
           ...reviewObj,
           acceptedBy: [...reviewObj.acceptedBy, userId],
-          pendingReview: [...reviewObj.acceptedBy, userId].length < 1,
+          pendingReview: [...reviewObj.acceptedBy, userId].length < 2,
         };
 
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`, updatedReviewObj);
@@ -51,7 +51,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
 
-        if (updatedReviewObj.acceptedBy.length >= 1) {
+        if (updatedReviewObj.acceptedBy.length >= 2) {
           // Update the cluster_id of the source comment
           try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.sourceId}`, {
@@ -95,9 +95,9 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
   
-        if (updatedReviewObj.deniedBy.length >= 1) {
+        if (updatedReviewObj.deniedBy.length >= 2) {
           try {
-            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}reviews/${reviewObj.id}`);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`);
             setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
           } catch (error) {
             console.error('Error deleting review:', error);
@@ -194,10 +194,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                 {review.pendingReview && (
                   <>
                     <ReviewButton style={{ backgroundColor: 'green' }} onClick={() => handleAccept(review)}>
-                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/1)
+                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/2)
                     </ReviewButton>
                     <ReviewButton onClick={() => handleDecline(review)}>
-                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/1)
+                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/2)
                     </ReviewButton>
                   </>
                 )}

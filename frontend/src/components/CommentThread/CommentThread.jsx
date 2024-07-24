@@ -7,6 +7,7 @@ import ReviewPage from '../level1/ReviewPage';
 import SummarizeButton from '../level1/SummarizeBox';
 import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
+import AcceptedPopup from './AcceptedPopup';
 
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
 
@@ -20,32 +21,16 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const [replyingTo, setReplyingTo] = useState(null);
   const commentInputRef = useRef(null); // textarea
 
+  const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
+
   useEffect(() => {
     if (replyingTo) {
       commentInputRef.current.focus();
     }
   }, [replyingTo]);
 
-  // useEffect(() => {
-  //   fetchComments();
-  //   fetchAcceptedReviews();
-  //   // const clusteringData = window.localStorage.getItem('clusteringData');
-  //   // if (clusteringData) {
-  //   //   setComments(JSON.parse(clusteringData));
-  //   // }
-  //   setCommentCounter(countAllComments(comments));
-  // }, []);
-
-
   useEffect(() => {
-    const localStorageKey = `clusteringData_${articleId}_${threadId}`;
-    const clusteringData = window.localStorage.getItem(localStorageKey);
-    if (clusteringData) {
-      setComments(JSON.parse(clusteringData));
-      setCommentCounter(countAllComments(JSON.parse(clusteringData)));
-    } else {
-      fetchComments();
-    }
+    fetchComments();
     fetchAcceptedReviews();
   }, []);
 
@@ -57,9 +42,11 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       console.error('Error refreshing comments:', error);
     }
   }
+
+  const handleClosePopup = () => {
+    setShowAcceptedPopup(false);
+  };
   
-
-
   const fetchComments = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
@@ -100,6 +87,19 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     if (!destination || source.droppableId === destination.droppableId ) return;
   
     try {
+      const sourceId = parseInt(source.droppableId.split('-')[1]);
+      const destinationId = parseInt(destination.droppableId.split('-')[1]);
+
+      setComments(comments => {
+        const commentToUpdate = comments.find(comment => {
+          return comment.id === sourceId;
+        });
+        if (commentToUpdate) {
+          commentToUpdate.cluster_id = destinationId;
+        }
+        return [...comments];
+      });
+
       const sourceComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${source.droppableId.split('-')[1]}`);
       const destinationComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${destination.droppableId.split('-')[1]}`);
   
@@ -137,6 +137,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           deniedBy: []
         };
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
+        setShowAcceptedPopup(true);
       } else {
         const reviewObj = {
           article_id: articleId, 
@@ -153,27 +154,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           summary: null
         };
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
+        setShowAcceptedPopup(true);
       }
 
-      // Update client-side clustering
-    const updatedComments = comments.map((comment) => {
-      if (comment.id === parseInt(destination.droppableId.split('-')[1])) {
-        return {
-          ...comment,
-          cluster_id: parseInt(draggableId.split('-')[1]),
-        };
-      }
-      return comment;
-    });
-
-    // Store the updated comments in local storage
-    const localStorageKey = `clusteringData_${articleId}_${threadId}`;
-    window.localStorage.setItem(localStorageKey, JSON.stringify(updatedComments));
-
-    setComments(updatedComments);
-    setCommentCounter(countAllComments(updatedComments));
-
-      // fetchComments();
+      fetchComments();
     } catch (error) {
       console.error('Error updating comment order:', error);
     }
@@ -209,7 +193,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const handleReplyClick = (commentId) => {
     console.log("replying to", commentId || null);
     setReplyingTo(commentId);
-    setTimeout(() => commentInputRef.current.focus(), 0);
   };
 
   if (showReviewPage && level === "L1") {
@@ -368,7 +351,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                e.preventDefault(); // Prevents newline from being added
+                e.preventDefault();
                 handleAddComment();
               }
             }}
@@ -380,13 +363,12 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           </CommentActions>
         </CommentInputContainer>
       </CommentBoxContainer>
+      {showAcceptedPopup && <AcceptedPopup onClose={handleClosePopup} />}
     </div>
   );
 };
 
 export default CommentThread;
-
-
 
 
 const CommentBoxContainer = styled.div`

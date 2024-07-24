@@ -29,13 +29,10 @@ function removeColorControl(userId, level) {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'removeColorControl') {
-    console.log('tables added');
     if ( request.payload === undefined ) {
       console.log("nothing reached");
       return;
     }
-    console.log("User Id in script: ", request.payload.userId);
-    console.log("User Level in script: ", request.payload.level);
     removeColorControl(request.payload.userId, request.payload.level);
   }
 });
