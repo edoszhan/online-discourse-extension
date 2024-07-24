@@ -212,7 +212,7 @@ async def create_review(article_id: int, thread_id: int, review: ReviewCreate, d
         raise HTTPException(status_code=422, detail=str(e))
 
     
-@router.get("/articles/{article_id}/thread_id/reviews/{review_id}", response_model=ReviewResponse) #updated
+@router.get("/articles/{article_id}/{thread_id}/reviews/{review_id}", response_model=ReviewResponse) #updated
 async def get_review(article_id: int, thread_id: int, review_id: int, db: Session = Depends(get_db)):
     review = db.query(Review).filter(Review.id == review_id,
                                      Review.article_id == article_id,
@@ -234,11 +234,17 @@ async def get_review(article_id: int, thread_id: int, review_id: int, db: Sessio
         summary=review.summary
     )
     
-@router.delete("/reviews/{review_id}")
-async def delete_review(review_id: int, db: Session = Depends(get_db)):
-    review = db.query(Review).filter(Review.id == review_id).first()
+@router.delete("/articles/{article_id}/{thread_id}/reviews/{review_id}")
+async def delete_review(article_id: int, thread_id: int, review_id: int, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(
+        Review.id == review_id,
+        Review.article_id == article_id,
+        Review.thread_id == thread_id
+    ).first()
+    
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
+    
     db.delete(review)
     db.commit()
     return {"message": "Review deleted successfully"}
@@ -258,7 +264,7 @@ async def update_review(article_id: int, thread_id: int, review_id: int, updated
 
     if updated_review.acceptedBy is not None:
         review.accepted_by = updated_review.acceptedBy
-        review.pending_review = len(updated_review.acceptedBy) < 1
+        review.pending_review = len(updated_review.acceptedBy) < 2
     if updated_review.deniedBy is not None:
         review.denied_by = updated_review.deniedBy
     if updated_review.summary is not None:
