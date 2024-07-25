@@ -56,34 +56,33 @@ function CommentSection({userId, level}) {
     fetchTopics();
   }, []);
 
-  useEffect(() => {
-    const fetchAllAcceptedReviews = async () => {
-      const summariesTemp = [];
-      const timestampsTemp = [];
-      for (let threadId = 1; threadId <= 4; threadId++) {
-        try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
-          const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
-            summary: review.summary,
-            timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric' })
-          }));
-          summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
-          timestampsTemp[threadId] = reviews.map(review => review.timestamp);
-        } catch (error) {
-          console.error(`Error fetching accepted reviews for threadId ${threadId}:`, error);
-          summariesTemp[threadId] = [];
-          timestampsTemp[threadId] = [];
-        }
+  const fetchAllAcceptedReviews = async () => {
+    const summariesTemp = [];
+    const timestampsTemp = [];
+    for (let threadId = 1; threadId <= 4; threadId++) {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
+        const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
+          summary: review.summary,
+          timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric' })
+        }));
+        summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
+        timestampsTemp[threadId] = reviews.map(review => review.timestamp);
+      } catch (error) {
+        console.error(`Error fetching accepted reviews for threadId ${threadId}:`, error);
+        summariesTemp[threadId] = [];
+        timestampsTemp[threadId] = [];
       }
-      setSummaries(summariesTemp);
-      setTimestamps(timestampsTemp);
-    };
-
+    }
+    setSummaries(summariesTemp);
+    setTimestamps(timestampsTemp);
+  };
+  
+  useEffect(() => {
     if (articleId) {
       fetchAllAcceptedReviews();
     }
   }, [articleId]);
-
 
   const handleThreadClick = (topic) => {
     setSelectedThread({ id: topic.id, topic: topic.text, question: questions[topic.id-1] || "Question Placeholder", color: topic.color || "#FFFFFF" });
