@@ -299,9 +299,9 @@ async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
     if thread:
         print(f"Thread found: {thread.id}")
         print(f"Website link found: {thread.website_url}")
-        return {"topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
+        return {"exists": True, "topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
     
-    return {"website_url": decoded_url, "message": "Discussion not found probably due to link"}
+    return {"exists": False,"website_url": decoded_url, "message": "Discussion not found probably due to link"}
 
 class TopicUpdateRequest(BaseModel):
     topic: str

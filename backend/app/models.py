@@ -10,7 +10,7 @@ class Log(Base):
     user_id = Column(String, index=True)
     action = Column(String, index=True)
     folder_name = Column(String, index=True)
-    timestamp = Column(TIMESTAMP, default=lambda: datetime.now(timezone('Asia/Seoul')))
+    timestamp = Column(TIMESTAMP, default=datetime.now(timezone('Asia/Seoul')))
     
 class Thread(Base):
     __tablename__ = "threads"
@@ -29,7 +29,7 @@ class Comment(Base):
     thread_id = Column(Integer, ForeignKey("threads.id"))
     text = Column(String)
     author = Column(String, default="admin")
-    timestamp = Column(TIMESTAMP, default=lambda: datetime.now(timezone('Asia/Seoul')))
+    timestamp = Column(TIMESTAMP, default=datetime.now(timezone('Asia/Seoul')))
     upvotes = Column(JSON, default=[])
     children = Column(JSON, default=[])
     cluster_id = Column(Integer, nullable=True) 
@@ -51,7 +51,7 @@ class Review(Base):
     accepted_by = Column(JSON, default=[])
     denied_by = Column(JSON, default=[])
     author = Column(String)
-    timestamp = Column(TIMESTAMP, default=lambda: datetime.now(timezone('Asia/Seoul')))
+    timestamp = Column(TIMESTAMP, default=datetime.now(timezone('Asia/Seoul')))
     summary = Column(String)
     article_id= Column(Integer)
     thread_id= Column(Integer)

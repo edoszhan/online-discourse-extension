@@ -22,9 +22,8 @@ async def generate_topics_endpoint(article: ArticleText, db: Session = Depends(g
     extracted_text = article.text
     website_url = article.url
 
-    existing_thread = db.query(Thread).filter(Thread.website_url.startswith(website_url)).first()
+    existing_thread = db.query(Thread).filter(Thread.website_url == website_url).first()
     if existing_thread:
-        print("Found existing thread")
         return GenerateResponse(topics=existing_thread.topics, questions=existing_thread.questions)
 
     topics, questions = generate_topics_and_questions(extracted_text)
