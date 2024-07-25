@@ -39,10 +39,10 @@ const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summ
 
   const saveSummary = async () => {
     try {
+      const summaryToSend = localSummary.trim() !== "" ? localSummary : summary;
       await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewId}`, {
-        summary: summary,
+      summary: summaryToSend,
       });
-      console.log('Summary saved successfully');
       setShowPopup(true);
       onClose();
     } catch (error) {

@@ -89,14 +89,17 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const sourceId = parseInt(source.droppableId.split('-')[1]);
       const destinationId = parseInt(destination.droppableId.split('-')[1]);
 
-      setComments(comments => {
-        const commentToUpdate = comments.find(comment => {
+      setComments(prevComments => {
+        const updatedComments = [...prevComments];
+        const commentToUpdate = updatedComments.find(comment => {
           return comment.id === sourceId;
         });
         if (commentToUpdate) {
           commentToUpdate.cluster_id = destinationId;
         }
+        return updatedComments;
       });
+  
  
       const sourceComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${source.droppableId.split('-')[1]}`);
       const destinationComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${destination.droppableId.split('-')[1]}`);
@@ -155,7 +158,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         setShowAcceptedPopup(true);
       }
 
-      fetchComments();
+      // fetchComments();
     } catch (error) {
       console.error('Error updating comment order:', error);
     }
