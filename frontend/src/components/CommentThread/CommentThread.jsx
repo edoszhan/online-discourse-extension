@@ -119,6 +119,9 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const clientChange = (result) => {
     const { destination, source } = result;
+
+    if (!destination || source.draggableId === destination.draggableId) return;
+
     const uid = uuidv4();
     setComments(prevComments => {
       const updatedComments = prevComments.map(comment => {
@@ -148,6 +151,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const serverChange = async (result, uid) => {
     const { destination, source } = result;
+
+    if (!destination || source.draggableId === destination.draggableId) return;
     
     try {
       const sourceComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${source.droppableId.split('-')[1]}`);
