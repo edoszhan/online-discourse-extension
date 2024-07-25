@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Comment from '../CommentBox/Comment';
+import axios from 'axios';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
@@ -14,20 +15,96 @@ const ClusteredCommentsContainer = styled.div`
   margin-bottom: 10px;
 `;
 
-const CommentBox = ({comment, clusteredComments, isReplyDisabled }) => {
-  // remember that we are not changing isReplayDisabled
+const ReplyContainer = styled.div`
+  border-left: 2px solid #ccc;
+  margin-left: 20px;
+  padding-left: 10px;
+`;
+
+const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredComments, isReplyDisabled }) => {
+  const [allComments, setAllComments] = useState([]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [articleId, threadId]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
+      setAllComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const findChildrenComments = (commentId) => {
+    return allComments.filter((c) => c.children_id === commentId);
+  };
+
   return (
     <CommentBoxContainer>
-      {clusteredComments.length > 0 ? (
-        <ClusteredCommentsContainer>
-          <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={isReplyDisabled} />
-          {clusteredComments.map((child) => (
-            <CommentBox key={child.id} comment={child} clusteredComments={[]} isReplyDisabled={isReplyDisabled} />
-          ))}
-        </ClusteredCommentsContainer>
-      ) : (
+      <ClusteredCommentsContainer>
         <Comment comment={comment} isCombined={false} isDragging={false} isReplyDisabled={isReplyDisabled} />
-      )}
+        {childrenComments && childrenComments.length > 0 ? (
+          <>
+            <ReplyContainer>
+              {childrenComments.map((child) => {
+                const childrenOfChild = findChildrenComments(child.id);
+                return (
+                  <CommentBox
+                    key={child.id}
+                    articleId={articleId}
+                    threadId={threadId}
+                    comment={child}
+                    childrenComments={childrenOfChild}
+                    clusteredComments={[]}
+                    isReplyDisabled={isReplyDisabled}
+                  />
+                );
+              })}
+            </ReplyContainer>
+            {clusteredComments && clusteredComments.length > 0 ? (
+              <>
+                {clusteredComments.map((child) => {
+                  const childrenOfChild = findChildrenComments(child.id);
+                  return (
+                    <CommentBox
+                      key={child.id}
+                      articleId={articleId}
+                      threadId={threadId}
+                      comment={child}
+                      childrenComments={childrenOfChild}
+                      clusteredComments={[]}
+                      isReplyDisabled={isReplyDisabled}
+                    />
+                  );
+                })}
+              </>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {clusteredComments && clusteredComments.length > 0 ? (
+              <>
+                {clusteredComments.map((child) => {
+                  const childrenOfChild = findChildrenComments(child.id);
+                  return (
+                    <CommentBox
+                      key={child.id}
+                      articleId={articleId}
+                      threadId={threadId}
+                      comment={child}
+                      childrenComments={childrenOfChild}
+                      clusteredComments={[]}
+                      isReplyDisabled={isReplyDisabled}
+                    />
+                  );
+                })}
+              </>
+            ) : null}
+          </>
+        )}
+      </ClusteredCommentsContainer>
     </CommentBoxContainer>
   );
 };

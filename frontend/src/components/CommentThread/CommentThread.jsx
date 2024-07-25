@@ -85,7 +85,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     const { destination, source } = result;
   
     if (!destination || source.droppableId === destination.droppableId ) return;
-  
     try {
       const sourceId = parseInt(source.droppableId.split('-')[1]);
       const destinationId = parseInt(destination.droppableId.split('-')[1]);
@@ -261,9 +260,11 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         {comments
           .filter((comment) => comment.children_id === null && comment.cluster_id === null)
           .map((comment, index) => {
+            // Find the replies to the parent comment
             const replies = comments.filter(
               (c) => c.children_id === comment.id
             );
+            // Find the clusters to the parent comment
             const clusteredComments = comments.filter(
               (c) => c.cluster_id === comment.id
             );
@@ -321,7 +322,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                     )
                   )}
                 </CombinedCommentContainer>
-
                 ) : (
                   <CommentBox
                     articleId={articleId}

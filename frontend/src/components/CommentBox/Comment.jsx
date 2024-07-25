@@ -11,8 +11,8 @@ const CommentContainer = styled.div`
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: ${(props) =>
-    props.isReplying ? '#9bbcc7' : props.isCombined ? 'transparent' : 'white'};
-  opacity: ${(props) => (props.isDragging ? '0.5' : '1')}; 
+    props.isReplying ? '#9bbcc7' : props.isCombined ? 'white' : 'white'};
+  opacity: ${(props) => (props.isDragging ? '1' : '1')}; 
 `;
 
 const UserLogo = styled.div`

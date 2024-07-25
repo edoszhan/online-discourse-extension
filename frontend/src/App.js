@@ -86,10 +86,17 @@ function App() {
     if (!userId.trim()) {
       setShowWarning(true);
     } else {
-      extractArticleText();
       injectThreads();
     }
   };
+
+  const handleInject = () => {
+    if (!userId.trim()) {
+      setShowWarning(true);
+    } else {
+      extractArticleText();
+    }
+  }
 
   const closeWarning = () => {
     setShowWarning(false);
@@ -125,6 +132,7 @@ function App() {
           </select>
         </div>
         <button onClick={handleAddThreads}>Add Threads</button>
+        <button onClick={handleInject}>Extract Article</button>
         {showWarning && (
           <div className="warning-popup">
             <p>Please fill out the name.</p>

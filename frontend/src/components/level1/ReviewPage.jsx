@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import CommentBox from './CommentBoxReview';
-// import CommentBox from '../CommentBox/CommentBox';
 import './ReviewPage.css';
 import AcceptedPopup from './AcceptedPopup';
 
@@ -37,7 +36,6 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
 
   const handleAccept = async (reviewObj) => {
     if (!reviewObj.acceptedBy.includes(userId)) {
-      console.log(reviewObj.acceptedBy);
       try {
         const updatedReviewObj = {
           ...reviewObj,
@@ -141,6 +139,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                   {comments
                     .filter((c) => c.id === review.sourceId || c.id === review.destinationId)
                     .map((comment) => {
+                      const childrenComments = comments.filter((c) => c.children_id === comment.id);
                       const clusteredComments = comments.filter((c) => c.cluster_id === comment.id);
                       return (
                         <div
@@ -152,17 +151,17 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                         padding: '8px',
                         }}
                       >
-                          <CommentBox comment={comment} clusteredComments={clusteredComments} />
+                          <CommentBox articleId={articleId} threadId={threadId}  comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments} />
                         </div>
                       );
                     })}
                 </CommentContent>
                 <CommentContent>
                   {comments
-                    .filter((c) => c.id === review.destinationId)
+                    .filter((c) => c.id === review.destinationId) // find the destination comment
                     .map((comment) => {
                       const modifiedComments = comments.map((c) => {
-                        if (c.id === review.sourceId || c.cluster_id === review.sourceId) {
+                        if (c.id === review.sourceId || c.cluster_id === review.sourceId) { // find the source comment and its children and exchange to destinationId
                           return {
                             ...c,
                             cluster_id: review.destinationId,
@@ -170,6 +169,8 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                         }
                         return c;
                       });
+
+                      const childrenComments = modifiedComments.filter((c) => c.children_id === comment.id);
                       const clusteredComments = modifiedComments.filter(
                         (c) => c.cluster_id === comment.id
                       );
@@ -184,7 +185,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                             padding: '8px',
                           }}
                         >
-                          <CommentBox comment={comment} clusteredComments={clusteredComments} />
+                          <CommentBox articleId={articleId} threadId={threadId} comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments}/>
                         </div>
                       );
                     })}
