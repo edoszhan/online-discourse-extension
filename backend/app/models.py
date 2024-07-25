@@ -47,7 +47,7 @@ class Review(Base):
     new_order = Column(JSON, default = [])
     source_id = Column(Integer)
     destination_id = Column(Integer)
-    pending_review = Column(Boolean, default=True)
+    pending_review = Column(Boolean, nullable=True)
     accepted_by = Column(JSON, default=[])
     denied_by = Column(JSON, default=[])
     author = Column(String)

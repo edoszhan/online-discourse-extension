@@ -51,10 +51,10 @@ class ThreadResponse(ThreadBase):
         
 class ReviewBase(BaseModel):
     prevOrder: List[int]
-    newOrder: List[CommentBase]
+    newOrder: List[str]
     sourceId: int
     destinationId: int
-    pendingReview: bool 
+    pendingReview: Optional[bool] = None
     
 class ReviewCreate(ReviewBase):
     acceptedBy: List[str] = []

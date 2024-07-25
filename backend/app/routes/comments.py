@@ -171,7 +171,6 @@ async def read_comment(article_id: int, thread_id: int, comment_id: int, db: Ses
 async def create_review(article_id: int, thread_id: int, review: ReviewCreate, db: Session = Depends(get_db)):
     print(f"Received review data: {review}")
     
-    review.new_order_dicts = [comment.model_dump() for comment in review.newOrder]
     for comment_dict in review.new_order_dicts:
         comment_dict['timestamp'] = comment_dict['timestamp'].isoformat()
     
@@ -180,7 +179,7 @@ async def create_review(article_id: int, thread_id: int, review: ReviewCreate, d
             article_id=article_id,
             thread_id=thread_id,
             prev_order=review.prevOrder,
-            new_order=review.new_order_dicts,
+            new_order=review.newOrder,
             source_id=review.sourceId,
             destination_id=review.destinationId,
             pending_review=review.pendingReview,
@@ -261,16 +260,19 @@ async def update_review(article_id: int, thread_id: int, review_id: int, updated
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
 
-    print(f"Updating review with ID: {review_id}")
-    print(f"Updated review data: {updated_review}")
-
     if updated_review.acceptedBy is not None:
         review.accepted_by = updated_review.acceptedBy
-        review.pending_review = len(updated_review.acceptedBy) < 2
     if updated_review.deniedBy is not None:
         review.denied_by = updated_review.deniedBy
     if updated_review.summary is not None:
         review.summary = updated_review.summary
+
+    if len(review.accepted_by) >= 2:
+        review.pending_review = False
+    elif len(review.denied_by) >= 2:
+        review.pending_review = True
+    else:
+        review.pending_review = None
 
     db.commit()
     db.refresh(review)
@@ -306,12 +308,13 @@ async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
 class TopicUpdateRequest(BaseModel):
     topic: str
 
-@router.put("/{website_url:path}")
+@router.put("/website_check/{website_url:path}")
 async def update_topics_by_url(website_url: str, request: TopicUpdateRequest, db: Session = Depends(get_db)):
+    decoded_url = unquote(website_url)
     print("Received URL:", website_url)
     print("Received topic:", request.topic)
     
-    thread = db.query(Thread).filter(Thread.website_url == website_url).first()
+    thread = db.query(Thread).filter(Thread.website_url == decoded_url).first()
     if thread:
         if thread.topics:
             updated_topics = thread.topics + [request.topic]
