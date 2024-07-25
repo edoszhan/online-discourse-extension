@@ -4,11 +4,13 @@ import axios from 'axios';
 import CommentBox from './CommentBoxReview';
 import './ReviewPage.css';
 import AcceptedPopup from './AcceptedPopup';
+import DeletedPopup from './DeletedPopup';
 
 const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [reviews, setReviews] = useState([]);
   const [comments, setComments] = useState([]);
   const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
+  const [showDeletedPopup, setShowDeletedPopup] = useState(false);
 
   useEffect(() => {
     fetchReviews();
@@ -97,6 +99,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           try {
             await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`);
             setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
+            setShowDeletedPopup(true);
           } catch (error) {
             console.error('Error deleting review:', error);
           }
@@ -109,6 +112,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
 
   const handleClosePopup = () => {
     setShowAcceptedPopup(false);
+  };
+
+  const handleClosePopupDelete = () => {
+    setShowDeletedPopup(false);
   };
 
   const handleBack = async () => {
@@ -208,6 +215,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         ))}
       </ReviewSection>
       {showAcceptedPopup && <AcceptedPopup onClose={handleClosePopup} />}
+      {showDeletedPopup && <DeletedPopup onClose={handleClosePopupDelete} />}
     </ReviewPageContainer>
   );
 };

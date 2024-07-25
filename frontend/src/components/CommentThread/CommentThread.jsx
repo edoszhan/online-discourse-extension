@@ -96,9 +96,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         if (commentToUpdate) {
           commentToUpdate.cluster_id = destinationId;
         }
-        return [...comments];
       });
-
+ 
       const sourceComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${source.droppableId.split('-')[1]}`);
       const destinationComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${destination.droppableId.split('-')[1]}`);
   
@@ -218,10 +217,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   }
 
   const handleBack = () => {
-    const localStorageKey = `clusteringData_${articleId}_${threadId}`;
-    if (window.localStorage.getItem(localStorageKey)) {
-      window.localStorage.removeItem(localStorageKey);
-    }
     onBack();
   };
 
@@ -286,9 +281,13 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                   {acceptedReview && acceptedReview.summary ? (
                     <>
                       <SummaryCollapse
+                        articleId={articleId}
+                        threadId={threadId}
                         summary={acceptedReview.summary}
                         comment={comment}
+                        childrenComments={replies}
                         clusteredComments={clusteredComments}
+                        onReplyClick={handleReplyClick}
                       />
                       <ReviewMessage>This change has been accepted and summarized</ReviewMessage>
                     </>
