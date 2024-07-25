@@ -20,24 +20,42 @@ chrome.runtime.onMessage.addListener((request) => {
   return true; 
 });
 
+
+let debounceTimer;
+
 chrome.runtime.onMessage.addListener((request) => {
   if (request.type === 'ARTICLE_TEXT_EXTRACTED') {
     const { text, url } = request;
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-topics`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ text, url})
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Generated Topics:', data.topics);
-      console.log('Generated Questions:', data.questions);
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
+
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodeURIComponent(url)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.exists) {
+          console.log('Thread already exists. No need to generate topics.');
+        } else {
+          clearTimeout(debounceTimer);
+
+          debounceTimer = setTimeout(() => {
+            fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-topics`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ text, url })
+            })
+              .then(response => response.json())
+              .then(data => {
+                console.log('Generated Topics:', data.topics);
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+          }, 1000);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
   }
 });
 

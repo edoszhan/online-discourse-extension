@@ -8,6 +8,8 @@ import SummarizeButton from '../level1/SummarizeBox';
 import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
 import AcceptedPopup from './AcceptedPopup';
+import moment from 'moment-timezone';
+import CommentUnit from '../CommentBox/CommentUnit';
 
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
 
@@ -78,7 +80,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       }
     };
     comments.forEach(countChildComments);
-    return count;
+    return count;  
   };
 
   const onDragEnd = async (result) => {
@@ -128,7 +130,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           article_id: articleId, 
           thread_id: threadId,
           author: userId,
-          timestamp: new Date(),
+          timestamp: moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
           sourceId: parseInt(destination.droppableId.split('-')[1]),
           destinationId: parseInt(source.droppableId.split('-')[1]),
           pendingReview: true,
@@ -144,7 +146,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           article_id: articleId, 
           thread_id: threadId,
           author: userId,
-          timestamp: new Date(),
+          timestamp: moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
           sourceId: parseInt(source.droppableId.split('-')[1]),
           destinationId: parseInt(destination.droppableId.split('-')[1]),
           pendingReview: true,
@@ -184,6 +186,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         setNewComment('');
         setCommentCounter(commentCounter + 1);
         setReplyingTo(null);
+        fetchComments();
       } catch (error) {
         console.error('Error adding comment:', error);
       }
@@ -295,7 +298,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       <ReviewMessage>This change has been accepted and summarized</ReviewMessage>
                     </>
                   ) : (
-                    <CommentBox
+                    <CommentUnit
                       articleId={articleId}
                       threadId={threadId}
                       comment={comment}

@@ -111,26 +111,6 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
                     {renderClusteredComments()}
                   </div>
                 )}
-                {/* {clusteredComments && clusteredComments.length > 0 && (
-                  <div>
-                    {clusteredComments.map((child, childIndex) => (
-                      <div key={child.id}>
-                      <CommentMap
-                        key={child.id}
-                        articleId={articleId}
-                        threadId={threadId}
-                        comment={child}
-                        index={childIndex}
-                        clusteredComments={child.clusteredComments || []}
-                        childrenComments={child.childrenComments || []}
-                        userId={userId}
-                        isReplyDisabled={false}
-                        onReplyClick={onReplyClick}
-                      />
-                    </div>
-                    ))}
-                  </div>
-                )} */}
               </div>
             )}
           </Draggable>

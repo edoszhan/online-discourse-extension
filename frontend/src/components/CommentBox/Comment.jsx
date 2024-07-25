@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AiOutlineLike, AiFillLike, AiOutlineMessage } from "react-icons/ai";
 import axios from 'axios';
+import moment from 'moment-timezone';
 
 const CommentContainer = styled.div`
   display: flex;
@@ -115,14 +116,13 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
 
   const authorInitial = comment.author ? comment.author.charAt(0).toUpperCase() : 'A';
 
-  const formattedTimestamp = new Date(comment.timestamp).toLocaleString('kr-KO', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true
-  });
+  const formattedTimestamp = moment.utc(comment.timestamp)
+  .tz('Asia/Seoul')
+  .format('MMMM D, YYYY h:mm A z');
+
+  const convertToKoreanTime = (utcTimestamp) => {
+    return moment.utc(utcTimestamp).tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss');
+  };
 
   const addUpvote = async () => {
     const updatedUpvotes = Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
