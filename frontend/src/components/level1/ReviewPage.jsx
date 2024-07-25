@@ -42,7 +42,6 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         const updatedReviewObj = {
           ...reviewObj,
           acceptedBy: [...reviewObj.acceptedBy, userId],
-          pendingReview: [...reviewObj.acceptedBy, userId].length < 2,
         };
 
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`, updatedReviewObj);
@@ -58,6 +57,11 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
               cluster_id: reviewObj.destinationId,
             });
 
+          // Update the hasClusters attribute of the destination comment
+          await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.destinationId}`, {
+            hasClusters: true,
+          });
+
           // Update the cluster_id of the source comment's children
           const childrenComments = comments.filter((c) => c.cluster_id === reviewObj.sourceId);
           if (childrenComments.length > 0) {
@@ -69,7 +73,6 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
             )
            );
           }
-
             fetchComments();
             setShowAcceptedPopup(true);
           } catch (error) {
@@ -94,15 +97,11 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
-  
+
         if (updatedReviewObj.deniedBy.length >= 2) {
-          try {
-            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewObj.id}`);
-            setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
-            setShowDeletedPopup(true);
-          } catch (error) {
-            console.error('Error deleting review:', error);
-          }
+          setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
+          fetchComments();
+          setShowDeletedPopup(true);
         }
       } catch (error) {
         console.error('Error updating review:', error);
@@ -137,7 +136,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       </ReviewHeader>
       {header}
       <ReviewSection>
-        {reviews.filter((review) => review.pendingReview).map((review, index) => (
+      {reviews.filter((review) => review.pendingReview === null).map((review, index) => (
           <div key={review.id}>
              <CombinedCommentContainer>
              <div className="review-title">#{index + 1} Review</div>
@@ -167,6 +166,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                   {comments
                     .filter((c) => c.id === review.destinationId) // find the destination comment
                     .map((comment) => {
+                      const destinationId = comment.cluster_id !== null ? comment.cluster_id : review.destinationId; // needs to be tested for case [1<-2] and [2<-3]
                       const modifiedComments = comments.map((c) => {
                         if (c.id === review.sourceId || c.cluster_id === review.sourceId) { // find the source comment and its children and exchange to destinationId
                           return {
@@ -192,6 +192,9 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                             padding: '8px',
                           }}
                         >
+                          {comment.cluster_id !== null && (
+                          <PotentialConflictSign>Potential Conflict!</PotentialConflictSign>
+                        )}
                           <CommentBox articleId={articleId} threadId={threadId} comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments}/>
                         </div>
                       );
@@ -291,4 +294,9 @@ const NoReviewsMessage = styled.div`
   font-size: 18px;
   color: #888;
   margin-top: 50px;
+`;
+const PotentialConflictSign = styled.div`
+  color: red;
+  font-weight: bold;
+  margin-bottom: 5px;
 `;

@@ -8,21 +8,17 @@ import SummarizeButton from '../level1/SummarizeBox';
 import SummaryCollapse from '../level1/SummaryCollapse';
 import axios from 'axios';
 import AcceptedPopup from './AcceptedPopup';
-import moment from 'moment-timezone';
 import CommentUnit from '../CommentBox/CommentUnit';
+import { v4 as uuidv4 } from 'uuid';
 
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
-
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentCounter, setCommentCounter] = useState(0);
   const [showReviewPage, setShowReviewPage] = useState(false);
-
   const [acceptedReviews, setAcceptedReviews] = useState([]);
-
   const [replyingTo, setReplyingTo] = useState(null);
-  const commentInputRef = useRef(null); // textarea
-
+  const commentInputRef = useRef(null);
   const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
 
   useEffect(() => {
@@ -34,7 +30,15 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   useEffect(() => {
     fetchComments();
     fetchAcceptedReviews();
+    initializeLocalStorage();
   }, []);
+
+  const initializeLocalStorage = () => {
+    const storageKey = `clusters_${articleId}_${threadId}`;
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, JSON.stringify({}));
+    }
+  };
 
   const handleRefresh = async () => {
     try {
@@ -53,8 +57,20 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       const data = response.data || []; 
-      setComments(data);
-      setCommentCounter(countAllComments(data));
+
+      const storageKey = `clusters_${articleId}_${threadId}`;
+      const clusters = JSON.parse(localStorage.getItem(storageKey));
+
+      const updatedComments = data.map(comment => {
+        const cluster = Object.values(clusters).find(c => c.sourceId === comment.id);
+        if (cluster) {
+          return { ...comment, cluster_id: cluster.destinationId };
+        }
+        return comment;
+      });
+
+      setComments(updatedComments);
+      setCommentCounter(countAllComments(updatedComments));
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
@@ -65,11 +81,29 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
+
+      const storageKey = `clusters_${articleId}_${threadId}`;
+      const clusters = JSON.parse(localStorage.getItem(storageKey));
+      
+      let clustersChanged = false;
+      acceptedReviews.forEach(review => {
+        if (review.pendingReview != null) {
+          Object.entries(clusters).forEach(([uid, cluster]) => {
+            if (cluster.children && cluster.children[0] === review.newOrder[0]) {
+              delete clusters[uid];
+              clustersChanged = true;
+            }
+          });
+        }
+      });
+
+      if (clustersChanged) {
+        localStorage.setItem(storageKey, JSON.stringify(clusters));
+      }
     } catch (error) {
       console.error('Error fetching accepted reviews:', error);
     }
   };
-
 
   const countAllComments = (comments) => {
     let count = 0;
@@ -83,26 +117,39 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     return count;  
   };
 
-  const onDragEnd = async (result) => {
+  const clientChange = (result) => {
     const { destination, source } = result;
-  
-    if (!destination || source.droppableId === destination.droppableId ) return;
-    try {
-      const sourceId = parseInt(source.droppableId.split('-')[1]);
-      const destinationId = parseInt(destination.droppableId.split('-')[1]);
-
-      setComments(prevComments => {
-        const updatedComments = [...prevComments];
-        const commentToUpdate = updatedComments.find(comment => {
-          return comment.id === sourceId;
-        });
-        if (commentToUpdate) {
-          commentToUpdate.cluster_id = destinationId;
+    const uid = uuidv4();
+    setComments(prevComments => {
+      const updatedComments = prevComments.map(comment => {
+        if (comment.id === parseInt(source.droppableId.split('-')[1])) {
+          return {
+            ...comment,
+            cluster_id: parseInt(destination.droppableId.split('-')[1]),
+            children: [...(comment.children || []), uid]
+          };
         }
-        return updatedComments;
+        return comment;
       });
-  
- 
+      return updatedComments;
+    });
+
+    const storageKey = `clusters_${articleId}_${threadId}`;
+    const clusters = JSON.parse(localStorage.getItem(storageKey));
+    clusters[uid] = {
+      sourceId: parseInt(source.droppableId.split('-')[1]),
+      destinationId: parseInt(destination.droppableId.split('-')[1]),
+      children: [uid]
+    };
+    localStorage.setItem(storageKey, JSON.stringify(clusters));
+
+    return uid;
+  };
+
+  const serverChange = async (result, uid) => {
+    const { destination, source } = result;
+    
+    try {
       const sourceComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${source.droppableId.split('-')[1]}`);
       const destinationComment = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${destination.droppableId.split('-')[1]}`);
   
@@ -110,31 +157,29 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const sourceClusterId = sourceComment.data.cluster_id;
       const destinationHasClusters = destinationComment.data.hasClusters;
       const destinationClusterId = destinationComment.data.cluster_id;
-  
-      // Case 1: Both source and destination have hasClusters true
+      
+       // Case 1: Both source and destination have hasClusters true
       if (sourceHasClusters && destinationHasClusters) {
         console.log("Auto reject 1 case");
         return;
       }
-  
       // Case 2: Destination has a non-null cluster_id
       if (destinationClusterId !== null) {
         console.log("Auto rejected 2 case");
         return;
       }
-  
-      // Case 3: Destination has hasClusters false and cluster_id null, and source has hasClusters true
+       // Case 3: Destination has hasClusters false and cluster_id null, and source has hasClusters true
       if (!destinationHasClusters && destinationClusterId === null && sourceHasClusters) {
         console.log("Swapping source and destination");
         const reviewObj = {
           article_id: articleId, 
           thread_id: threadId,
           author: userId,
-          timestamp: moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
+          timestamp: new Date(),
           sourceId: parseInt(destination.droppableId.split('-')[1]),
           destinationId: parseInt(source.droppableId.split('-')[1]),
-          pendingReview: true,
-          newOrder: [],
+          pendingReview: null,
+          newOrder: [uid.toString()],
           prevOrder: [],
           acceptedBy: [],
           deniedBy: []
@@ -146,26 +191,31 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           article_id: articleId, 
           thread_id: threadId,
           author: userId,
-          timestamp: moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
+          timestamp: new Date(),
           sourceId: parseInt(source.droppableId.split('-')[1]),
           destinationId: parseInt(destination.droppableId.split('-')[1]),
-          pendingReview: true,
-          newOrder: [],
+          pendingReview: null,
+          newOrder: [uid.toString()],
           prevOrder: [],
           acceptedBy: [],
           deniedBy: [],
           summary: null
         };
+        console.log("reviewObj  is this: ", reviewObj);
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
         setShowAcceptedPopup(true);
       }
-
-      // fetchComments();
     } catch (error) {
       console.error('Error updating comment order:', error);
     }
   };
-  
+
+  const onDragEnd = async (result) => {
+    if (!result.destination) return;
+    const uid = clientChange(result);
+    await serverChange(result, uid);
+  };
+
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
@@ -192,8 +242,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       }
     }
   };
-   
-  // for replies
+
   const handleReplyClick = (commentId) => {
     console.log("replying to", commentId || null);
     setReplyingTo(commentId);

@@ -110,7 +110,7 @@ function CommentSection({userId, level}) {
 
       try {
         // Update the backend with the new topic
-        const currentUrl = window.location.href;
+        const currentUrl =  encodeURIComponent(window.location.href);
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${currentUrl}`, { topic: newTopicText });
 
         // Refetch the updated topics list
