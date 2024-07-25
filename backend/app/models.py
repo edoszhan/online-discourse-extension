@@ -35,7 +35,7 @@ class Comment(Base):
     cluster_id = Column(Integer, nullable=True) 
     article_id = Column(Integer, nullable=True)
     children_id = Column(Integer, nullable=True)
-    hasChildren = Column(Boolean, default=False)
+    hasClusters = Column(Boolean, default=False)
 
     thread = relationship("Thread", back_populates="comments")
     

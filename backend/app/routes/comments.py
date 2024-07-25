@@ -14,12 +14,12 @@ router = APIRouter()
 
 @router.get("/articles/{article_id}/comments/{thread_id}", response_model=List[CommentResponse])
 async def read_comments(article_id: int, thread_id: int, db: Session = Depends(get_db)):
-    comments = db.query(Comment).filter(Comment.article_id == article_id, Comment.thread_id == thread_id).all()
+    comments = db.query(Comment).filter(Comment.article_id == article_id, Comment.thread_id == thread_id).order_by(Comment.id).all()
     return comments
 
 @router.get("/articles/{article_id}/reviews/{thread_id}", response_model=List[ReviewResponse]) #updated
 async def get_reviews(article_id: int, thread_id: int, db: Session = Depends(get_db)):
-    reviews = db.query(Review).filter(Review.article_id== article_id, Review.thread_id == thread_id).all()
+    reviews = db.query(Review).filter(Review.article_id== article_id, Review.thread_id == thread_id).order_by(Review.id).all()
     return [
         ReviewResponse(
             id=review.id,
@@ -231,7 +231,9 @@ async def get_review(article_id: int, thread_id: int, review_id: int, db: Sessio
         deniedBy=review.denied_by,
         author=review.author,
         timestamp=review.timestamp,
-        summary=review.summary
+        summary=review.summary,
+        article_id=review.article_id,
+        thread_id=review.thread_id
     )
     
 @router.delete("/articles/{article_id}/{thread_id}/reviews/{review_id}")
