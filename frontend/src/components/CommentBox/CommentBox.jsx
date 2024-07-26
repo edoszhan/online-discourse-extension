@@ -18,7 +18,7 @@ const ReplyContainer = styled.div`
 `;
 
 
-const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick }) => {
+const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, level }) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
@@ -67,7 +67,7 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
           isDragging={snapshot.isDraggingOver}
           style={{ backgroundColor: hasChildren ? 'white' : 'white'}}
         >
-          <Draggable draggableId={String(comment.id)} index={index}>
+          <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
