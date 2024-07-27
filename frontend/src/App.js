@@ -68,7 +68,7 @@ function App() {
   const handleUserIdChange = (e) => {
     const newUserId = e.target.value;
     setUserId(newUserId);
-    setIsUserIdConfirmed(false);
+    // setIsUserIdConfirmed(false); // add if allow user change their usernames
   };
 
   const confirmUserId = () => {

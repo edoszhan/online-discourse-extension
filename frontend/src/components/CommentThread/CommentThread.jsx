@@ -267,9 +267,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         header={
           <>
             <h2>{topic}</h2>
-            <HeaderUnderline />
+            <div className="heading-underline" style={{ backgroundColor: color }}></div>
+            <br></br>
             <div>
-              {commentCounter} comments 
+              {acceptedReviews.filter((review) => review.pendingReview === null).length} reviews
               <span style={{ fontWeight: "bold", marginLeft: "5px" }}>
                 (REVIEWING)
               </span>

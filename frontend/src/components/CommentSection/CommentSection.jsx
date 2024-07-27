@@ -64,7 +64,7 @@ function CommentSection({userId, level}) {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
         const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
           summary: review.summary,
-          timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric' })
+          timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric', hour: 'numeric'}) // not sure yet whether showing hour is useful
         }));
         summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
         timestampsTemp[threadId] = reviews.map(review => review.timestamp);
@@ -140,7 +140,7 @@ function CommentSection({userId, level}) {
           <div className="thread-list" style={{ display: 'flex' }}>
             {topics.map((topic, idx) => (
               <div key={idx} style={{ display: "flex", flexDirection: "column", width: topicWidth, margin: "5px" }}>
-                <div style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px" }}>
+                <div style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px"}}>
                   {topic}
                 </div>
                 <div
@@ -178,7 +178,7 @@ function CommentSection({userId, level}) {
               style={{ padding: "10px 20px", marginTop: "20px", backgroundColor: "#5D6BE5", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
               onClick={() => level === "L2" && setIsPopupOpen(true)}
             >
-              Create New Discussion Thread
+             Suggest New Thread
             </button>
           </div>
           <br />

@@ -73,7 +73,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
             )
            );
           }
-            fetchComments();
+            fetchReviews();
             setShowAcceptedPopup(true);
           } catch (error) {
             console.error('Error updating comment:', error);
@@ -100,7 +100,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
 
         if (updatedReviewObj.deniedBy.length >= 2) {
           setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
-          fetchComments();
+          fetchReviews();
           setShowDeletedPopup(true);
         }
       } catch (error) {
@@ -202,7 +202,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                 </CommentContent>
               </CommentWrapper>
               <div style={{ display: 'flex', justifyContent:'flex-end' }}>
-                {review.pendingReview && (
+                {review.pendingReview === null && (
                   <>
                     <ReviewButton style={{ backgroundColor: 'green' }} onClick={() => handleAccept(review)}>
                       Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/2)
