@@ -3,6 +3,7 @@ import CommentThread from '../CommentThread/CommentThread';
 import './CommentSection.css';
 import axios from 'axios';
 import styled from 'styled-components';
+import { AiFillCheckSquare, AiFillCloseSquare } from "react-icons/ai";
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -28,16 +29,28 @@ const RefreshIcon = styled.span`
 function CommentSection({userId, level}) {
   const [topics, setTopics] = useState([]);
   const [articleId, setArticleId] = useState(null);
-  const colors = ["#5D6BE5", "#84D2C4", "#FC9CF2", "#2596be"];
+  const colors = ["#5D6BE5", "#84D2C4", "#FC9CF2", "#2596be", "red", "green", "yellow"];
   const [selectedThread, setSelectedThread] = useState(null);
   const [questions, setQuestions] = useState([]);
 
   // for new discussion thread
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [newTopic, setNewTopic] = useState('');
+  const [isReviewPopupOpen, setIsReviewPopupOpen] = useState(false);
 
   const [summaries, setSummaries] = useState([]);
   const [timestamps, setTimestamps] = useState([]);
+
+  // everything is used for suggest topic button
+  const [suggestedMaterials, setSuggestedMaterials] = useState([]);
+  const [newTopic, setNewTopic] = useState('');
+  const [newQuestion, setNewQuestion] = useState('');
+  const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+  const isButtonEnabled = (isCheckboxChecked || (newTopic.trim() !== '' && newQuestion.trim() !== '')) && level === "L2";
+
+
+  const [pendingTopics, setPendingTopics] = useState([]);
+  const [topicActions, setTopicActions] = useState({});
+
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -47,6 +60,7 @@ function CommentSection({userId, level}) {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodedUrl}`);
         setTopics(response.data.topics || []);
         setQuestions(response.data.questions|| [])
+        setSuggestedMaterials(response.data.suggested_topic_question || []);
         setArticleId(response.data.article_id);
       } catch (error) {
         console.error('Error fetching topics and questions:', error);
@@ -97,32 +111,82 @@ function CommentSection({userId, level}) {
   }
 
   const addNewThread = async () => {
-    if (level === "L2") {
+    if (isButtonEnabled) {
       let newTopicText = '';
-
-      // Check if the suggested topic checkbox is checked
-      const suggestedTopicCheckbox = document.getElementById('suggested-topic');
-      if (suggestedTopicCheckbox && suggestedTopicCheckbox.checked) {
-        newTopicText = `This feature is not yet supported: Please manually add the topic below`;
+      let newQuestionText = '';
+  
+      if (isCheckboxChecked) {
+        newTopicText = suggestedMaterials[0];
+        newQuestionText = suggestedMaterials[1];
       } else {
         newTopicText = newTopic;
+        newQuestionText = newQuestion;
       }
 
       try {
-        // Update the backend with the new topic
-        const currentUrl =  encodeURIComponent(window.location.href);
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${currentUrl}`, { topic: newTopicText });
-
-        // Refetch the updated topics list
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodeURIComponent(currentUrl)}`);
-        setTopics(response.data.topics);
-      } catch (error) {
-        console.error('Error creating new discussion thread:', error);
-      }
-
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}`, {
+          author: userId,
+          suggested_topic: newTopicText,
+          suggested_question: newQuestionText
+        }) } catch (error) {
+          console.error('Error creating new discussion thread:', error);
+        }
+    
       setIsPopupOpen(false);
     }
   };
+
+  const fetchPendingTopics = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}`);
+      if (response.data && Array.isArray(response.data)) {
+        const filteredTopics = response.data.filter(topic => topic.final_status === "pending");
+        setPendingTopics(filteredTopics);
+        setTopicActions(prevActions => {
+          const newActions = { ...prevActions };
+          filteredTopics.forEach(topic => {
+            if (!(topic.id in newActions)) {
+              newActions[topic.id] = null;
+            }
+          });
+          return newActions;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching pending topics:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isReviewPopupOpen) {
+      fetchPendingTopics();
+    }
+  }, [isReviewPopupOpen]);
+
+  const handleTopicAction = (topicId, action) => {
+    setTopicActions(prev => ({ ...prev, [topicId]: action }));
+  };
+
+  const handleSaveTopicReviews = async () => {
+    try {
+      const updatePromises = Object.entries(topicActions).map(([topicId, action]) => {
+        if (action) {
+          return axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}/${topicId}`, {
+            acceptedBy: action === 'accept' ? [userId] : [],
+            deniedBy: action === 'reject' ? [userId] : []
+          });
+        }
+        return Promise.resolve();
+      });
+
+      await Promise.all(updatePromises);
+      setIsReviewPopupOpen(false);
+      fetchPendingTopics();
+    } catch (error) {
+      console.error('Error saving topic reviews:', error);
+    }
+  };
+
 
   const topicWidth = `${100 / topics.length}%`;
 
@@ -175,12 +239,30 @@ function CommentSection({userId, level}) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <button
-              style={{ padding: "10px 20px", marginTop: "20px", backgroundColor: "#5D6BE5", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+              style={{ padding: "10px 20px", marginTop: "20px", backgroundColor: level === "L2" ? "#5D6BE5" : "#E9E9E9", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
               onClick={() => level === "L2" && setIsPopupOpen(true)}
             >
              Suggest New Thread
             </button>
+
+            <button
+              style={{
+                padding: "10px 20px",
+                marginTop: "20px",
+                marginLeft: "10px",
+                backgroundColor: level === "L2" ? "#5D6BE5" : "#E9E9E9",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer"
+              }}
+              onClick={() => setIsReviewPopupOpen(true)}
+            >
+              Review Threads
+            </button>
+
           </div>
+          <br />
           <br />
         </div>
       ) : (
@@ -196,50 +278,144 @@ function CommentSection({userId, level}) {
         />
       )}
 
+
+
+
+
       {isPopupOpen && (
         <div className="popup-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center'
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
         }}>
           <div className="popup-content" style={{
-            background: 'white', padding: '20px', borderRadius: '10px', width: '400px'
+            background: 'white', padding: '20px', borderRadius: '10px', width: '500px', zIndex: 10000
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Create New Discussion Threads</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottomColor: 'black' }}>
+              <span>Suggest New Discussion Threads</span>
+              
               <button onClick={() => setIsPopupOpen(false)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>X</button>
             </div>
             <div style={{ margin: '20px 0' }}>
               <b>Suggested Topics:</b>
+              {suggestedMaterials.length === 2 && (
                 <div style={{ marginTop: '10px' }}>
-                  <input type="checkbox" id="suggested-topic" name="suggested-topic" />
+                  <input 
+                    type="checkbox" 
+                    id="suggested-topic" 
+                    name="suggested-topic"
+                    checked={isCheckboxChecked}
+                    onChange={(e) => setIsCheckboxChecked(e.target.checked)}
+                    disabled={newTopic.trim() !== '' || newQuestion.trim() !== ''}
+                  />
                   <label htmlFor="suggested-topic" style={{ marginLeft: '10px' }}>
-                  <b>This feature is not yet supported</b>: Please manually add the topic below
+                    <b>Topic:</b> {suggestedMaterials[0]}
+                    <br />
+                    <i> Question: </i> {suggestedMaterials[1]}
                   </label>
                 </div>
+              )}
             </div>
             <div style={{ marginBottom: '20px' }}>
+              <p>Write down new topics</p>
               <textarea
                 value={newTopic}
                 onChange={(e) => setNewTopic(e.target.value)}
-                placeholder="Write down new topic"
+                placeholder="Topic"
+                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '10px' }}
+                disabled={isCheckboxChecked}
+              />
+              <p>Add supporting question to the topic</p>
+              <textarea
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+                placeholder="Question"
                 style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                disabled={isCheckboxChecked}
               />
             </div>
             <button
               onClick={addNewThread}
               style={{
                 padding: '10px 20px',
-                backgroundColor: level === "L2" ? '#5D6BE5' : '#ccc',
+                backgroundColor: isButtonEnabled ? '#5D6BE5' : 'gray',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: level === "L2" ? 'pointer' : 'not-allowed'
+                cursor: isButtonEnabled ? 'pointer' : 'not-allowed',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
+              disabled={!isButtonEnabled}
             >
-              Create New Discussion
+              Suggest change
             </button>
           </div>
         </div>
       )}
+
+
+      {isReviewPopupOpen && (
+        <div className="popup-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
+        }}>
+          <div className="popup-content" style={{
+            background: 'white', padding: '20px', borderRadius: '10px', width: '400px', zIndex: 10000
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Review Suggested Threads</span>
+              <button onClick={() => setIsReviewPopupOpen(false)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>X</button>
+            </div>
+            <div style={{ margin: '20px 0' }}>
+              {pendingTopics.map((topic) => (
+                <div key={topic.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <strong>{topic.suggested_topic}</strong>
+                    <br />
+                    <small>By: {topic.author}</small>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => handleTopicAction(topic.id, 'accept')}
+                      style={{ marginRight: '5px', cursor: 'pointer', border: 'none', background: 'none' }}
+                    >
+                      {topicActions[topic.id] === 'accept' ? (
+                        <AiFillCheckSquare style={{ color: 'green', fontSize: '24px' }} />
+                      ) : (
+                        <div style={{ width: '24px', height: '24px', border: '2px solid green' }} />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleTopicAction(topic.id, 'reject')}
+                      style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+                    >
+                      {topicActions[topic.id] === 'reject' ? (
+                        <AiFillCloseSquare style={{ color: 'red', fontSize: '24px' }} />
+                      ) : (
+                        <div style={{ width: '24px', height: '24px', border: '2px solid red' }} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={handleSaveTopicReviews}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#5D6BE5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

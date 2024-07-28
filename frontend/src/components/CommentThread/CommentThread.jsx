@@ -426,6 +426,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
             <AddCommentButton onClick={handleAddComment}>
               POST
             </AddCommentButton>
+            <br />
+            <br />
           </CommentActions>
         </CommentInputContainer>
       </CommentBoxContainer>
@@ -539,11 +541,8 @@ const ReviewMessage = styled.div`
 
 const CommentsContainer = styled.div`
   margin-top: 10px;
-  // border-radius: 5px;
   padding: 10px;
-  // background-color: ${(props) => (props.isDraggingOver ? 'lightblue' : 'lightgrey')};
   background-color: #F2F2F2;
-  //  border: 2px solid #000;
 `;
 const ReviewButton = styled.button`
   background-color: #5D6BE5;
@@ -554,13 +553,6 @@ const ReviewButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-`;
-
-const HeaderUnderline = styled.div`
-  width: 120%;
-  height: 2px;
-  background-color: ${(props) => props.color};
-  margin-bottom: 10px;
 `;
 
 const RefreshButton = styled.button`

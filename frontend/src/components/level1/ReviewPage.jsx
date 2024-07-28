@@ -136,7 +136,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       </ReviewHeader>
       {header}
       <ReviewSection>
-      {reviews.filter((review) => review.pendingReview === null).map((review, index) => (
+      {reviews.filter((review) => review.pendingReview === null).length === 0 ? (
+          <NoReviewsMessage>Nothing to review as of right now</NoReviewsMessage>
+        ) : (
+          reviews.filter((review) => review.pendingReview === null).map((review, index) => (
           <div key={review.id}>
              <CombinedCommentContainer>
              <div className="review-title">#{index + 1} Review</div>
@@ -215,10 +218,13 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
               </div>
               </CombinedCommentContainer>
           </div>
-        ))}
+          ))
+        )}
       </ReviewSection>
       {showAcceptedPopup && <AcceptedPopup onClose={handleClosePopup} />}
       {showDeletedPopup && <DeletedPopup onClose={handleClosePopupDelete} />}
+      <br />
+      <br />
     </ReviewPageContainer>
   );
 };
