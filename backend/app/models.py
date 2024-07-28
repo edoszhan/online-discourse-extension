@@ -19,8 +19,11 @@ class Thread(Base):
     website_url = Column(String, index=True)
     topics = Column(JSON)
     questions = Column(JSON)
+    extracted_text = Column(String)
+    suggested_topic_question = Column(JSON, default = [])
 
     comments = relationship("Comment", back_populates="thread")
+    topic = relationship("Topic", back_populates="thread")
     
 class Comment(Base):
     __tablename__ = "comments"
@@ -55,3 +58,19 @@ class Review(Base):
     summary = Column(String)
     article_id= Column(Integer)
     thread_id= Column(Integer)
+
+
+class Topic(Base):
+    __tablename__ = "topics"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    article_id = Column(Integer, ForeignKey("threads.id"))
+    author = Column(String)
+    suggested_topic = Column(String)
+    suggested_question = Column(String)
+    timestamp = Column(TIMESTAMP, default=datetime.now(timezone('Asia/Seoul')))
+    acceptedBy = Column(JSON, default=[])
+    deniedBy = Column(JSON, default=[])
+    final_status = Column(String, default="pending")
+
+    thread = relationship("Thread", back_populates="topic")

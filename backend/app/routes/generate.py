@@ -26,13 +26,13 @@ async def generate_topics_endpoint(article: ArticleText, db: Session = Depends(g
     if existing_thread:
         return GenerateResponse(topics=existing_thread.topics, questions=existing_thread.questions)
 
-    topics, questions = generate_topics_and_questions(extracted_text)
+    topics, questions, suggested_topic_question = generate_topics_and_questions(extracted_text)
 
     # Store the generated topics and questions in the threads table
-    new_thread = ThreadCreate(website_url=website_url, topics=topics, questions=questions)
-    db_thread = Thread(**new_thread.model_dump())
-    db.add(db_thread)
+    new_thread = Thread(extracted_text=extracted_text, website_url=website_url, topics=topics, questions=questions, suggested_topic_question=suggested_topic_question)
+    # db_thread = Thread(**new_thread.model_dump())
+    db.add(new_thread)
     db.commit()
-    db.refresh(db_thread)
+    db.refresh(new_thread)
 
     return GenerateResponse(topics=topics, questions=questions)

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, attributes
 from typing import List
 from app.utils.database import get_db
 from app.models import Comment
 from app.schemas import CommentCreate, CommentResponse
-from app.models import Thread, Comment, Review
+from app.models import Thread, Comment, Review, Topic
 from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse, ReviewUpdate
 from datetime import datetime
 from urllib.parse import urlparse, unquote
@@ -89,33 +89,6 @@ async def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Comment deleted 2 successfully"}
 
-# @router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) #updated
-# async def update_comment(article_id: int, thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
-#     db_comment = db.query(Comment).filter(
-#         Comment.article_id == article_id,
-#         Comment.thread_id == thread_id,
-#         Comment.id == comment_id
-#     ).first()
-#     if db_comment is None:
-#         raise HTTPException(status_code=404, detail="Comment not found")
-
-#     print(f"Updating comment: {db_comment.id} with data: {update_data}")
-#     print(f"Before update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
-
-#     # Only update the cluster_id field
-#     if 'cluster_id' in update_data:
-#         db_comment.cluster_id = update_data['cluster_id']
-#         print(f"After update - Comment ID: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
-#     else:
-#         raise HTTPException(status_code=400, detail="No valid fields provided for update")
-
-#     db.commit()
-#     db.refresh(db_comment)
-
-#     print(f"Updated comment: {db_comment.id}, Cluster ID: {db_comment.cluster_id}")
-
-#     return db_comment
-
 @router.put("/articles/{article_id}/comments/{thread_id}/{comment_id}", response_model=CommentResponse) # here, we can update cluster_id, children_id, upvotes
 async def update_comment(article_id: int, thread_id: int, comment_id: int, update_data: dict, db: Session = Depends(get_db)):
     db_comment = db.query(Comment).filter(
@@ -186,7 +159,7 @@ async def create_review(article_id: int, thread_id: int, review: ReviewCreate, d
             accepted_by=review.acceptedBy,
             denied_by=review.deniedBy,
             author=review.author,
-            timestamp=review.timestamp
+            timestamp=datetime.now()
         )
         db.add(db_review)
         db.commit()
@@ -300,8 +273,14 @@ async def get_topics_by_url(website_url: str, db: Session = Depends(get_db)):
     thread = db.query(Thread).filter(Thread.website_url == decoded_url).first()
     if thread:
         print(f"Thread found: {thread.id}")
-        print(f"Website link found: {thread.website_url}")
-        return {"exists": True, "topics": thread.topics, "questions": thread.questions, "article_id": thread.id}
+        return {
+            "exists": True,
+            "topics": thread.topics,
+            "questions": thread.questions,
+            "article_id": thread.id,
+            "extracted_text": thread.extracted_text,
+            "suggested_topic_question": thread.suggested_topic_question
+        }
     
     return {"exists": False,"website_url": decoded_url, "message": "Discussion not found probably due to link"}
 
@@ -311,8 +290,6 @@ class TopicUpdateRequest(BaseModel):
 @router.put("/website_check/{website_url:path}")
 async def update_topics_by_url(website_url: str, request: TopicUpdateRequest, db: Session = Depends(get_db)):
     decoded_url = unquote(website_url)
-    print("Received URL:", website_url)
-    print("Received topic:", request.topic)
     
     thread = db.query(Thread).filter(Thread.website_url == decoded_url).first()
     if thread:
@@ -325,3 +302,66 @@ async def update_topics_by_url(website_url: str, request: TopicUpdateRequest, db
         return {"message": "Topic updated successfully", "topics": thread.topics}
 
     raise HTTPException(status_code=404, detail="Thread not found")
+
+
+class TopicCreate(BaseModel):
+    author: str
+    suggested_topic: str
+    suggested_question: str
+
+class TopicUpdate(BaseModel):
+    acceptedBy: List[str] = []
+    deniedBy: List[str] = []
+    
+    
+@router.get("/topics/{article_id}")
+async def get_topics(article_id: int, db: Session = Depends(get_db)):
+    topics = db.query(Topic).filter(Topic.article_id == article_id).all()
+    return topics
+
+@router.post("/topics/{article_id}")
+async def create_topic(article_id: int, topic: TopicCreate, db: Session = Depends(get_db)):
+    new_topic = Topic(
+        article_id=article_id,
+        author=topic.author,
+        suggested_topic=topic.suggested_topic,
+        suggested_question=topic.suggested_question,
+        timestamp=datetime.now(),
+        acceptedBy=[],
+        deniedBy=[],
+        final_status="pending"
+    )
+    db.add(new_topic)
+    db.commit()
+    db.refresh(new_topic)
+    return new_topic
+
+@router.put("/topics/{article_id}/{topic_id}")
+async def update_topic(article_id: int, topic_id: int, topic_update: TopicUpdate, db: Session = Depends(get_db)):
+    db_topic = db.query(Topic).filter(Topic.id == topic_id, Topic.article_id == article_id).first()
+    if not db_topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    if topic_update.acceptedBy and topic_update.acceptedBy[0] not in db_topic.acceptedBy + db_topic.deniedBy:
+        db_topic.acceptedBy = db_topic.acceptedBy + topic_update.acceptedBy
+    elif topic_update.deniedBy and topic_update.deniedBy[0] not in db_topic.acceptedBy + db_topic.deniedBy:
+        db_topic.deniedBy = db_topic.deniedBy + topic_update.deniedBy
+
+    if len(db_topic.acceptedBy) >= 2:
+        db_topic.final_status = "accepted"
+        thread = db.query(Thread).filter(Thread.id == article_id).first()
+        if thread:
+            if db_topic.suggested_topic not in thread.topics:
+                thread.topics = thread.topics + [db_topic.suggested_topic]
+                attributes.flag_modified(thread, "topics")
+            if db_topic.suggested_question not in thread.questions:
+                thread.questions = thread.questions + [db_topic.suggested_question]
+                attributes.flag_modified(thread, "questions")
+    elif len(db_topic.deniedBy) >= 2:
+        db_topic.final_status = "denied"
+    else: 
+        db_topic.final_status = "pending"
+
+    db.commit()
+    db.refresh(db_topic)
+    return db_topic

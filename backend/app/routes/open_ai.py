@@ -10,9 +10,9 @@ def generate_topics_and_questions(text, max_retries=1, delay=1):
     client = OpenAI(api_key=api_key)
     
     prompt = f"""
-    Please generate 3 diverse and distinct topics based on the following article text. 
+    Please generate 4 diverse and distinct topics based on the following article text. 
     For each topic, also generate a thought-provoking question that can open a meaningful conversation among readers and help explore the topic further. 
-    Each topic should be represented by a minimum of 5 words and a maximum of 10 words.
+    Each topic should be represented by a minimum of 4 words and a maximum of 5 words.
     Format the output as follows:
     Topic 1: <topic>
     Question 1: <question>
@@ -20,6 +20,8 @@ def generate_topics_and_questions(text, max_retries=1, delay=1):
     Question 2: <question>
     Topic 3: <topic>
     Question 3: <question>
+    Topic 4: <topic>
+    Question 4: <question>
     
     Article text: {text}
     """ 
@@ -39,19 +41,25 @@ def generate_topics_and_questions(text, max_retries=1, delay=1):
                 temperature=0.7, 
             )
             response_text = chat_completion.choices[0].message.content.strip()
-            print("what we get 0:", response_text)
             topics_and_questions = [line.strip() for line in response_text.split("\n") if line.strip()]  
-            print("what we get: ", topics_and_questions)
             topics = []
             questions = []
+            suggested_topic_question = []
+            
             for i in range(0, len(topics_and_questions), 2):
                 topic_line = topics_and_questions[i].strip()
                 question_line = topics_and_questions[i+1].strip()
                 if topic_line and question_line:
                     if topic_line.startswith("Topic") and question_line.startswith("Question"):
-                        topics.append(topic_line.split(":")[1].replace("**", "").strip())
-                        questions.append(question_line.split(":")[1].replace("**", "").strip())
-            return topics, questions
+                        topic = topic_line.split(":")[1].replace("**", "").strip()
+                        question = question_line.split(":")[1].replace("**", "").strip()
+                        if topic and question:
+                            if len(topics) < 3:
+                                topics.append(topic)
+                                questions.append(question)
+                            else:
+                                suggested_topic_question = [topic, question]
+            return topics, questions, suggested_topic_question
         except APIError as e:
             if e.status_code == 429:  
                 retries += 1

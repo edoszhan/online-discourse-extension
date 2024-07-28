@@ -38,9 +38,10 @@ class ThreadBase(BaseModel):
     website_url: str
     topics: List[str]
     questions: List[str]
+    extracted_text: str
 
 class ThreadCreate(ThreadBase):
-    pass
+    suggested_topic_question: List[str] = []
 
 class ThreadResponse(ThreadBase):
     id: int
