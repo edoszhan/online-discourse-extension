@@ -49,8 +49,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           const clusteredComments = comments.filter(comment => comment.cluster_id === cluster.destinationId);
   
           return (
-            <ClusterSection key={cluster.uid}>
-              <ClusterLabel>Cluster #{index + 1} Result - Accepted</ClusterLabel>
+            <ClusterSection key={cluster.uid} status={cluster.pendingReview}>
+              <ClusterLabel>Cluster #{index + 1} Result - {cluster.pendingReview ? 'Rejected' : 'Accepted'} </ClusterLabel>
               {destinationComment ? (
                 <CommentUnit
                   articleId={articleId}
@@ -125,17 +125,18 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
+      const nullReviews = response.data.filter((review) => review.pendingReview != null);
 
       const storageKey = `clusters_${articleId}_${threadId}`;
       const clusters = JSON.parse(localStorage.getItem(storageKey));
       
       let clustersChanged = false;
       let deletedClustersArray = [];
-      acceptedReviews.forEach(review => {
+      nullReviews.forEach(review => {
         if (review.pendingReview != null) {
           Object.entries(clusters).forEach(([uid, cluster]) => {
             if (cluster.children && cluster.children[0] === review.newOrder[0]) {
-              deletedClustersArray.push(cluster);
+              deletedClustersArray.push({...cluster, pendingReview: review.pendingReview});
               delete clusters[uid];
               clustersChanged = true;
             }
@@ -406,7 +407,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                         clusteredComments={clusteredComments}
                         onReplyClick={handleReplyClick}
                       />
-                      <ReviewMessage>Cluster accepted. Summary completed.</ReviewMessage>
+                      {/* <ReviewMessage>Cluster accepted. Summary completed.</ReviewMessage> */}
                     </>
                   ) : (
                     <CommentUnit
@@ -428,9 +429,13 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       const clusters = JSON.parse(localStorage.getItem(storageKey) || '{}');
                       const isLocalCluster = Object.values(clusters).some(cluster => cluster.destinationId === comment.id);
                       
-                      return isClusterAccepted && !acceptedReview?.summary && !isLocalCluster ? (
+                      return isLocalCluster ? (
+                        <ReviewMessage>This cluster is currently visible only to you.</ReviewMessage>
+                      ) : acceptedReview?.summary && isClusterAccepted ? (
+                        <ReviewMessage>Cluster accepted. Summary accepted.</ReviewMessage>
+                      ) : (
                         <ReviewMessage>Cluster accepted. Summary pending.</ReviewMessage>
-                      ) : <ReviewMessage>This cluster is currently visible only to you.</ReviewMessage>;
+                      );
                     })()
                   ) : (
                     level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
@@ -677,7 +682,7 @@ const PopupContainer = styled.div`
 `;
 
 const ClusterSection = styled.div`
-  background-color: #4caf50;
+  background-color: ${props => props.status ? '#ffcccc' : '#ccffcc'};
   margin: 10px 0;
   padding: 10px;
   border-radius: 5px;

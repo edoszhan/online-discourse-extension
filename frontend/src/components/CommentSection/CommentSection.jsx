@@ -73,12 +73,12 @@ function CommentSection({userId, level}) {
   const fetchAllAcceptedReviews = async () => {
     const summariesTemp = [];
     const timestampsTemp = [];
-    for (let threadId = 1; threadId <= 4; threadId++) {
+    for (let threadId = 1; threadId <= 6; threadId++) {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
         const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
           summary: review.summary,
-          timestamp: moment.utc(review.timestamp).tz('Asia/Seoul').format('MMMM D, HH:mm')
+          timestamp: moment.utc(review.timestamp).format('MMMM D, HH:mm')
         }));
         summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
         timestampsTemp[threadId] = reviews.map(review => review.timestamp);
@@ -147,7 +147,6 @@ function CommentSection({userId, level}) {
           const newActions = { ...prevActions };
           filteredTopics.forEach(topic => {
             if (topic.acceptedBy && topic.acceptedBy.includes(userId)) {
-              console.log("username already accepted")
               newActions[topic.id] = 'accept';
             } else if (topic.deniedBy && topic.deniedBy.includes(userId)) {
               newActions[topic.id] = 'reject';
