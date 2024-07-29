@@ -543,7 +543,7 @@ const ReviewMessage = styled.div`
 const CommentsContainer = styled.div`
   margin-top: 10px;
   padding: 10px;
-  background-color: white;
+  background-color: white; 
 `;
 const ReviewButton = styled.button`
   background-color: #5D6BE5;
