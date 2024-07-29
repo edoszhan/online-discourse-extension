@@ -65,7 +65,7 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? 'white' : 'white'}}
+          style={{ backgroundColor: hasChildren ? '#F2F2F2' : 'white', padding: "5px"}}
         >
           <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
             {(provided, snapshot) => (
@@ -78,12 +78,14 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
                   articleId={articleId}
                   threadId={threadId}
                   comment={comment}
-                  isCombined={clusteredComments.length > 0}
+                  isCombined={false}
                   isDragging={snapshot.isDragging}
                   isReplyDisabled={false}
                   userId={userId}
                   onReplyClick={onReplyClick}
+                  level={level}
                 />
+
 
                  {/* Render the replies */}
                  {childrenComments && childrenComments.length > 0 && (

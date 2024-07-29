@@ -14,6 +14,8 @@ const CommentContainer = styled.div`
   background-color: ${(props) =>
     props.isReplying ? '#9bbcc7' : props.isCombined ? 'white' : 'white'};
   opacity: ${(props) => (props.isDragging ? '1' : '1')}; 
+
+  position: relative;
 `;
 
 const UserLogo = styled.div`
@@ -103,7 +105,19 @@ const IconWrapper = styled.span`
   justify-content: flex-end;
 `;
 
-const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick  }) => {
+const DraggableIndicator = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 100%;
+  background-color: #5D6BE5;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+`;
+
+
+const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick, level }) => {
   if (!comment) {
     return null;
   }
@@ -119,10 +133,6 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
   const formattedTimestamp = moment.utc(comment.timestamp)
   .tz('Asia/Seoul')
   .format('MMMM D, YYYY h:mm A z');
-
-  const convertToKoreanTime = (utcTimestamp) => {
-    return moment.utc(utcTimestamp).tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss');
-  };
 
   const addUpvote = async () => {
     const updatedUpvotes = Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
@@ -188,6 +198,7 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
           </UpvoteButton>
         </CommentActions>
       </CommentContent>
+      {!isCombined && level === "L0" &&  <DraggableIndicator />}
     </CommentContainer>
   );
 };

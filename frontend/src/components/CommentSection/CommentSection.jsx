@@ -4,6 +4,7 @@ import './CommentSection.css';
 import axios from 'axios';
 import styled from 'styled-components';
 import { AiFillCheckSquare, AiFillCloseSquare } from "react-icons/ai";
+import moment from 'moment-timezone';
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -77,7 +78,7 @@ function CommentSection({userId, level}) {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
         const reviews = response.data.filter((review) => !review.pendingReview).map(review => ({
           summary: review.summary,
-          timestamp: new Date(review.timestamp).toLocaleString('default', { month: 'long', day: 'numeric', hour: 'numeric'}) // not sure yet whether showing hour is useful
+          timestamp: moment.utc(review.timestamp).tz('Asia/Seoul').format('MMMM D, HH:mm')
         }));
         summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
         timestampsTemp[threadId] = reviews.map(review => review.timestamp);

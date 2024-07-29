@@ -17,7 +17,7 @@ const ReplyContainer = styled.div`
   padding-left: 10px;
 `;
 
-const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick }) => {
+const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, hasSummaryCollapse}) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
@@ -58,19 +58,19 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
   };
 
   return (
-    <Droppable droppableId={`droppable-${comment.id}`}>
+    <Droppable droppableId={`droppable-${comment.id}`} isDropDisabled={hasSummaryCollapse}>
       {(provided, snapshot) => (
         <CommentUnitContainer
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? 'white' : 'white'}}
+          style={{ backgroundColor: hasChildren ? '#F2F2F2' : 'white', padding: "5px"}}
         >
           <Comment
             articleId={articleId}
             threadId={threadId}
             comment={comment}
-            isCombined={clusteredComments.length > 0}
+            isCombined={true}
             isDragging={false}
             isReplyDisabled={false}
             userId={userId}

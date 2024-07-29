@@ -44,7 +44,7 @@ const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredC
   return (
     <CommentBoxContainer>
       <ClusteredCommentsContainer>
-        <Comment comment={comment} isCombined={false} isDragging={false} isReplyDisabled={isReplyDisabled} />
+        <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={isReplyDisabled} />
         {childrenComments && childrenComments.length > 0 ? (
           <>
             <ReplyContainer>

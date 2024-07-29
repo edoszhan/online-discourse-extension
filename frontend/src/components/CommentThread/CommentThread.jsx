@@ -367,6 +367,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       userId={userId}
                       onReplyClick={handleReplyClick}
                       level={level}
+                      hasSummaryCollapse={comment.summary !== undefined && comment.summary !== null}
                     />
                   )}
                   {level === 'L0' || level === 'L2' ? (
@@ -542,7 +543,7 @@ const ReviewMessage = styled.div`
 const CommentsContainer = styled.div`
   margin-top: 10px;
   padding: 10px;
-  background-color: #F2F2F2;
+  background-color: white;
 `;
 const ReviewButton = styled.button`
   background-color: #5D6BE5;
