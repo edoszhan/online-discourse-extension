@@ -21,6 +21,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const commentInputRef = useRef(null);
   const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
 
+  const [isClusterDeleted, setIsClusterDeleted] = useState(false);
+  const [deletedClusters, setDeletedClusters] = useState([]);
+
+
   useEffect(() => {
     if (replyingTo) {
       commentInputRef.current.focus();
@@ -32,6 +36,46 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     fetchAcceptedReviews();
     initializeLocalStorage();
   }, []);
+
+
+  const ClusterPopup = ({ clusters, comments, onClose }) => (
+    <Overlay>
+      <PopupContainer>
+        <h3>Here are the updates made in your absence:</h3>
+        <ScrollContainer>
+        {clusters.map((cluster, index) => {
+          const destinationComment = comments.find(comment => comment.id === cluster.destinationId);
+          const replies = comments.filter(comment => comment.children_id === cluster.destinationId);
+          const clusteredComments = comments.filter(comment => comment.cluster_id === cluster.destinationId);
+  
+          return (
+            <ClusterSection key={cluster.uid}>
+              <ClusterLabel>Cluster #{index + 1} Result - Accepted</ClusterLabel>
+              {destinationComment ? (
+                <CommentUnit
+                  articleId={articleId}
+                  threadId={threadId}
+                  comment={destinationComment}
+                  index={0}
+                  clusteredComments={clusteredComments}
+                  childrenComments={replies}
+                  userId={userId}
+                  level={level}
+                />
+              ) : (
+                <p>Destination comment not found</p>
+              )}
+            </ClusterSection>
+          );
+        })}
+        </ScrollContainer>
+          <ButtonContainerPopup>
+            <OkayButton onClick={onClose}>Close</OkayButton>
+          </ButtonContainerPopup>
+      </PopupContainer>
+    </Overlay>
+  );
+
 
   const initializeLocalStorage = () => {
     const storageKey = `clusters_${articleId}_${threadId}`;
@@ -86,10 +130,12 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const clusters = JSON.parse(localStorage.getItem(storageKey));
       
       let clustersChanged = false;
+      let deletedClustersArray = [];
       acceptedReviews.forEach(review => {
         if (review.pendingReview != null) {
           Object.entries(clusters).forEach(([uid, cluster]) => {
             if (cluster.children && cluster.children[0] === review.newOrder[0]) {
+              deletedClustersArray.push(cluster);
               delete clusters[uid];
               clustersChanged = true;
             }
@@ -100,6 +146,12 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       if (clustersChanged) {
         localStorage.setItem(storageKey, JSON.stringify(clusters));
       }
+
+      if (deletedClustersArray.length > 0) {
+        setDeletedClusters(deletedClustersArray);
+        setIsClusterDeleted(true);
+      }
+
     } catch (error) {
       console.error('Error fetching accepted reviews:', error);
     }
@@ -354,7 +406,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                         clusteredComments={clusteredComments}
                         onReplyClick={handleReplyClick}
                       />
-                      <ReviewMessage>This change has been accepted and summarized</ReviewMessage>
+                      <ReviewMessage>Cluster accepted. Summary completed.</ReviewMessage>
                     </>
                   ) : (
                     <CommentUnit
@@ -377,8 +429,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       const isLocalCluster = Object.values(clusters).some(cluster => cluster.destinationId === comment.id);
                       
                       return isClusterAccepted && !acceptedReview?.summary && !isLocalCluster ? (
-                        <ReviewMessage>This change has been accepted but not summarized</ReviewMessage>
-                      ) : null;
+                        <ReviewMessage>Cluster accepted. Summary pending.</ReviewMessage>
+                      ) : <ReviewMessage>This cluster is currently visible only to you.</ReviewMessage>;
                     })()
                   ) : (
                     level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
@@ -438,12 +490,31 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           </CommentActions>
         </CommentInputContainer>
       </CommentBoxContainer>
+      {isClusterDeleted && deletedClusters.length > 0 && (
+        <ClusterPopup 
+          clusters={deletedClusters}
+          comments={comments}
+          onClose={() => setIsClusterDeleted(false)}
+        />
+      )}
       {showAcceptedPopup && <AcceptedPopup onClose={handleClosePopup} />}
     </div>
   );
 };
 
 export default CommentThread;
+
+
+const ScrollContainer = styled.div`
+  max-height: 400px;
+  overflow-y: auto;
+`;
+
+const ClusterLabel = styled.h4`
+  margin: 0;
+  padding: 0 0 10px 0;
+  color: white;
+`;
 
 
 const CommentBoxContainer = styled.div`
@@ -583,3 +654,48 @@ const ButtonContainer = styled.div`
   align-items: center;
   width: 100%;
 `;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+
+const PopupContainer = styled.div`
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 600px;
+`;
+
+const ClusterSection = styled.div`
+  background-color: #4caf50;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+`;
+
+const OkayButton = styled.button`
+  background-color: white;
+  color: #4caf50;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+`;
+
+const ButtonContainerPopup= styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+`;
+

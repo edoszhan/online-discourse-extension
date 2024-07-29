@@ -65,7 +65,7 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? '#F2F2F2' : 'white', padding: "5px"}}
+          style={{ backgroundColor: hasChildren ? '#F2F2F2' : '#F2F2F2', padding: "5px"}}
         >
           <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
             {(provided, snapshot) => (
