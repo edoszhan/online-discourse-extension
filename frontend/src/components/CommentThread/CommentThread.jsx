@@ -371,9 +371,15 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                     />
                   )}
                   {level === 'L0' || level === 'L2' ? (
-                    isClusterAccepted && !acceptedReview?.summary ? (
-                      <ReviewMessage>This change has been accepted but not summarized</ReviewMessage>
-                    ) : null
+                    (() => {
+                      const storageKey = `clusters_${articleId}_${threadId}`;
+                      const clusters = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                      const isLocalCluster = Object.values(clusters).some(cluster => cluster.destinationId === comment.id);
+                      
+                      return isClusterAccepted && !acceptedReview?.summary && !isLocalCluster ? (
+                        <ReviewMessage>This change has been accepted but not summarized</ReviewMessage>
+                      ) : null;
+                    })()
                   ) : (
                     level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
