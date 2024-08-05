@@ -4,6 +4,10 @@ import { AiOutlineLike, AiFillLike, AiOutlineMessage } from "react-icons/ai";
 import axios from 'axios';
 import moment from 'moment-timezone';
 
+import iconCat from '../../assets/icon_cat.png';
+import iconDuck from '../../assets/icon_duck.png';
+import iconFox from '../../assets/icon_fox.png';
+
 const CommentContainer = styled.div`
   display: flex;
   align-items: flex-start;
@@ -32,6 +36,24 @@ const UserLogo = styled.div`
   font-weight: bold;
   margin-top: 10px;
   flex-shrink: 0;
+`;
+// const UserLogo = styled.div`
+//   margin-right: 10px;
+//   width: 50px;
+//   height: 50px;
+//   background-color: white;
+//   border-radius: 50%;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   overflow: hidden;
+//   flex-shrink: 0;
+// `;
+
+const UserIcon = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const CommentContent = styled.div`
@@ -153,6 +175,16 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
     }
   };
 
+  const iconPaths = [
+    chrome.runtime.getURL('static/media/icon_cat.png'),
+    chrome.runtime.getURL('static/media/icon_duck.png'),
+    chrome.runtime.getURL('static/media/icon_fox.png')
+];
+
+  
+  const getRandomIcon = () => {
+    return iconPaths[Math.floor(Math.random() * iconPaths.length)];
+  };
 
   const handleReplyClick = () => {
     setIsReplying(true);
@@ -176,9 +208,14 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
     };
   }, [isReplying]);
 
+  const userIcon = getRandomIcon();
+
   return (
     <CommentContainer isDragging={isDragging} isReplying={isReplying}>
-      <UserLogo>{authorInitial}</UserLogo>
+      {/* <UserLogo>
+        <img src={getRandomIcon()} alt="User Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </UserLogo> */}
+        <UserLogo>{authorInitial}</UserLogo>
       <CommentContent isCombined={isCombined} isDragging={isDragging}>
         <CommentDetails>
           <CommentAuthor>{comment.author}</CommentAuthor>

@@ -33,6 +33,9 @@
         "static/css/CommentThread.css",
         "static/css/CommentBox.css",
         "static/media/default-avatar-2.png",
+        "static/media/icon_fox.png",
+        "static/media/icon_cat.png",
+        "static/media/icon_duck.png",
         "static/css/ReviewPage.css"
       ],
       "matches": ["<all_urls>"]
