@@ -4,7 +4,7 @@ import Comment from './Comment';
 
 const CommentMapContainer = styled.div`
   margin-bottom: 10px;
-  background-color: white;
+  background-color: #f8f8f8;
   border-radius: 5px;
 `;
 

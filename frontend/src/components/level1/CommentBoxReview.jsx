@@ -5,6 +5,7 @@ import axios from 'axios';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
+  padding: 10px;
   background-color: ${(props) => (props.hasChildren ? 'white' : 'white')};
   border-radius: 5px;
 `;
@@ -13,7 +14,6 @@ const ClusteredCommentsContainer = styled.div`
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 10px;
-  background-color: ${(props) => (props.hasChildren ? '#D9DBF4' : 'white')};
 `;
 
 const ReplyContainer = styled.div`
@@ -45,7 +45,7 @@ const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredC
   };
 
   return (
-      <ClusteredCommentsContainer hasChildren={hasChildren}>
+      <CommentBoxContainer hasChildren={hasChildren}>
         <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={isReplyDisabled} />
         {childrenComments && childrenComments.length > 0 ? (
           <>
@@ -106,7 +106,7 @@ const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredC
             ) : null}
           </>
         )}
-      </ClusteredCommentsContainer>
+        </CommentBoxContainer>
   );
 };
 

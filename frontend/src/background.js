@@ -22,16 +22,22 @@ chrome.runtime.onMessage.addListener((request) => {
 
 
 let debounceTimer;
+let isFetching = false;
 
 chrome.runtime.onMessage.addListener((request) => {
   if (request.type === 'ARTICLE_TEXT_EXTRACTED') {
     const { text, url } = request;
 
+    if (isFetching){
+      return;
+    }
+
+    isFetching = true;
+
     fetch(`${process.env.REACT_APP_BACKEND_URL}/api/website_check/${encodeURIComponent(url)}`)
       .then(response => response.json())
       .then(data => {
         if (data.exists) {
-          console.log('Thread already exists. No need to generate topics.');
         } else {
           clearTimeout(debounceTimer);
 
@@ -49,12 +55,18 @@ chrome.runtime.onMessage.addListener((request) => {
               })
               .catch(error => {
                 console.error('Error:', error);
+              })
+              .finally(() => {
+                isFetching = false;
               });
           }, 1000);
         }
       })
       .catch(error => {
         console.error('Error:', error);
+      })
+      .finally(() => {
+        isFetching = false;
       });
   }
 });

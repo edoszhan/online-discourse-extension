@@ -24,7 +24,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const [isClusterDeleted, setIsClusterDeleted] = useState(false);
   const [deletedClusters, setDeletedClusters] = useState([]);
 
-
   useEffect(() => {
     if (replyingTo) {
       commentInputRef.current.focus();
@@ -41,7 +40,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const ClusterPopup = ({ clusters, comments, onClose }) => (
     <Overlay>
       <PopupContainer>
-        <h3>Here are the updates made in your absence:</h3>
+        <Title>Here are the updates made in your absence:</Title>
         <ScrollContainer>
         {clusters.map((cluster, index) => {
           const destinationComment = comments.find(comment => comment.id === cluster.destinationId);
@@ -263,7 +262,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           deniedBy: [],
           summary: null
         };
-        console.log("reviewObj  is this: ", reviewObj);
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
         setShowAcceptedPopup(true);
       }
@@ -322,12 +320,6 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
             <h2>{topic}</h2>
             <div className="heading-underline" style={{ backgroundColor: color }}></div>
             <br></br>
-            <div>
-              {acceptedReviews.filter((review) => review.pendingReview === null).length} reviews
-              <span style={{ fontWeight: "bold", marginLeft: "5px" }}>
-                (REVIEWING)
-              </span>
-            </div>
           </>
         }
       />
@@ -518,7 +510,8 @@ const ScrollContainer = styled.div`
 const ClusterLabel = styled.h4`
   margin: 0;
   padding: 0 0 10px 0;
-  color: white;
+  color: black;
+  margin-top: 5px;
 `;
 
 
@@ -571,12 +564,13 @@ const UserProfile = styled.div`
 const AddCommentButton = styled.button`
   width: 100%;
   padding: 10px 20px;
-  background-color: #007bff;
+  // background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   box-sizing: border-box;
+  background-color: #5D6BE5
 `;
 
 const Separator = styled.hr`
@@ -674,27 +668,41 @@ const Overlay = styled.div`
 `;
 
 const PopupContainer = styled.div`
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   padding: 20px;
-  border-radius: 5px;
+  border-radius: 10px;
   width: 80%;
-  max-width: 600px;
+  max-width: 700px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const Title = styled.h3`
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
 `;
 
 const ClusterSection = styled.div`
-  background-color: ${props => props.status ? '#ffcccc' : '#ccffcc'};
+  background-color: ${props => props.status ? '#ffdddd' : '#ddffdd'};
   margin: 10px 0;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid ${props => props.status ? '#ffaaaa' : '#aaffaa'};
 `;
 
 const OkayButton = styled.button`
-  background-color: white;
-  color: #4caf50;
+  background-color: #5D6BE5;
+  color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #3b4bb3;
+  }
 `;
 
 const ButtonContainerPopup= styled.div`

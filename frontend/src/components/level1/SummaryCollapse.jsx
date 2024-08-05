@@ -4,7 +4,7 @@ import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
 import CommentBox from '../CommentBox/CommentBox';
 
 const SummaryCollapse = ({ articleId, threadId, summary, comment, clusteredComments, childrenComments, onReplyClick }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -33,13 +33,18 @@ const SummaryContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  background-color: #f0f0f0;
+  padding: 15px;
+  background-color: #e9e9e9;
   cursor: pointer;
+  border-bottom: 1px solid #ccc;
+  border-radius: 10px 10px 0 0;
 `;
 
 const SummaryText = styled.div`
   flex: 1;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
 `;
 
 const ToggleButton = styled.div`
@@ -52,5 +57,9 @@ const ToggleButton = styled.div`
 `;
 
 const ExpandedContent = styled.div`
-  padding: 10px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
 `;

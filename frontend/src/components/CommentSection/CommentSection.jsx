@@ -11,6 +11,7 @@ const HeaderContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  margin-bottom: 10px;
 `;
 
 const RefreshButton = styled.button`
@@ -20,12 +21,27 @@ const RefreshButton = styled.button`
   font-size: 15px;
   display: flex;
   align-items: center;
+  font-weight: bold;
 `;
 
 const RefreshIcon = styled.span`
   margin-right: 5px;
   font-size: 15px;
 `;
+
+const FloatingMessage = styled.div`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 10000;
+  opacity: ${({ show }) => (show ? 1 : 0)};
+  transition: opacity 0.3s ease-in-out;
+`;
+
 
 function CommentSection({userId, level}) {
   const [topics, setTopics] = useState([]);
@@ -51,6 +67,10 @@ function CommentSection({userId, level}) {
 
   const [pendingTopics, setPendingTopics] = useState([]);
   const [topicActions, setTopicActions] = useState({});
+
+  const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
+
 
   const fetchTopics = async () => {
     try {
@@ -129,11 +149,16 @@ function CommentSection({userId, level}) {
           author: userId,
           suggested_topic: newTopicText,
           suggested_question: newQuestionText
-        }) } catch (error) {
+        });
+        setConfirmationMessage('Thank you! Your suggestion has been submitted successfully.');
+      } catch (error) {
           console.error('Error creating new discussion thread:', error);
+          setConfirmationMessage('An error occurred while submitting your suggestion. Please try again.');
         }
     
       setIsPopupOpen(false);
+      setShowConfirmationMessage(true);
+      setTimeout(() => setShowConfirmationMessage(false), 5000);
     }
   };
 
@@ -208,7 +233,7 @@ function CommentSection({userId, level}) {
       {!selectedThread ? (
         <div className="discussion-threads" style={{ width: '100%' }}>
           <HeaderContainer>
-            <div style={{ padding: "15px" }}><b>Discussions About the Article</b></div>
+            <div className="header-title"><b>Discussions About the Article</b></div>
             <RefreshButton onClick={handleRefresh}>
               <RefreshIcon>&#8635;</RefreshIcon>
               Refresh
@@ -217,7 +242,7 @@ function CommentSection({userId, level}) {
           <div className="thread-list" style={{ display: 'flex' }}>
             {topics.map((topic, idx) => (
               <div key={idx} style={{ display: "flex", flexDirection: "column", width: topicWidth, margin: "5px" }}>
-                <div style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px"}}>
+                <div className="topic-heading" style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px"}}>
                   {topic}
                 </div>
                 <div
@@ -241,9 +266,9 @@ function CommentSection({userId, level}) {
                    </div>
                   ) : (
                     <>
-                      <b>No Comments</b>
+                      <b className="no-comments">No Comments</b>
                       <br />
-                      Click here to write comments
+                      <span className="click-here">Click here to write comments</span>
                     </>
                   )}
                 </div>
@@ -276,7 +301,11 @@ function CommentSection({userId, level}) {
                 borderRadius: "5px",
                 cursor: "pointer"
               }}
-              onClick={() => setIsReviewPopupOpen(true)}
+              onClick={() => {
+                if (level === "L2") {
+                  setIsReviewPopupOpen(true);
+                }
+              }}
             >
               Review Threads
             </button>
@@ -284,6 +313,11 @@ function CommentSection({userId, level}) {
           </div>
           <br />
           <br />
+          {showConfirmationMessage && (
+            <FloatingMessage show={showConfirmationMessage}>
+              {confirmationMessage}
+            </FloatingMessage>
+          )}
         </div>
       ) : (
         <CommentThread
@@ -305,10 +339,10 @@ function CommentSection({userId, level}) {
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
         }}>
           <div className="popup-content" style={{
-            background: 'white', padding: '20px', borderRadius: '10px', width: '500px', zIndex: 10000
+            background: 'white', padding: '20px', borderRadius: '10px', width: '500px', zIndex: 10000, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid black', paddingBottom: '10px' }}>
-              <span>Suggest New Discussion Threads</span>
+              <span>Suggest New Discussion Thread</span>
               <button onClick={handleClosePopup} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>X</button>
             </div>
             <div style={{ margin: '20px 0' }}>
@@ -331,7 +365,7 @@ function CommentSection({userId, level}) {
               )}
             </div>
             <div style={{ marginBottom: '20px' }}>
-              <p>Write down new topics</p>
+              <p>Write down new topic</p>
               <textarea
                 value={newTopic}
                 onChange={(e) => setNewTopic(e.target.value)}

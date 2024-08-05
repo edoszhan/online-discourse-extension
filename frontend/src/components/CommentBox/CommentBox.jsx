@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
-  background-color: ${(props) => (props.isDragging ? 'lightgreen' : 'white')};
+  background-color: ${(props) => (props.isDragging ? 'lightgreen' : '#F2F2F2')};
   border-radius: 5px;
 `;
 

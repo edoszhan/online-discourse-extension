@@ -30,7 +30,6 @@ function removeColorControl(userId, level) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'removeColorControl') {
     if ( request.payload === undefined ) {
-      console.log("nothing reached");
       return;
     }
     removeColorControl(request.payload.userId, request.payload.level);

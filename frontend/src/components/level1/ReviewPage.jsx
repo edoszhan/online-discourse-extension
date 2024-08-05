@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState} from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import CommentBox from './CommentBoxReview';
@@ -8,6 +8,7 @@ import DeletedPopup from './DeletedPopup';
 
 const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [reviews, setReviews] = useState([]);
+  const [reviewCount, setReviewCount] = useState(0);
   const [comments, setComments] = useState([]);
   const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
   const [showDeletedPopup, setShowDeletedPopup] = useState(false);
@@ -20,7 +21,9 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const fetchReviews = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
+      const filteredReviews = response.data.filter((review) => review.pendingReview === null);
       setReviews(response.data);
+      setReviewCount(filteredReviews.length);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
@@ -33,6 +36,11 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchReviews();
+    fetchComments();
   };
 
 
@@ -74,6 +82,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
            );
           }
             fetchReviews();
+
             setShowAcceptedPopup(true);
           } catch (error) {
             console.error('Error updating comment:', error);
@@ -133,15 +142,24 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
           <BackIcon>&larr;</BackIcon>
           Back
         </BackButton>
+        <RefreshButton onClick={handleRefresh}>
+          <RefreshIcon>&#8635;</RefreshIcon>
+          Refresh
+        </RefreshButton>
       </ReviewHeader>
       {header}
+      <div>
+        {reviewCount} reviews
+        <span style={{ fontWeight: "bold", marginLeft: "5px" }}>
+          (REVIEWING)
+        </span>
+      </div>
       <ReviewSection>
       {reviews.filter((review) => review.pendingReview === null).length === 0 ? (
           <NoReviewsMessage>Nothing to review as of right now</NoReviewsMessage>
         ) : (
           reviews.filter((review) => review.pendingReview === null).map((review, index) => (
           <div key={review.id}>
-             <CombinedCommentContainer>
              <div className="review-title">#{index + 1} Review</div>
               <CommentWrapper>
                 <CommentContent>
@@ -150,21 +168,39 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                     .map((comment) => {
                       const childrenComments = comments.filter((c) => c.children_id === comment.id);
                       const clusteredComments = comments.filter((c) => c.cluster_id === comment.id);
-                      return (
-                        <div
-                        key={comment.id}
-                        style={{
-                        backgroundColor:
-                          comment.id === review.sourceId || comment.id === review.destinationId
-                          ? '#FEE8E8' : 'inherit',
-                        padding: '8px',
-                        }}
-                      >
-                          <CommentBox articleId={articleId} threadId={threadId}  comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments} />
-                        </div>
-                      );
+                      
+                      if (comment.id === review.destinationId && comment.cluster_id !== null) {
+                        const clusterComment = comments.find(c => c.id === comment.cluster_id);
+                        const clusterChildrenComments = comments.filter((c) => c.children_id === clusterComment.id);
+                        const clusterClusteredComments = comments.filter((c) => c.cluster_id === clusterComment.id);
+                        return (
+                          <CommentBoxWrapper
+                            key={comment.id}
+                            style={{
+                              backgroundColor: '#FEE8E8',
+                              padding: '8px',
+                            }}
+                          >
+                            <CommentBox articleId={articleId} threadId={threadId} comment={clusterComment} childrenComments={clusterChildrenComments} clusteredComments={clusterClusteredComments} />
+                          </CommentBoxWrapper>
+                        );
+                      } else {
+                        return (
+                          <CommentBoxWrapper
+                            key={comment.id}
+                            style={{
+                              backgroundColor:
+                                comment.id === review.sourceId || comment.id === review.destinationId
+                                ? '#FEE8E8' : 'inherit',
+                              padding: '8px',
+                            }}
+                          >
+                            <CommentBox articleId={articleId} threadId={threadId} comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments} />
+                          </CommentBoxWrapper>
+                        );
+                      }
                     })}
-                </CommentContent>
+                  </CommentContent>
                 <CommentContent>
                   {comments
                     .filter((c) => c.id === review.destinationId) // find the destination comment
@@ -186,7 +222,8 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                       );
 
                       return (
-                        <div key={comment.id}
+                        <CommentBoxWrapper
+                          key={comment.id}
                           style={{
                             backgroundColor:
                               comment.id === review.sourceId || comment.id === review.destinationId
@@ -199,7 +236,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                           <PotentialConflictSign>Potential Conflict!</PotentialConflictSign>
                         )}
                           <CommentBox articleId={articleId} threadId={threadId} comment={comment} childrenComments={childrenComments} clusteredComments={clusteredComments}/>
-                        </div>
+                        </CommentBoxWrapper>
                       );
                     })}
                 </CommentContent>
@@ -216,7 +253,6 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                   </>
                 )}
               </div>
-              </CombinedCommentContainer>
           </div>
           ))
         )}
@@ -277,22 +313,29 @@ const CombinedCommentContainer = styled.div`
   margin: 10px 0;
   background-color: #F8F8F8;
   border: 1px solid lightgray;
-  width: 130%;
+  border-radius: 10px;
+  // width: 130%;
 
 `;
 
 const CommentWrapper = styled.div`
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   background: #f9f9f9;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 10px;
 `;
 
 const CommentContent = styled.div`
   width: 48%;
+`;
+
+const CommentBoxWrapper = styled.div`
+  padding: 8px;
+  border-radius: 5px;
 `;
 
 const NoReviewsMessage = styled.div`
@@ -305,4 +348,19 @@ const PotentialConflictSign = styled.div`
   color: red;
   font-weight: bold;
   margin-bottom: 5px;
+`;
+
+const RefreshButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+`;
+
+const RefreshIcon = styled.span`
+  margin-right: 5px;
+  font-size: 15px;
 `;
