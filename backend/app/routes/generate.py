@@ -10,7 +10,7 @@ from app.schemas import ThreadCreate
 router = APIRouter()
 
 class ArticleText(BaseModel):
-    text: str
+    text: str   
     url: str
 
 class GenerateResponse(BaseModel):
@@ -30,7 +30,6 @@ async def generate_topics_endpoint(article: ArticleText, db: Session = Depends(g
 
     # Store the generated topics and questions in the threads table
     new_thread = Thread(extracted_text=extracted_text, website_url=website_url, topics=topics, questions=questions, suggested_topic_question=suggested_topic_question)
-    # db_thread = Thread(**new_thread.model_dump())
     db.add(new_thread)
     db.commit()
     db.refresh(new_thread)

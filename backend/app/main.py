@@ -5,6 +5,7 @@ import logging
 from app.routes import comments
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import generate, summarize
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -19,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
@@ -32,6 +32,7 @@ app.include_router(summarize.router)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @app.post("/log")
 async def log_event(log: dict):
