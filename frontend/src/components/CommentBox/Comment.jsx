@@ -11,12 +11,10 @@ import iconFox from '../../assets/icon_fox.png';
 const CommentContainer = styled.div`
   display: flex;
   align-items: flex-start;
-  margin-bottom: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 5px;
+  border-radius: 8px;
   background-color: ${(props) =>
-    props.isReplying ? '#9bbcc7' : props.isCombined ? 'white' : 'white'};
+    props.isReplying ? '#9bbcc7' : props.isCombined ? '#F2F2F2' : '#F2F2F2'}; //individual (not surrounding) comment background 
   opacity: ${(props) => (props.isDragging ? '1' : '1')}; 
 
   position: relative;
@@ -26,7 +24,7 @@ const UserLogo = styled.div`
   margin-right: 10px;
   width: 50px;
   height: 50px;
-  background-color: #ccc;
+  background-color: #E2E2E2;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -211,7 +209,7 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
   const userIcon = getRandomIcon();
 
   return (
-    <CommentContainer isDragging={isDragging} isReplying={isReplying}>
+    <CommentContainer isDragging={isDragging} isReplying={isReplying} isCombined={isCombined}>
       {/* <UserLogo>
         <img src={getRandomIcon()} alt="User Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </UserLogo> */}
@@ -235,7 +233,7 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
           </UpvoteButton>
         </CommentActions>
       </CommentContent>
-      {!isCombined && level === "L0" &&  <DraggableIndicator />}
+      {/* {!isCombined && level === "L0" &&  <DraggableIndicator />} */}
     </CommentContainer>
   );
 };

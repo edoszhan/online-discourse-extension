@@ -11,19 +11,45 @@ const CommentUnitContainer = styled.div`
   border-radius: 5px;
 `;
 
+// const CommentUnitContainer = styled.div`
+//   margin-bottom: 10px;
+//   background-color: ${(props) => (props.isDragging ? 'lightgreen' : 'white')};
+//   border-radius: 5px;
+//   position: relative; 
+
+//   &:before {
+//     content: '';
+//     position: absolute;
+//     left: 0;
+//     top: 0;
+//     bottom: 0;
+//     width: 5px; 
+//     background-color: #5D6BE5; // Blue color
+//     border-top-left-radius: 5px;
+//     border-bottom-left-radius: 5px;
+//     // z-index: 1; 
+//   }
+// `;
+
 const ReplyContainer = styled.div`
-  border-left: 2px solid #ccc;
-  margin-left: 20px;
+  border-left: 3px solid #ccc;
+  margin-left: 70px;
   padding-left: 10px;
 `;
 
-const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, hasSummaryCollapse}) => {
+const CommentReplyContainer = styled.div`
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #F2F2F2;
+`;
+
+const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, hasSummaryCollapse,  refreshTrigger}) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
   useEffect(() => {
     fetchComments();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchComments = async () => {
     try {
@@ -51,6 +77,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             userId={userId}
             isReplyDisabled={false}
             onReplyClick={onReplyClick}
+            isCombined={true}
           />
         </div>
       );
@@ -64,8 +91,9 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? '#F2F2F2' : 'white', padding: "5px"}}
+          style={{ backgroundColor: hasChildren ? '#D9DBF4' : 'white', padding: "3px"}} // comment and its background except the comment's cluster background which is separate
         >
+          <CommentReplyContainer> 
           <Comment
             articleId={articleId}
             threadId={threadId}
@@ -91,11 +119,13 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
                     childrenComments={[]}
                     userId={userId}
                     onReplyClick={onReplyClick}
+                    isCombined={true}
                   />
                 </div>
               ))}
             </ReplyContainer>
           )}
+          </CommentReplyContainer>
 
           {/* Render the clusteredComments */}
           {clusteredComments && clusteredComments.length > 0 && (

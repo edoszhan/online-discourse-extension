@@ -24,6 +24,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const [isClusterDeleted, setIsClusterDeleted] = useState(false);
   const [deletedClusters, setDeletedClusters] = useState([]);
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   useEffect(() => {
     if (replyingTo) {
       commentInputRef.current.focus();
@@ -87,6 +89,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     try {
       await fetchComments();
       await fetchAcceptedReviews();
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error refreshing comments:', error);
     }
@@ -245,8 +248,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           acceptedBy: [],
           deniedBy: []
         };
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
         setShowAcceptedPopup(true);
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
       } else {
         const reviewObj = {
           article_id: articleId, 
@@ -262,8 +265,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           deniedBy: [],
           summary: null
         };
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
         setShowAcceptedPopup(true);
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
       }
     } catch (error) {
       console.error('Error updating comment order:', error);
@@ -293,6 +296,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           hasClusters: false,
         });
         setComments([...comments, response.data]);
+
+
         setNewComment('');
         setCommentCounter(commentCounter + 1);
         setReplyingTo(null);
@@ -387,7 +392,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
             return (
               <React.Fragment key={comment.id}>
                 {clusteredComments.length > 0 ? (
-                  <CombinedCommentContainer>
+                <React.Fragment>
                   {acceptedReview && acceptedReview.summary ? (
                     <>
                       <SummaryCollapse
@@ -399,38 +404,23 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                         clusteredComments={clusteredComments}
                         onReplyClick={handleReplyClick}
                       />
-                      {/* <ReviewMessage>Cluster accepted. Summary completed.</ReviewMessage> */}
                     </>
                   ) : (
-                    <CommentUnit
-                      articleId={articleId}
-                      threadId={threadId}
-                      comment={comment}
-                      index={index}
-                      clusteredComments={clusteredComments}
-                      childrenComments={replies}
-                      userId={userId}
-                      onReplyClick={handleReplyClick}
-                      level={level}
-                      hasSummaryCollapse={comment.summary !== undefined && comment.summary !== null}
-                    />
-                  )}
-                  {level === 'L0' || level === 'L2' ? (
-                    (() => {
-                      const storageKey = `clusters_${articleId}_${threadId}`;
-                      const clusters = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                      const isLocalCluster = Object.values(clusters).some(cluster => cluster.destinationId === comment.id);
-                      
-                      return isLocalCluster ? (
-                        <ReviewMessage>This cluster is currently visible only to you.</ReviewMessage>
-                      ) : acceptedReview?.summary && isClusterAccepted ? (
-                        <ReviewMessage>Cluster accepted. Summary accepted.</ReviewMessage>
-                      ) : (
-                        <ReviewMessage>Cluster accepted. Summary pending.</ReviewMessage>
-                      );
-                    })()
-                  ) : (
-                    level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
+                    <CombinedCommentContainer>
+                      <CommentUnit
+                        articleId={articleId}
+                        threadId={threadId}
+                        comment={comment}
+                        index={index}
+                        clusteredComments={clusteredComments}
+                        childrenComments={replies}
+                        userId={userId}
+                        onReplyClick={handleReplyClick}
+                        level={level}
+                        hasSummaryCollapse={comment.summary !== undefined && comment.summary !== null}
+                        refreshTrigger={refreshTrigger}
+                      />
+                       {level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <SummarizeButton
                           articleId={articleId}
@@ -440,9 +430,28 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                           reviewId={acceptedReview.id}
                         />
                       </div>
-                    )
+                      )}
+                    </CombinedCommentContainer>
                   )}
-                </CombinedCommentContainer>
+
+                 <ReviewMessageContainer>
+                 {level === 'L0' || level === 'L2' ? (
+                   (() => {
+                     const storageKey = `clusters_${articleId}_${threadId}`;
+                     const clusters = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                     const isLocalCluster = Object.values(clusters).some(cluster => cluster.destinationId === comment.id);
+                     
+                     return isLocalCluster ? (
+                       <ReviewMessage>This cluster is currently visible only to you.</ReviewMessage>
+                     ) : acceptedReview?.summary && isClusterAccepted ? (
+                       null
+                     ) : (
+                       <ReviewMessage>Cluster accepted. Summary pending.</ReviewMessage>
+                     );
+                   })()
+                 ) : null}
+               </ReviewMessageContainer>
+              </React.Fragment>
                 ) : (
                   <CommentBox
                     articleId={articleId}
@@ -602,18 +611,24 @@ const BackIcon = styled.span`
 `;
 
 const CombinedCommentContainer = styled.div`
-  padding: 10px;
+  padding: 5px;
   margin: 10px 0;
   background-color: #D9DBF4;
   border: 1px solid lightgray;
+  border-radius: 5px;
+`;
+
+const ReviewMessageContainer = styled.div`
+  margin-top: 10px;
+  margin-right: 5px;
+  text-align: right;
 `;
 
 const ReviewMessage = styled.div`
   font-size: 12px;
-  color: #555;
-  margin-top: 10px;
-  margin-right: 5px;
-  text-align: right;
+  font-weight: bold;
+  color: #97a0ec;
+  margin-bottom: 5px;
 `;
 
 const CommentsContainer = styled.div`

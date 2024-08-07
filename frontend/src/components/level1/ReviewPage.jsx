@@ -13,6 +13,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
   const [showDeletedPopup, setShowDeletedPopup] = useState(false);
 
+  const [floatingMessage, setFloatingMessage] = useState('');
+  const [showFloatingMessage, setShowFloatingMessage] = useState(false);
+
+
   useEffect(() => {
     fetchReviews();
     fetchComments();
@@ -57,6 +61,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
+
+        setFloatingMessage("You have successfully accepted the cluster! Wait for the other users to vote for final decision");
+        setShowFloatingMessage(true);
+        setTimeout(() => setShowFloatingMessage(false), 5000);
 
         if (updatedReviewObj.acceptedBy.length >= 2) {
           // Update the cluster_id of the source comment
@@ -106,6 +114,11 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review.id === reviewObj.id ? updatedReviewObj : review))
         );
+
+        setFloatingMessage("You have rejected the cluster! Wait for the other users to vote for final decision");
+        setShowFloatingMessage(true);
+        setTimeout(() => setShowFloatingMessage(false), 5000);
+  
 
         if (updatedReviewObj.deniedBy.length >= 2) {
           setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
@@ -261,6 +274,9 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       {showDeletedPopup && <DeletedPopup onClose={handleClosePopupDelete} />}
       <br />
       <br />
+      <FloatingMessage show={showFloatingMessage}>
+      {floatingMessage}
+    </FloatingMessage>
     </ReviewPageContainer>
   );
 };
@@ -363,4 +379,17 @@ const RefreshButton = styled.button`
 const RefreshIcon = styled.span`
   margin-right: 5px;
   font-size: 15px;
+`;
+
+const FloatingMessage = styled.div`
+  position: fixed;
+  bottom: 40px;
+  right: 380px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 10000;
+  opacity: ${({ show }) => (show ? 1 : 0)};
+  transition: opacity 0.3s ease-in-out;
 `;

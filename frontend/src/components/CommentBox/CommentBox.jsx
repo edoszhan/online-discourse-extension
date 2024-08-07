@@ -7,18 +7,32 @@ import axios from 'axios';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
-  background-color: ${(props) => (props.isDragging ? 'lightgreen' : '#F2F2F2')};
   border-radius: 5px;
 `;
 
 const ReplyContainer = styled.div`
-  border-left: 2px solid #ccc;
+  border-left: 2px solid #ccc; 
   margin-left: 20px;
   padding-left: 10px;
 `;
 
+const DraggableIndicator = styled.div`
+  position: absolute;
+  top: 0;
+  right: -5px;
+  width: 15px;
+  height: 100%;
+  background-color: #5D6BE5;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+`;
 
-const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, level }) => {
+const CommentWrapper = styled.div`
+  position: relative;
+`;
+
+
+const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, level, pass }) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
@@ -65,7 +79,7 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
           ref={provided.innerRef}
           {...provided.droppableProps}
           isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? '#F2F2F2' : '#F2F2F2', padding: "5px"}}
+          style={{ backgroundColor: hasChildren ? '#F2F2F2' : '#F2F2F2', padding: "6px"}}
         >
           <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
             {(provided, snapshot) => (
@@ -74,6 +88,7 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
               >
+                <CommentWrapper>
                 <Comment
                   articleId={articleId}
                   threadId={threadId}
@@ -101,11 +116,14 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
                           childrenComments={[]}
                           userId={userId}
                           onReplyClick={onReplyClick}
+                          isCombined={false}
                         />
                       </div>
                     ))}
                   </ReplyContainer>
                 )}
+                  {pass !== "unpass" && level === "L0" && <DraggableIndicator />}
+                </CommentWrapper>
 
                 {/* Render the clusteredComments */}
                 {clusteredComments && clusteredComments.length > 0 && (

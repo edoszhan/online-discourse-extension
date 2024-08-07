@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
 import CommentBox from '../CommentBox/CommentBox';
+import CommentUnit from '../CommentBox/CommentUnit';
 
 const SummaryCollapse = ({ articleId, threadId, summary, comment, clusteredComments, childrenComments, onReplyClick }) => {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -20,7 +21,7 @@ const SummaryCollapse = ({ articleId, threadId, summary, comment, clusteredComme
       </SummaryContainer>
       {isExpanded && (
         <ExpandedContent>
-          <CommentBox comment={comment} clusteredComments={clusteredComments} childrenComments={childrenComments} onReplyClick={onReplyClick}/>
+          <CommentBox comment={comment} clusteredComments={clusteredComments} childrenComments={childrenComments} onReplyClick={onReplyClick} pass="unpass"/>
         </ExpandedContent>
       )}
     </div>

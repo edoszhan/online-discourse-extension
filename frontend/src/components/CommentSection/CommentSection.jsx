@@ -31,8 +31,8 @@ const RefreshIcon = styled.span`
 
 const FloatingMessage = styled.div`
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 40px;
+  right: 380px;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 10px 20px;
@@ -158,13 +158,13 @@ function CommentSection({userId, level}) {
     
       setIsPopupOpen(false);
       setShowConfirmationMessage(true);
-      setTimeout(() => setShowConfirmationMessage(false), 5000);
+      setTimeout(() => setShowConfirmationMessage(false), 7000);
     }
   };
 
   const fetchPendingTopics = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}?current_user_id=${userId}`);
       if (response.data && Array.isArray(response.data)) {
         const filteredTopics = response.data.filter(topic => topic.final_status === "pending");
         setPendingTopics(filteredTopics);
@@ -213,6 +213,10 @@ function CommentSection({userId, level}) {
       setIsReviewPopupOpen(false);
       fetchPendingTopics();
       setTopicActions({});
+
+      setConfirmationMessage('Thank you! Your choices have been saved successfully.');
+      setShowConfirmationMessage(true);
+      setTimeout(() => setShowConfirmationMessage(false), 7000);
     } catch (error) {
       console.error('Error saving topic reviews:', error);
     }

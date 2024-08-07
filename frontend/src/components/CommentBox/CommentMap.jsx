@@ -4,7 +4,7 @@ import Comment from './Comment';
 
 const CommentMapContainer = styled.div`
   margin-bottom: 10px;
-  background-color: #f8f8f8;
+  background-color: #F2F2F2;  // we have comment, it has cluster comment, cluster comment has background color set to this
   border-radius: 5px;
 `;
 
@@ -14,14 +14,14 @@ const ReplyContainer = styled.div`
   padding-left: 10px;
 `;
 
-const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick }) => {
+const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, isCombined}) => {
   return (
     <CommentMapContainer>
       <Comment
         articleId={articleId}
         threadId={threadId}
         comment={comment}
-        isCombined={true}
+        isCombined={isCombined}
         isDragging={false}
         isReplyDisabled={false}
         userId={userId}
@@ -41,6 +41,7 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
                 clusteredComments={[]}
                 childrenComments={[]}
                 userId={userId}
+                isCombined={isCombined}
                 onReplyClick={onReplyClick}
               />
             </div>
@@ -63,6 +64,7 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
               userId={userId}
               isReplyDisabled={false}
               onReplyClick={onReplyClick}
+              isCombined={isCombined}
             />
           ))}
         </div>
