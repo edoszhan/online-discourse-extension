@@ -315,8 +315,8 @@ class TopicUpdate(BaseModel):
     
     
 @router.get("/topics/{article_id}")
-async def get_topics(article_id: int, db: Session = Depends(get_db)):
-    topics = db.query(Topic).filter(Topic.article_id == article_id).all()
+async def get_topics(article_id: int, current_user_id: str, db: Session = Depends(get_db)):
+    topics = db.query(Topic).filter(Topic.article_id == article_id, Topic.author != current_user_id).all()
     return topics
 
 @router.post("/topics/{article_id}")
@@ -327,7 +327,7 @@ async def create_topic(article_id: int, topic: TopicCreate, db: Session = Depend
         suggested_topic=topic.suggested_topic,
         suggested_question=topic.suggested_question,
         timestamp=datetime.now(),
-        acceptedBy=[],
+        acceptedBy=[topic.author],
         deniedBy=[],
         final_status="pending"
     )
