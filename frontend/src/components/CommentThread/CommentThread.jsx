@@ -11,6 +11,8 @@ import AcceptedPopup from './AcceptedPopup';
 import CommentUnit from '../CommentBox/CommentUnit';
 import { v4 as uuidv4 } from 'uuid';
 
+import SummaryContext from '../CommentSection/SummaryContext';
+
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -26,18 +28,38 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const { summaryUpdated } = React.useContext(SummaryContext);
+
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (articleId && threadId) {
+          await Promise.all([
+            fetchComments(),
+            fetchAcceptedReviews(),
+          ]);
+          if (level === 'L0') {
+            initializeLocalStorage();
+          }
+        } else {
+          console.warn('Article ID or Thread ID is missing');
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  
     if (replyingTo) {
       commentInputRef.current.focus();
     }
-  }, [replyingTo]);
-
-  useEffect(() => {
-    fetchComments();
-    fetchAcceptedReviews();
-    initializeLocalStorage();
-  }, []);
-
+  
+    if (summaryUpdated) {
+      handleRefresh();
+    }
+  }, [articleId, threadId, replyingTo, summaryUpdated, level]);
+  
 
   const ClusterPopup = ({ clusters, comments, onClose }) => (
     <Overlay>
@@ -101,9 +123,14 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   
   const fetchComments = async () => {
     try {
+
+      if (articleId === undefined || threadId === undefined) {
+        throw new Error('Article ID or Thread ID is missing');
+      }
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       const data = response.data || []; 
 
+      if (level === 'L0') {
       const storageKey = `clusters_${articleId}_${threadId}`;
       const clusters = JSON.parse(localStorage.getItem(storageKey));
 
@@ -113,17 +140,25 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           return { ...comment, cluster_id: cluster.destinationId };
         }
         return comment;
+        
       });
-
       setComments(updatedComments);
       setCommentCounter(countAllComments(updatedComments));
+      } else {
+      const updatedComments = data;
+      setComments(updatedComments);
+      setCommentCounter(countAllComments(updatedComments));
+      }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      return;
     }
   };
 
   const fetchAcceptedReviews = async () => {
     try {
+      if (!articleId || !threadId) {
+        throw new Error('Article ID or Thread ID is missing in review fetch');
+      }
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
@@ -428,6 +463,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                           comment={comment}
                           clusteredComments={clusteredComments}
                           reviewId={acceptedReview.id}
+                          onSummarySaved={fetchComments()}
                         />
                       </div>
                       )}

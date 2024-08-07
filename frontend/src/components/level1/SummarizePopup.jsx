@@ -1,7 +1,8 @@
 import React, { useState} from "react";
 import styled from "styled-components";
 import axios from "axios";
-import Popup from "./Popup";
+
+import SummaryContext from "../CommentSection/SummaryContext";
 
 const PopupContainer = styled.div`
   position: absolute;
@@ -33,30 +34,12 @@ const Header = styled.div`
   height: 30px;
 `;
 
-const FloatingMessage = styled.div`
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  z-index: 10000;
-  opacity: ${({ show }) => (show ? 1 : 0)};
-  visibility: ${({ show }) => (show ? 'visible' : 'hidden')};
-  transition: opacity 0.3s ease-in-out;
-`;
-
-const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summary, reviewId}) => {
+const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summary, reviewId, onSummarySaved}) => {
   const [localSummary, setSummary] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-
-  const [confirmationMessage, setConfirmationMessage] = useState('');
-  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
   const [isTextareaEmpty, setIsTextareaEmpty] = useState(true);
 
-
+  const { updateSummary } = React.useContext(SummaryContext);
 
   const saveSummary = async () => {
     try {
@@ -64,19 +47,14 @@ const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summ
       await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/reviews/${reviewId}`, {
       summary: summaryToSend,
       });
-      setShowPopup(true);
       onClose();
-
-      setConfirmationMessage('Thank you! Your summary has been saved successfully.');
-      setShowConfirmationMessage(true);
-      setTimeout(() => setShowConfirmationMessage(false), 7000);
+      updateSummary(); 
     } catch (error) {
       console.error('Error saving summary:', error);
     }
   };
 
   return (
-    <>
     <PopupContainer
       style={{
         top: buttonRef.current ? buttonRef.current.offsetTop + buttonRef.current.offsetHeight : 0,
@@ -113,14 +91,7 @@ const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summ
           Save Summary
         </button>
       </div>
-      {showPopup && <Popup onClose={() => setShowPopup(false)} />}
     </PopupContainer>
-    {showConfirmationMessage && (
-    <FloatingMessage show={showConfirmationMessage}>
-      {confirmationMessage}
-    </FloatingMessage>
-  )}
-  </>
   );
 };
 

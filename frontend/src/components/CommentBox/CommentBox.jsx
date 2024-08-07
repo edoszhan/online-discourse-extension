@@ -41,11 +41,14 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
   }, []);
 
   const fetchComments = async () => {
+    if (articleId === undefined || threadId === undefined) {
+      return;
+    }
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       setAllComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      return;
     }
   };
 

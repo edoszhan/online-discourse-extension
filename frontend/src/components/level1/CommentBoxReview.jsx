@@ -29,14 +29,15 @@ const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredC
 
   useEffect(() => {
     fetchComments();
-  }, [articleId, threadId]);
+  },[]);
 
   const fetchComments = async () => {
+    await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       setAllComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      return;
     }
   };
 

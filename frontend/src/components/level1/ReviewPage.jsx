@@ -38,7 +38,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       setComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching comments in review page:', error);
     }
   };
 

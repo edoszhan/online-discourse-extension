@@ -5,6 +5,7 @@ import axios from 'axios';
 import styled from 'styled-components';
 import { AiFillCheckSquare, AiFillCloseSquare } from "react-icons/ai";
 import moment from 'moment-timezone';
+import { SummaryProvider } from './SummaryContext';
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -324,16 +325,18 @@ function CommentSection({userId, level}) {
           )}
         </div>
       ) : (
-        <CommentThread
-          articleId={articleId}
-          question={selectedThread.question}
-          threadId={selectedThread.id}
-          topic={selectedThread.topic}
-          onBack={() => setSelectedThread(null)}
-          level={level}
-          userId={userId}
-          color={selectedThread.color}
-        />
+        <SummaryProvider>
+          <CommentThread
+            articleId={articleId}
+            question={selectedThread.question}
+            threadId={selectedThread.id}
+            topic={selectedThread.topic}
+            onBack={() => setSelectedThread(null)}
+            level={level}
+            userId={userId}
+            color={selectedThread.color}
+          />
+        </SummaryProvider>
       )}
 
 

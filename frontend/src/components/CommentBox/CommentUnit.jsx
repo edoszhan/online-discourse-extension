@@ -56,7 +56,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
       setAllComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching comment in unit:', error);
     }
   };
 
