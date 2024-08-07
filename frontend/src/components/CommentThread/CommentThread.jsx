@@ -162,17 +162,19 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const acceptedReviews = response.data.filter((review) => !review.pendingReview);
       setAcceptedReviews(acceptedReviews);
+
+      if (level === 'L0') {
       const nullReviews = response.data.filter((review) => review.pendingReview != null);
 
       const storageKey = `clusters_${articleId}_${threadId}`;
-      const clusters = JSON.parse(localStorage.getItem(storageKey));
+      const clusters = JSON.parse(localStorage.getItem(storageKey)) || {};
       
       let clustersChanged = false;
       let deletedClustersArray = [];
       nullReviews.forEach(review => {
-        if (review.pendingReview != null) {
+        if (review.pendingReview != null && clusters) {
           Object.entries(clusters).forEach(([uid, cluster]) => {
-            if (cluster.children && cluster.children[0] === review.newOrder[0]) {
+            if (cluster && cluster.children && cluster.children[0] === review.newOrder[0]) {
               deletedClustersArray.push({...cluster, pendingReview: review.pendingReview});
               delete clusters[uid];
               clustersChanged = true;
@@ -189,7 +191,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         setDeletedClusters(deletedClustersArray);
         setIsClusterDeleted(true);
       }
-
+      }
     } catch (error) {
       console.error('Error fetching accepted reviews:', error);
     }
