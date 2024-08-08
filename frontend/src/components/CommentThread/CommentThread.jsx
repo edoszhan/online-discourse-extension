@@ -28,7 +28,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { summaryUpdated } = React.useContext(SummaryContext);
+  const { summaryUpdated, commentDeleted} = React.useContext(SummaryContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,10 +55,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       commentInputRef.current.focus();
     }
   
-    if (summaryUpdated) {
+    if (summaryUpdated || commentDeleted) {
       handleRefresh();
     }
-  }, [articleId, threadId, replyingTo, summaryUpdated, level]);
+  }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted, level]);
   
 
   const ClusterPopup = ({ clusters, comments, onClose }) => (
