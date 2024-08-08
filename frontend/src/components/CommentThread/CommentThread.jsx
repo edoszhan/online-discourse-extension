@@ -28,7 +28,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { summaryUpdated, commentDeleted} = React.useContext(SummaryContext);
+  const { summaryUpdated, commentDeleted, reviewUpdated} = React.useContext(SummaryContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,10 +55,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       commentInputRef.current.focus();
     }
   
-    if (summaryUpdated || commentDeleted) {
+    if (summaryUpdated || commentDeleted || reviewUpdated) {
       handleRefresh();
     }
-  }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted, level]);
+  }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted,  reviewUpdated, level]);
   
 
   const ClusterPopup = ({ clusters, comments, onClose }) => (
@@ -164,33 +164,34 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       setAcceptedReviews(acceptedReviews);
 
       if (level === 'L0') {
-      const nullReviews = response.data.filter((review) => review.pendingReview != null);
+        const nullReviews = response.data.filter((review) => review.pendingReview != null);
 
-      const storageKey = `clusters_${articleId}_${threadId}`;
-      const clusters = JSON.parse(localStorage.getItem(storageKey)) || {};
-      
-      let clustersChanged = false;
-      let deletedClustersArray = [];
-      nullReviews.forEach(review => {
-        if (review.pendingReview != null && clusters) {
-          Object.entries(clusters).forEach(([uid, cluster]) => {
-            if (cluster && cluster.children && cluster.children[0] === review.newOrder[0]) {
-              deletedClustersArray.push({...cluster, pendingReview: review.pendingReview});
-              delete clusters[uid];
-              clustersChanged = true;
-            }
-          });
+        const storageKey = `clusters_${articleId}_${threadId}`;
+        const clusters = JSON.parse(localStorage.getItem(storageKey)) || {};
+        
+        let clustersChanged = false;
+        let deletedClustersArray = [];
+        
+        nullReviews.forEach(review => {
+          if (review.pendingReview != null && clusters) {
+            Object.entries(clusters).forEach(([uid, cluster]) => {
+              if (cluster && cluster.children && cluster.children[0] === review.newOrder[0]) {
+                deletedClustersArray.push({...cluster, pendingReview: review.pendingReview});
+                delete clusters[uid];
+                clustersChanged = true;
+              }
+            });
+          }
+        });
+
+        if (clustersChanged) {
+          localStorage.setItem(storageKey, JSON.stringify(clusters));
         }
-      });
 
-      if (clustersChanged) {
-        localStorage.setItem(storageKey, JSON.stringify(clusters));
-      }
-
-      if (deletedClustersArray.length > 0) {
-        setDeletedClusters(deletedClustersArray);
-        setIsClusterDeleted(true);
-      }
+        if (deletedClustersArray.length > 0) {
+          setDeletedClusters(deletedClustersArray);
+          setIsClusterDeleted(true);
+        }
       }
     } catch (error) {
       console.error('Error fetching accepted reviews:', error);

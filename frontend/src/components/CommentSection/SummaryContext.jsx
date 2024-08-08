@@ -5,6 +5,7 @@ const SummaryContext = React.createContext();
 export const SummaryProvider = ({ children }) => {
   const [summaryUpdated, setSummaryUpdated] = React.useState(false);
   const [commentDeleted, setCommentDeleted] = React.useState(false);
+  const [reviewUpdated, setReviewUpdated] = React.useState(false);
 
 
   const updateSummary = () => {
@@ -15,8 +16,19 @@ export const SummaryProvider = ({ children }) => {
     setCommentDeleted(true);
   };
 
+  const updateReview = () => {
+    setReviewUpdated(true);
+  };
+
   return (
-    <SummaryContext.Provider value={{ summaryUpdated, updateSummary, commentDeleted, updateCommentDeleted }}>
+    <SummaryContext.Provider value={{ 
+      summaryUpdated, 
+      updateSummary, 
+      commentDeleted, 
+      updateCommentDeleted,
+      reviewUpdated,
+      updateReview
+    }}>
       {children}
     </SummaryContext.Provider>
   );

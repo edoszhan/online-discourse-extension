@@ -6,6 +6,8 @@ import './ReviewPage.css';
 import AcceptedPopup from './AcceptedPopup';
 import DeletedPopup from './DeletedPopup';
 
+import SummaryContext from '../CommentSection/SummaryContext';
+
 const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [reviews, setReviews] = useState([]);
   const [reviewCount, setReviewCount] = useState(0);
@@ -16,18 +18,28 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
   const [floatingMessage, setFloatingMessage] = useState('');
   const [showFloatingMessage, setShowFloatingMessage] = useState(false);
 
+  const { updateReview } = React.useContext(SummaryContext);
+
 
   useEffect(() => {
     fetchReviews();
     fetchComments();
   }, [threadId]);
 
+  useEffect(() => {
+    const validReviews = reviews.filter(review => 
+      comments.some(comment => comment.id === review.sourceId) &&
+      comments.some(comment => comment.id === review.destinationId) &&
+      review.pendingReview === null
+    );
+    setReviewCount(validReviews.length);
+  }, [reviews, comments]);
+
   const fetchReviews = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
       const filteredReviews = response.data.filter((review) => review.pendingReview === null);
       setReviews(response.data);
-      setReviewCount(filteredReviews.length);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
@@ -90,7 +102,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
            );
           }
             fetchReviews();
-
+            updateReview();
             setShowAcceptedPopup(true);
           } catch (error) {
             console.error('Error updating comment:', error);
@@ -171,7 +183,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
       {reviews.filter((review) => review.pendingReview === null).length === 0 ? (
           <NoReviewsMessage>Nothing to review as of right now</NoReviewsMessage>
         ) : (
-          reviews.filter((review) => review.pendingReview === null).map((review, index) => (
+          reviews.filter(review => 
+            comments.some(comment => comment.id === review.sourceId) &&
+            comments.some(comment => comment.id === review.destinationId)
+          ).filter((review) => review.pendingReview === null).map((review, index) => (
           <div key={review.id}>
              <div className="review-title">#{index + 1} Review</div>
               <CommentWrapper>
