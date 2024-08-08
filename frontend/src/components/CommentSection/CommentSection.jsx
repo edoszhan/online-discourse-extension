@@ -65,12 +65,15 @@ function CommentSection({userId, level}) {
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
   const isButtonEnabled = (isCheckboxChecked || (newTopic.trim() !== '' && newQuestion.trim() !== '')) && level === "L2";
 
-
+  const [allPendingTopics, setAllPendingTopics] = useState([]);
   const [pendingTopics, setPendingTopics] = useState([]);
   const [topicActions, setTopicActions] = useState({});
 
   const [confirmationMessage, setConfirmationMessage] = useState('');
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
+
+  const [floatingMessage, setFloatingMessage] = useState('');
+  const [showFloatingMessage, setShowFloatingMessage] = useState(false);
 
 
   const fetchTopics = async () => {
@@ -145,13 +148,26 @@ function CommentSection({userId, level}) {
         newQuestionText = newQuestion;
       }
 
+      const allPendingTopics = await fetchAllPendingTopics(); 
+
+      const topicExists = allPendingTopics.some(topic => {
+        return topic.suggested_topic.toLowerCase() === newTopicText.toLowerCase();
+      });
+
+      if (topicExists) {
+        setFloatingMessage('Duplicate topic names are not possible. Please check topics in Review Threads section.');
+        setShowFloatingMessage(true);
+        setTimeout(() => setFloatingMessage(false), 5000); // Clear message after 5 seconds
+        return;
+      }
+
       try {
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}`, {
           author: userId,
           suggested_topic: newTopicText,
           suggested_question: newQuestionText
         });
-        setConfirmationMessage('Thank you! Your suggestion has been submitted successfully.');
+        setConfirmationMessage('Thank you! Your suggestion has been submitted successfully. Your suggestion will only be displayed to other people.');
       } catch (error) {
           console.error('Error creating new discussion thread:', error);
           setConfirmationMessage('An error occurred while submitting your suggestion. Please try again.');
@@ -185,6 +201,21 @@ function CommentSection({userId, level}) {
       }
     } catch (error) {
       console.error('Error fetching pending topics:', error);
+    }
+  };
+
+  const fetchAllPendingTopics = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/topicsAll/${articleId}`);
+      if (response.data && Array.isArray(response.data)) {
+        const filteredTopics = response.data.filter(topic => topic.final_status === "pending");
+        setAllPendingTopics(filteredTopics);
+        return filteredTopics;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching pending topics:', error);
+      return [];
     }
   };
 
@@ -323,6 +354,7 @@ function CommentSection({userId, level}) {
               {confirmationMessage}
             </FloatingMessage>
           )}
+        {floatingMessage && <FloatingMessage show={showFloatingMessage}>{floatingMessage}</FloatingMessage>}
         </div>
       ) : (
         <SummaryProvider>
