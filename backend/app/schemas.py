@@ -25,6 +25,13 @@ class CommentBase(BaseModel):
 
 class CommentCreate(CommentBase):
     thread_id: int
+    
+class CommentUpdate(BaseModel):
+    text: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 
 class CommentResponse(CommentBase):
     id: int

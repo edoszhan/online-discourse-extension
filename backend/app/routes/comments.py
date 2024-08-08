@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, attributes
 from typing import List
 from app.utils.database import get_db
 from app.models import Comment
-from app.schemas import CommentCreate, CommentResponse
+from app.schemas import CommentCreate, CommentResponse, CommentUpdate
 from app.models import Thread, Comment, Review, Topic
 from app.schemas import ThreadCreate, ThreadResponse, CommentCreate, CommentResponse, ReviewCreate, ReviewResponse, ReviewUpdate
 from datetime import datetime
@@ -16,6 +16,30 @@ router = APIRouter()
 async def read_comments(article_id: int, thread_id: int, db: Session = Depends(get_db)):
     comments = db.query(Comment).filter(Comment.article_id == article_id, Comment.thread_id == thread_id).order_by(Comment.id).all()
     return comments
+
+@router.put("/comments/{comment_id}", response_model=CommentResponse)
+async def update_comment(comment_id: int, comment_update: CommentUpdate, db: Session = Depends(get_db)):
+    db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if db_comment is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    if comment_update.text is not None:
+        db_comment.text = comment_update.text
+    
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+@router.delete("/comments/{comment_id}")
+async def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if db_comment is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    db.delete(db_comment)
+    db.commit()
+    return {"message": "Comment deleted successfully"}
+
 
 @router.get("/articles/{article_id}/reviews/{thread_id}", response_model=List[ReviewResponse]) #updated
 async def get_reviews(article_id: int, thread_id: int, db: Session = Depends(get_db)):
