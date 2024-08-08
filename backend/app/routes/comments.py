@@ -343,6 +343,11 @@ async def get_topics(article_id: int, current_user_id: str, db: Session = Depend
     topics = db.query(Topic).filter(Topic.article_id == article_id, Topic.author != current_user_id).all()
     return topics
 
+@router.get("/topicsAll/{article_id}")
+async def get_topics(article_id: int, db: Session = Depends(get_db)):
+    topics = db.query(Topic).filter(Topic.article_id == article_id).all()
+    return topics
+
 @router.post("/topics/{article_id}")
 async def create_topic(article_id: int, topic: TopicCreate, db: Session = Depends(get_db)):
     new_topic = Topic(
