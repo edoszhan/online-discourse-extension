@@ -27,8 +27,9 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const [deletedClusters, setDeletedClusters] = useState([]);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [allowComment, setAllowComment] = useState(true);
 
-  const { summaryUpdated, commentDeleted, reviewUpdated} = React.useContext(SummaryContext);
+  const { summaryUpdated, commentDeleted, reviewUpdated, resetAll} = React.useContext(SummaryContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,6 +58,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   
     if (summaryUpdated || commentDeleted || reviewUpdated) {
       handleRefresh();
+      resetAll();
     }
   }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted,  reviewUpdated, level]);
   
@@ -318,7 +320,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   };
 
   const handleAddComment = async () => {
-    if (newComment.trim()) {
+    if (allowComment && newComment.trim()) {
+      setAllowComment(false);
       try {
         const timestamp = new Date();
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/${threadId}/comments`, {
@@ -334,14 +337,17 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           hasClusters: false,
         });
         setComments([...comments, response.data]);
-
-
         setNewComment('');
         setCommentCounter(commentCounter + 1);
         setReplyingTo(null);
         fetchComments();
+
+        setTimeout(() => {
+          setAllowComment(true);
+        }, 2000);
       } catch (error) {
         console.error('Error adding comment:', error);
+        setAllowComment(true);
       }
     }
   };
@@ -399,7 +405,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
       )} 
       </div>
       {comments && comments.length === 0 ? (
-        <div className="no-comments">
+          <div className="no-comments">
           <p>No Comments</p>
         </div>
       ) : (
@@ -436,6 +442,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                       <SummaryCollapse
                         articleId={articleId}
                         threadId={threadId}
+                        userId={userId}
                         summary={acceptedReview.summary}
                         comment={comment}
                         childrenComments={replies}
@@ -527,8 +534,8 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
             }}
           />
           <CommentActions>
-            <AddCommentButton onClick={handleAddComment}>
-              POST
+            <AddCommentButton onClick={handleAddComment} disabled={!allowComment}>
+              {allowComment ? 'POST' : 'Please wait...'}
             </AddCommentButton>
             <br />
             <br />

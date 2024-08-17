@@ -339,15 +339,6 @@ const ReviewButton = styled.button`
   margin-right: 10px;
 `;
 
-const CombinedCommentContainer = styled.div`
-  padding: 10px;
-  margin: 10px 0;
-  background-color: #F8F8F8;
-  border: 1px solid lightgray;
-  border-radius: 10px;
-  // width: 130%;
-
-`;
 
 const CommentWrapper = styled.div`
   display: flex;
@@ -358,15 +349,21 @@ const CommentWrapper = styled.div`
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 10px;
+  gap: 10px;
 `;
 
 const CommentContent = styled.div`
-  width: 48%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
 `;
 
 const CommentBoxWrapper = styled.div`
-  padding: 8px;
+  padding: 5px;
   border-radius: 5px;
+  flex-grow: 1; 
+  min-width: 0;
 `;
 
 const NoReviewsMessage = styled.div`

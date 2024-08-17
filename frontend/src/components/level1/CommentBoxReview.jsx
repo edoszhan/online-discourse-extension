@@ -10,12 +10,6 @@ const CommentBoxContainer = styled.div`
   border-radius: 5px;
 `;
 
-const ClusteredCommentsContainer = styled.div`
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-`;
-
 const ReplyContainer = styled.div`
   border-left: 2px solid #ccc;
   margin-left: 20px;
@@ -47,7 +41,7 @@ const CommentBox = ({ articleId, threadId, comment, childrenComments, clusteredC
 
   return (
       <CommentBoxContainer hasChildren={hasChildren}>
-        <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={isReplyDisabled} />
+        <Comment comment={comment} isCombined={true} isDragging={false} isReplyDisabled={true} />
         {childrenComments && childrenComments.length > 0 ? (
           <>
             <ReplyContainer>

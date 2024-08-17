@@ -302,7 +302,7 @@ function CommentSection({userId, level}) {
                    </div>
                   ) : (
                     <>
-                      <b className="no-comments">No Comments</b>
+                      <b className="no-comments">No Summaries</b>
                       <br />
                       <span className="click-here">Click here to write comments</span>
                     </>

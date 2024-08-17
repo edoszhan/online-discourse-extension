@@ -7,6 +7,11 @@ export const SummaryProvider = ({ children }) => {
   const [commentDeleted, setCommentDeleted] = React.useState(false);
   const [reviewUpdated, setReviewUpdated] = React.useState(false);
 
+  const resetAll = () => {
+    setSummaryUpdated(false);
+    setCommentDeleted(false);
+    setReviewUpdated(false);
+  };
 
   const updateSummary = () => {
     setSummaryUpdated(true);
@@ -27,7 +32,8 @@ export const SummaryProvider = ({ children }) => {
       commentDeleted, 
       updateCommentDeleted,
       reviewUpdated,
-      updateReview
+      updateReview,
+      resetAll
     }}>
       {children}
     </SummaryContext.Provider>

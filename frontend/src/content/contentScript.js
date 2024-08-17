@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from 'react-dom/client';
 import CommentSection from "../components/CommentSection/CommentSection";
 import { DragDropContext } from '@hello-pangea/dnd';
+import CommentThreadBaseline from "../components/baseline/CommentThreadBaseline";
 
 
 function removeColorControl(userId, level) {
@@ -20,6 +21,7 @@ function removeColorControl(userId, level) {
       root.render(
         <DragDropContext>
           <CommentSection userId={userId} level={level}/>
+          {/* <CommentThreadBaseline userId={userId}/> */}
         </DragDropContext>);
     }
   } else {
