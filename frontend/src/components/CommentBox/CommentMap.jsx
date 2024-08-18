@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Comment from './Comment';
+import CommentNew from './CommentNew';
 
 const CommentMapContainer = styled.div`
   margin-bottom: 10px;
@@ -14,10 +15,11 @@ const ReplyContainer = styled.div`
   padding-left: 10px;
 `;
 
-const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, isCombined, allComments}) => {
+const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, isCombined, allComments, isReplyEnabled}) => {
   return (
     <CommentMapContainer>
-      <Comment
+
+      {/* <Comment
         articleId={articleId}
         threadId={threadId}
         comment={comment}
@@ -27,7 +29,33 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
         userId={userId}
         onReplyClick={onReplyClick}
         allComments={allComments}
-      />
+      /> */}
+
+      {isReplyEnabled ? (
+        <Comment
+          articleId={articleId}
+          threadId={threadId}
+          comment={comment}
+          isCombined={isCombined}
+          isDragging={false}
+          isReplyDisabled={false}
+          userId={userId}
+          onReplyClick={onReplyClick}
+          allComments={allComments}
+        />
+      ) : (
+        <CommentNew
+          articleId={articleId}
+          threadId={threadId}
+          comment={comment}
+          isCombined={isCombined}
+          isDragging={false}
+          isReplyDisabled={false}
+          userId={userId}
+          onReplyClick={onReplyClick}
+          allComments={allComments}
+        />
+      )}
 
       {/* Render the replies */}
       {childrenComments && childrenComments.length > 0 && (

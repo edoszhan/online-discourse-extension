@@ -4,6 +4,7 @@ import {Draggable, Droppable } from '@hello-pangea/dnd';
 import Comment from './Comment';
 import CommentMap from './CommentMap';
 import axios from 'axios';
+import CommentNew from './CommentNew';
 
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
@@ -71,6 +72,8 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
             isReplyDisabled={false}
             onReplyClick={onReplyClick}
             allComments={allComments}
+            isReplyEnabled={false} 
+
           />
         </div>
       );
@@ -83,7 +86,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
         style={{ backgroundColor: hasChildren ? '#F2F2F2' : '#F2F2F2', padding: "6px" }}
       >
         <CommentWrapper>
-          <Comment
+          <CommentNew
             articleId={articleId}
             threadId={threadId}
             comment={comment}

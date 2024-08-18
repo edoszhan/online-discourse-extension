@@ -80,6 +80,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             isCombined={true}
             isReplyingTo={isReplyingTo}
             allComments={allComments}
+            isReplyEnabled={true}
           />
         </div>
       );
