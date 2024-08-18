@@ -11,7 +11,7 @@ const CommentContainer = styled.div`
   padding: 5px;
   border-radius: 8px;
   background-color: ${(props) =>
-    props.isReplying ? '#9bbcc7' : props.isCombined ? '#F2F2F2' : '#F2F2F2'}; //individual (not surrounding) comment background 
+    props.isReplyingTo ? '#9bbcc7' : props.isCombined ? '#F2F2F2' : '#F2F2F2'}; //individual (not surrounding) comment background 
   opacity: ${(props) => (props.isDragging ? '1' : '1')}; 
 
   position: relative;
@@ -61,20 +61,34 @@ const DotSeparator = styled.span`
 
 const CommentActions = styled.div`
   display: flex;
-  align-items: center;
   margin-top: 5px;
   justify-content: flex-start;
+
+  .upvote-button {
+    order: ${(props) => (props.hasReplyButton ? '2' : '1')}; /* Order based on the presence of the reply button */
+  }
+
+  .reply-button {
+    order: 1; /* Always place the reply button first if it exists */
+  }
+
+  .ellipsis-button {
+    order: 3; /* Keep ellipsis at the end */
+  }
 `;
 
 const ReplyButton = styled.button`
   background: none;
   border: none;
   color: black;
-  cursor: pointer;
   font-size: 14px;
   display: flex;
   align-items: center;
   padding: 1px;
+  margin-right: 5px;
+
+  opacity: ${props => props.isDisabled ? 0.5 : 1};
+  cursor: ${props => props.isDisabled ? 'not-allowed' : 'pointer'};
 
   &:hover {
     text-decoration: underline;
@@ -85,13 +99,14 @@ const UpvoteButton = styled.button`
   background: none;
   border: none;
   color: black;
-  cursor: pointer;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 10px;
+  padding: 4px;
 
+  opacity: ${props => props.isDisabled ? 0.5 : 1};
+  cursor: ${props => props.isDisabled ? 'not-allowed' : 'pointer'};
 
   &.active {
     color: black; 
@@ -101,8 +116,12 @@ const UpvoteButton = styled.button`
 const IconWrapper = styled.span`
   display: flex;
   align-items: center;
-  margin-right: 10px;
+  margin-right: 5px;
   justify-content: flex-end;
+
+  svg {
+    margin-right: 5px; // Add this line to create space between the icon and the number
+  }
 `;
 
 const DraggableIndicator = styled.div`
@@ -119,10 +138,13 @@ const DraggableIndicator = styled.div`
 const EllipsisButton = styled.button`
   background: none;
   border: none;
-  cursor: pointer;
   font-size: 14px;
   display: flex;
   align-items: center;
+  padding: 4px;
+
+  opacity: ${props => props.isDisabled ? 0.5 : 1};
+  cursor: ${props => props.isDisabled ? 'not-allowed' : 'pointer'};
 `;
 
 const MenuPopup = styled.div`
@@ -246,11 +268,11 @@ const CancelModalButton = styled.button`
 `;
 
 
-const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick, level }) => {
+const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick, level, isReplyingTo, isReplyEnabled}) => {
   if (!comment) {
     return null;
   }
-  const { updateCommentDeleted } = React.useContext(SummaryContext);
+  const { updateCommentDeleted, updateCommentUpvoted} = React.useContext(SummaryContext);
 
   const [upvotes, setUpvotes] = useState(comment.upvotes || []);
   const [hasUpvoted, setHasUpvoted] = useState(
@@ -275,30 +297,41 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
   .format('MMMM D, YYYY h:mm A z');
 
   const addUpvote = async () => {
-    const updatedUpvotes = Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
-    ? comment.upvotes.filter((id) => id !== userId)
-    : Array.isArray(comment.upvotes)
-      ? [...comment.upvotes, userId]
-      : [userId];
+    if (!isReplyDisabled) {
+      const updatedUpvotes = Array.isArray(comment.upvotes) && comment.upvotes.includes(userId)
+      ? comment.upvotes.filter((id) => id !== userId)
+      : Array.isArray(comment.upvotes)
+        ? [...comment.upvotes, userId]
+        : [userId];
 
-    setHasUpvoted(!hasUpvoted);
-    setUpvotes(updatedUpvotes);
-  
-    try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${comment.id}`, {
-        upvotes: updatedUpvotes,
-      });
-    } catch (error) {
-      console.error('Error updating upvotes:', error);
+      setHasUpvoted(!hasUpvoted);
+      setUpvotes(updatedUpvotes);
+    
+      try {
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${comment.id}`, {
+          upvotes: updatedUpvotes,
+        });
+      } catch (error) {
+        console.error('Error updating upvotes:', error);
+      }
+      updateCommentUpvoted();
     }
   };
 
   const handleReplyClick = () => {
-    setIsReplying(true);
-    onReplyClick(comment.id); 
+    if (!isReplyDisabled) {
+      setIsReplying(true);
+      onReplyClick(comment.id);
+    }
   };
   const handleCancelReply = () => {
     setIsReplying(false);
+  };
+
+  const handleEllipsisClick = () => {
+    if (!isReplyDisabled) {
+      setIsMenuOpen(!isMenuOpen);
+    }
   };
 
   useEffect(() => {
@@ -363,9 +396,10 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
   };
+  
 
   return (
-    <CommentContainer isDragging={isDragging} isReplying={isReplying} isCombined={isCombined}>
+    <CommentContainer isDragging={isDragging} isReplyingTo={isReplyingTo} isCombined={isCombined}>
         <UserLogo>{authorInitial}</UserLogo>
       <CommentContent isCombined={isCombined} isDragging={isDragging}>
         <CommentDetails>
@@ -381,24 +415,24 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
             />
             <EditButtons>
               <CancelButton onClick={() => setIsEditing(false)}>Cancel</CancelButton>
-              <SaveButton type="submit">Save Edits</SaveButton>
+              <SaveButton type="submit">Save Edit</SaveButton>
             </EditButtons>
           </EditForm>
         ) : (
           <CommentText>{comment.text}</CommentText>
         )}
-        <CommentActions>
-          {!isReplyDisabled && (
-             <ReplyButton onClick={handleReplyClick}>
+        <CommentActions hasReplyButton={!isReplyDisabled && comment.children_id === null}>
+          {!isReplyDisabled && comment.children_id === null && (
+            <ReplyButton onClick={handleReplyClick} className="reply-button">
               <AiOutlineMessage style={{ marginRight: '5px' }} />
               Reply
             </ReplyButton>
           )}
-          <UpvoteButton onClick={addUpvote} className={hasUpvoted ? 'active' : ''}>
-           <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes.length || 0} </IconWrapper> 
+          <UpvoteButton onClick={addUpvote} className={`upvote-button ${hasUpvoted ? 'active' : ''}`} isDisabled={isReplyDisabled}>
+            <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes.length || 0} </IconWrapper>
           </UpvoteButton>
-          <EllipsisButton ref={ellipsisButtonRef} className="ellipsis-button" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-           <IconWrapper> <AiOutlineEllipsis /> </IconWrapper>
+          <EllipsisButton ref={ellipsisButtonRef} className="ellipsis-button" onClick={handleEllipsisClick} isDisabled={isReplyDisabled}>
+            <IconWrapper> <AiOutlineEllipsis /> </IconWrapper>
           </EllipsisButton>
           {isMenuOpen && (
             <MenuPopup ref={menuPopupRef} className="menu-popup">

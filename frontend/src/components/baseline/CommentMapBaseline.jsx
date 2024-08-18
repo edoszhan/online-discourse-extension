@@ -21,8 +21,6 @@ const CommentMapBaseline = ({ articleId, threadId, comment, childrenComments, us
         articleId={articleId}
         threadId={threadId}
         comment={comment}
-        isCombined={isCombined}
-        isDragging={false}
         isReplyDisabled={false}
         userId={userId}
         onReplyClick={onReplyClick}
@@ -41,7 +39,6 @@ const CommentMapBaseline = ({ articleId, threadId, comment, childrenComments, us
                 clusteredComments={[]}
                 childrenComments={[]}
                 userId={userId}
-                isCombined={isCombined}
                 onReplyClick={onReplyClick}
               />
             </div>

@@ -70,7 +70,7 @@ const SummarizePopup = ({ articleId, threadId, comment, onClose, buttonRef, summ
         <strong>AI Suggested Summary:</strong> {summary || "There was a general consensus that this is not the case in the article."}
       </p>
       <textarea
-        placeholder="Revise a summary"
+        placeholder="Revise your own summary"
         value={localSummary}
         onChange={(e) => {
           setSummary(e.target.value);

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import CommentSection from "../components/CommentSection/CommentSection";
 import { DragDropContext } from '@hello-pangea/dnd';
 import CommentThreadBaseline from "../components/baseline/CommentThreadBaseline";
+import { SummaryProvider } from '../components/baseline/SummaryContextBaseline';
 
 
 function removeColorControl(userId, level) {
@@ -21,7 +22,9 @@ function removeColorControl(userId, level) {
       root.render(
         <DragDropContext>
           <CommentSection userId={userId} level={level}/>
-          {/* <CommentThreadBaseline userId={userId}/> */}
+          {/* <SummaryProvider>
+            <CommentThreadBaseline userId={userId}/>
+          </SummaryProvider> */}
         </DragDropContext>);
     }
   } else {

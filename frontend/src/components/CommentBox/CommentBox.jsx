@@ -8,6 +8,7 @@ import axios from 'axios';
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
   border-radius: 5px;
+  background-color: ${props => props.isDragging  ? 'lightblue' : '#F2F2F2'};
 `;
 
 const ReplyContainer = styled.div`
@@ -32,25 +33,25 @@ const CommentWrapper = styled.div`
 `;
 
 
-const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, level, pass, isSummary }) => {
+const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setReplyingTo, clusteredComments, childrenComments, userId, onReplyClick, level, pass, isSummary, isReplyEnabled}) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
-  useEffect(() => {
-    fetchComments();
-  }, []);
+  // useEffect(() => {
+  //   fetchComments();
+  // }, []);
 
-  const fetchComments = async () => {
-    if (articleId === undefined || threadId === undefined) {
-      return;
-    }
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
-      setAllComments(response.data);
-    } catch (error) {
-      return;
-    }
-  };
+  // const fetchComments = async () => {
+  //   if (articleId === undefined || threadId === undefined) {
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
+  //     setAllComments(response.data);
+  //   } catch (error) {
+  //     return;
+  //   }
+  // };
 
   const renderClusteredComments = () => {
     return clusteredComments.map((child, childIndex) => {
@@ -86,10 +87,11 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
             threadId={threadId}
             comment={comment}
             isCombined={false}
-            isReplyDisabled={false}
+            isReplyDisabled={isReplyEnabled}
             userId={userId}
             onReplyClick={onReplyClick}
             level={level}
+            isReplyEnabled={false} 
           />
           {childrenComments && childrenComments.length > 0 && (
             <ReplyContainer>
@@ -124,62 +126,69 @@ const CommentBox = ({ articleId, threadId, comment, index, clusteredComments, ch
     <Droppable droppableId={`droppable-${comment.id}`}>
       {(provided, snapshot) => (
         <CommentBoxContainer
-          ref={provided.innerRef}
-          {...provided.droppableProps}
-          isDragging={snapshot.isDraggingOver}
-          style={{ backgroundColor: hasChildren ? '#F2F2F2' : '#F2F2F2', padding: "6px"}}
-        >
-          <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-              >
-                <CommentWrapper>
-                  <Comment
-                    articleId={articleId}
-                    threadId={threadId}
-                    comment={comment}
-                    isCombined={false}
-                    isDragging={snapshot.isDragging}
-                    isReplyDisabled={false}
-                    userId={userId}
-                    onReplyClick={onReplyClick}
-                    level={level}
-                  />
-                  {childrenComments && childrenComments.length > 0 && (
-                    <ReplyContainer>
-                      {childrenComments.map((childComment, childIndex) => (
-                        <div key={childComment.id}>
-                          <CommentMap
-                            articleId={articleId}
-                            threadId={threadId}
-                            comment={childComment}
-                            index={childIndex}
-                            clusteredComments={[]}
-                            childrenComments={[]}
-                            userId={userId}
-                            onReplyClick={onReplyClick}
-                            isCombined={false}
-                          />
-                        </div>
-                      ))}
-                    </ReplyContainer>
-                  )}
-                  {pass !== "unpass" && level === "L0" && <DraggableIndicator />}
-                </CommentWrapper>
-                {clusteredComments && clusteredComments.length > 0 && (
-                  <div>
-                    {renderClusteredComments()}
-                  </div>
+        ref={provided.innerRef}
+        {...provided.droppableProps}
+        isDragging={snapshot.isDraggingOver}
+        style={{ padding: "6px"}}
+      >
+        <Draggable draggableId={String(comment.id)} index={index} isDragDisabled={level !== 'L0'} >
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+            >
+              <CommentWrapper>
+                <Comment
+                  articleId={articleId}
+                  threadId={threadId}
+                  comment={comment}
+                  isCombined={false}
+                  isDragging={snapshot.isDragging}
+                  isReplyDisabled={false}
+                  userId={userId}
+                  onReplyClick={onReplyClick}
+                  level={level}
+                  isReplyingTo={isReplyingTo}
+                  setReplyingTo={setReplyingTo}
+                  isReplyEnabled={false} 
+                />
+                {!snapshot.isDragging && (
+                  <>
+                    {childrenComments && childrenComments.length > 0 && (
+                      <ReplyContainer>
+                        {childrenComments.map((childComment, childIndex) => (
+                          <div key={childComment.id}>
+                            <CommentMap
+                              articleId={articleId}
+                              threadId={threadId}
+                              comment={childComment}
+                              index={childIndex}
+                              clusteredComments={[]}
+                              childrenComments={[]}
+                              userId={userId}
+                              onReplyClick={onReplyClick}
+                              isCombined={false}
+                            />
+                          </div>
+                        ))}
+                      </ReplyContainer>
+                    )}
+                    {clusteredComments && clusteredComments.length > 0 && (
+                      <div>
+                        {renderClusteredComments()}
+                      </div>
+                    )}
+                  </>
                 )}
-              </div>
-            )}
-          </Draggable>
-          {provided.placeholder}
-        </CommentBoxContainer>
-      )}
+                {pass !== "unpass" && level === "L0" && <DraggableIndicator />}
+              </CommentWrapper>
+            </div>
+          )}
+        </Draggable>
+        {provided.placeholder}
+      </CommentBoxContainer>
+    )}
     </Droppable>
   );
 };

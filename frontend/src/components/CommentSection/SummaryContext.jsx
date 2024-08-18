@@ -6,11 +6,13 @@ export const SummaryProvider = ({ children }) => {
   const [summaryUpdated, setSummaryUpdated] = React.useState(false);
   const [commentDeleted, setCommentDeleted] = React.useState(false);
   const [reviewUpdated, setReviewUpdated] = React.useState(false);
+  const [commentUpvoted, setCommentUpvoted] = React.useState(false);
 
   const resetAll = () => {
     setSummaryUpdated(false);
     setCommentDeleted(false);
     setReviewUpdated(false);
+    setCommentUpvoted(false);
   };
 
   const updateSummary = () => {
@@ -25,6 +27,10 @@ export const SummaryProvider = ({ children }) => {
     setReviewUpdated(true);
   };
 
+  const updateCommentUpvoted = () => {
+    setCommentUpvoted(true);
+  };
+
   return (
     <SummaryContext.Provider value={{ 
       summaryUpdated, 
@@ -33,6 +39,8 @@ export const SummaryProvider = ({ children }) => {
       updateCommentDeleted,
       reviewUpdated,
       updateReview,
+      commentUpvoted,
+      updateCommentUpvoted,
       resetAll
     }}>
       {children}

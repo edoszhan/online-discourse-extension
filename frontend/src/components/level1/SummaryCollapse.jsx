@@ -21,7 +21,7 @@ const SummaryCollapse = ({ articleId, threadId, summary, comment, clusteredComme
       </SummaryContainer>
       {isExpanded && (
         <ExpandedContent>
-          <CommentBox articleId={articleId} threadId={threadId} userId={userId} comment={comment} clusteredComments={clusteredComments} childrenComments={childrenComments} onReplyClick={onReplyClick} pass="unpass" isSummary={true}/>
+          <CommentBox articleId={articleId} threadId={threadId} userId={userId} comment={comment} clusteredComments={clusteredComments} childrenComments={childrenComments} onReplyClick={onReplyClick} pass="unpass" isSummary={true} isReplyEnabled={false} />
         </ExpandedContent>
       )}
     </div>

@@ -29,7 +29,9 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [allowComment, setAllowComment] = useState(true);
 
-  const { summaryUpdated, commentDeleted, reviewUpdated, resetAll} = React.useContext(SummaryContext);
+  const commentBoxContainerRef = useRef(null);
+
+  const { summaryUpdated, commentDeleted, reviewUpdated, commentUpvoted, resetAll} = React.useContext(SummaryContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,16 +54,29 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
   
     fetchData();
   
-    if (replyingTo) {
+    if (replyingTo && commentInputRef.current) {
       commentInputRef.current.focus();
     }
   
-    if (summaryUpdated || commentDeleted || reviewUpdated) {
+    if (summaryUpdated || commentDeleted || reviewUpdated || commentUpvoted) {
       handleRefresh();
       resetAll();
     }
-  }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted,  reviewUpdated, level]);
+  }, [articleId, threadId, replyingTo, summaryUpdated, commentDeleted, reviewUpdated, commentUpvoted, level]);
   
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (replyingTo && commentBoxContainerRef.current && !commentBoxContainerRef.current.contains(event.target)) {
+        setReplyingTo(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [replyingTo]);
 
   const ClusterPopup = ({ clusters, comments, onClose }) => (
     <Overlay>
@@ -379,6 +394,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
     onBack();
   };
 
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
   return (
     <div className="comment-thread-container">
       <ButtonContainer>
@@ -472,8 +491,10 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                           threadId={threadId}
                           comment={comment}
                           clusteredComments={clusteredComments}
+                          childrenComments={replies}
                           reviewId={acceptedReview.id}
                           onSummarySaved={fetchComments()}
+                          allComments={comments}
                         />
                       </div>
                       )}
@@ -509,6 +530,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                     userId={userId}
                     onReplyClick={handleReplyClick}
                     level={level}
+                    isReplyingTo={replyingTo === comment.id}
                   />
                 )}
               </React.Fragment>
@@ -518,12 +540,12 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         </DragDropContext>
       )}
       <Separator />
-      <CommentBoxContainer>
+      <CommentBoxContainer ref={commentBoxContainerRef}>
         <UserProfile>{userId.charAt(0).toUpperCase() || 'A'}</UserProfile>
         <CommentInputContainer>
           <CommentInput
             ref={commentInputRef}
-            placeholder="Add a comment..."
+            placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => {

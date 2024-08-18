@@ -6,7 +6,7 @@ import axios from 'axios';
 const CommentBoxContainer = styled.div`
   margin-bottom: 10px;
   padding: 10px;
-  background-color: ${(props) => (props.hasChildren ? 'white' : 'white')};
+  background-color: ${(props) => (props.hasChildren ? '#F2F2F2' : '#F2F2F2')};
   border-radius: 5px;
 `;
 

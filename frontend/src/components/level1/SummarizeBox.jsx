@@ -2,7 +2,7 @@ import React, { useState, useRef} from "react";
 import SummarizePopup from "./SummarizePopup";
 import axios from "axios";
 
-const SummarizeButton = ({ articleId, threadId, comment, clusteredComments, reviewId,  onSummarySaved}) => {
+const SummarizeButton = ({ articleId, threadId, comment, clusteredComments, childrenComments, reviewId,  onSummarySaved, allComments}) => {
   const [showPopup, setShowPopup] = useState(false);
   const [summary, setSummary] = useState(null);
   const buttonRef = useRef(null);
@@ -11,10 +11,20 @@ const SummarizeButton = ({ articleId, threadId, comment, clusteredComments, revi
     setShowPopup(false);
   };
 
+  const findClusteredComments = (clusteredCommentId) => {
+    const clusteredComments = allComments.filter((c) => c.children_id === clusteredCommentId);
+    return clusteredComments;
+  };
+
   const handleSummarize = async () => {
     try {
-      const commentsString = [comment.text, ...clusteredComments.map(comment => comment.text)].join('\n');
-      console.log('Comments being sent to OpenAI:', commentsString);
+      const allComments = [
+        comment.text,
+        ...childrenComments.map(comment => comment.text),
+        ...clusteredComments.map(comment => comment.text),
+        ...clusteredComments.flatMap(comment => findClusteredComments(comment.id).map(child => child.text))
+      ];
+      const commentsString = allComments.join('\n');
 
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/summarize`, {
         comments: commentsString,

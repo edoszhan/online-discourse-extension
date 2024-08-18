@@ -78,7 +78,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setShowFloatingMessage(true);
         setTimeout(() => setShowFloatingMessage(false), 5000);
 
-        if (updatedReviewObj.acceptedBy.length >= 2) {
+        if (updatedReviewObj.acceptedBy.length >= 3) {
           // Update the cluster_id of the source comment
           try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}/${reviewObj.sourceId}`, {
@@ -132,7 +132,7 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setTimeout(() => setShowFloatingMessage(false), 5000);
   
 
-        if (updatedReviewObj.deniedBy.length >= 2) {
+        if (updatedReviewObj.deniedBy.length >= 3) {
           setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewObj.id));
           fetchReviews();
           setShowDeletedPopup(true);
@@ -273,10 +273,10 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
                 {review.pendingReview === null && (
                   <>
                     <ReviewButton style={{ backgroundColor: 'green' }} onClick={() => handleAccept(review)}>
-                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/2)
+                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/3)
                     </ReviewButton>
                     <ReviewButton onClick={() => handleDecline(review)}>
-                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/2)
+                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/3)
                     </ReviewButton>
                   </>
                 )}

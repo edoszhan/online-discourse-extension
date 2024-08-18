@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef , useContext} from 'react';
 import styled from 'styled-components';
 import { AiOutlineLike, AiFillLike, AiOutlineMessage, AiOutlineEllipsis, AiOutlineEdit, AiOutlineDelete, AiOutlineWarning} from "react-icons/ai";
 import axios from 'axios';
 import moment from 'moment-timezone';
+import SummaryContext from './SummaryContextBaseline';
 
 const CommentContainer = styled.div`
   display: flex;
@@ -10,8 +11,7 @@ const CommentContainer = styled.div`
   padding: 5px;
   border-radius: 8px;
   background-color: ${(props) =>
-    props.isReplying ? '#9bbcc7' : props.isCombined ? '#F2F2F2' : '#F2F2F2'}; //individual (not surrounding) comment background 
-  opacity: ${(props) => (props.isDragging ? '1' : '1')}; 
+    props.isReplyingTo ? '#9bbcc7' : props.isCombined ? '#F2F2F2' : '#F2F2F2'}; 
 
   position: relative;
 `;
@@ -34,7 +34,7 @@ const UserLogo = styled.div`
 
 const CommentContent = styled.div`
   flex-grow: 1;
-  color: ${(props) => (props.isCombined ? 'inherit' : 'black')};
+  color: black;
 `;
 
 const CommentText = styled.p`
@@ -60,9 +60,20 @@ const DotSeparator = styled.span`
 
 const CommentActions = styled.div`
   display: flex;
-  align-items: center;
   margin-top: 5px;
   justify-content: flex-start;
+
+  .upvote-button {
+    order: ${(props) => (props.hasReplyButton ? '2' : '1')}; /* Order based on the presence of the reply button */
+  }
+
+  .reply-button {
+    order: 1; /* Always place the reply button first if it exists */
+  }
+
+  .ellipsis-button {
+    order: 3; /* Keep ellipsis at the end */
+  }
 `;
 
 const ReplyButton = styled.button`
@@ -74,6 +85,7 @@ const ReplyButton = styled.button`
   display: flex;
   align-items: center;
   padding: 1px;
+  margin-right: 5px;
 
   &:hover {
     text-decoration: underline;
@@ -89,7 +101,7 @@ const UpvoteButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 10px;
+  padding: 4px;
 
 
   &.active {
@@ -100,8 +112,12 @@ const UpvoteButton = styled.button`
 const IconWrapper = styled.span`
   display: flex;
   align-items: center;
-  margin-right: 10px;
+  margin-right: 5px;
   justify-content: flex-end;
+
+  svg {
+    margin-right: 5px; 
+  }
 `;
 
 const EllipsisButton = styled.button`
@@ -234,7 +250,7 @@ const CancelModalButton = styled.button`
 `;
 
 
-const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReplyDisabled, userId, onReplyClick }) => {
+const Comment = ({ articleId, threadId, comment, isReplyDisabled, userId, onReplyClick, isReplyingTo}) => {
   if (!comment) {
     return null;
   }
@@ -253,6 +269,8 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
 
   const menuPopupRef = useRef(null);
   const ellipsisButtonRef = useRef(null);
+
+  const { updateCommentDeleted,  updateCommentUpvoted} = useContext(SummaryContext);
 
 
   const authorInitial = comment.author ? comment.author.charAt(0).toUpperCase() : 'A';
@@ -278,6 +296,7 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
     } catch (error) {
       console.error('Error updating upvotes:', error);
     }
+    updateCommentUpvoted();
   };
 
   const handleReplyClick = () => {
@@ -290,7 +309,7 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isReplying && !event.target.closest(".comment-container") && !event.target.closest(".comment-input")) {
+      if (isReplyingTo && !event.target.closest(".comment-container") && !event.target.closest(".comment-input")) {
         handleCancelReply();
       }
     };
@@ -300,7 +319,7 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isReplying]);
+  }, [isReplyingTo]);
 
   useEffect(() => {
     const handleClickOutsideMenu = (event) => {
@@ -352,9 +371,9 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
   };
 
   return (
-    <CommentContainer isDragging={isDragging} isReplying={isReplying} isCombined={isCombined}>
+    <CommentContainer isReplyingTo={isReplyingTo}>
         <UserLogo>{authorInitial}</UserLogo>
-      <CommentContent isCombined={isCombined} isDragging={isDragging}>
+      <CommentContent >
         <CommentDetails>
           <CommentAuthor>{comment.author}</CommentAuthor>
           <DotSeparator>•</DotSeparator>
@@ -374,14 +393,14 @@ const Comment = ({ articleId, threadId, comment, isDragging, isCombined, isReply
         ) : (
           <CommentText>{comment.text}</CommentText>
         )}
-        <CommentActions>
-          {!isReplyDisabled && (
-             <ReplyButton onClick={handleReplyClick}>
+        <CommentActions hasReplyButton={!isReplyDisabled && comment.children_id === null}>
+          {!isReplyDisabled && comment.children_id === null && (
+            <ReplyButton onClick={handleReplyClick} className="reply-button">
               <AiOutlineMessage style={{ marginRight: '5px' }} />
               Reply
             </ReplyButton>
           )}
-          <UpvoteButton onClick={addUpvote} className={hasUpvoted ? 'active' : ''}>
+          <UpvoteButton onClick={addUpvote} className={`upvote-button ${hasUpvoted ? 'active' : ''}`}>
            <IconWrapper>{hasUpvoted ? <AiFillLike /> : <AiOutlineLike />} {upvotes.length || 0} </IconWrapper> 
           </UpvoteButton>
           <EllipsisButton ref={ellipsisButtonRef} className="ellipsis-button" onClick={() => setIsMenuOpen(!isMenuOpen)}>

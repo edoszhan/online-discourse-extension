@@ -3,7 +3,7 @@ import CommentThread from '../CommentThread/CommentThread';
 import './CommentSection.css';
 import axios from 'axios';
 import styled from 'styled-components';
-import { AiFillCheckSquare, AiFillCloseSquare } from "react-icons/ai";
+import { AiFillCheckSquare, AiFillCloseSquare, AiOutlineClockCircle} from "react-icons/ai";
 import moment from 'moment-timezone';
 import { SummaryProvider } from './SummaryContext';
 
@@ -75,6 +75,9 @@ function CommentSection({userId, level}) {
   const [floatingMessage, setFloatingMessage] = useState('');
   const [showFloatingMessage, setShowFloatingMessage] = useState(false);
 
+  const [commentCounts, setCommentCounts] = useState({});
+
+  const [currentUserPendingTopics, setCurrentUserPendingTopics] = useState([]);
 
   const fetchTopics = async () => {
     try {
@@ -97,6 +100,8 @@ function CommentSection({userId, level}) {
   const fetchAllAcceptedReviews = async () => {
     const summariesTemp = [];
     const timestampsTemp = [];
+    const commentCountsTemp = {};
+
     for (let threadId = 1; threadId <= 6; threadId++) {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`);
@@ -106,14 +111,19 @@ function CommentSection({userId, level}) {
         }));
         summariesTemp[threadId] = reviews.filter((review) => review.summary != null).map(review => review.summary);
         timestampsTemp[threadId] = reviews.map(review => review.timestamp);
+
+        const commentCount = await fetchCommentCount(threadId);
+        commentCountsTemp[threadId] = commentCount;
       } catch (error) {
         console.error(`Error fetching accepted reviews for threadId ${threadId}:`, error);
         summariesTemp[threadId] = [];
         timestampsTemp[threadId] = [];
+        commentCountsTemp[threadId] = 0;
       }
     }
     setSummaries(summariesTemp);
     setTimestamps(timestampsTemp);
+    setCommentCounts(commentCountsTemp);
   };
   
   useEffect(() => {
@@ -210,6 +220,10 @@ function CommentSection({userId, level}) {
       if (response.data && Array.isArray(response.data)) {
         const filteredTopics = response.data.filter(topic => topic.final_status === "pending");
         setAllPendingTopics(filteredTopics);
+
+        const currentUserTopics = filteredTopics.filter(topic => topic.author === userId);
+        setCurrentUserPendingTopics(currentUserTopics);
+
         return filteredTopics;
       }
       return [];
@@ -222,6 +236,7 @@ function CommentSection({userId, level}) {
   useEffect(() => {
     if (isReviewPopupOpen) {
       fetchPendingTopics();
+      fetchAllPendingTopics();
     }
   }, [isReviewPopupOpen]);
 
@@ -261,6 +276,18 @@ function CommentSection({userId, level}) {
     setIsCheckboxChecked(false);
   };
 
+  const fetchCommentCount = async (threadId) => {
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
+    const data = response.data || [];
+    return data.length;
+  } catch (error) {
+    console.error(`Error fetching comment count for threadId ${threadId}:`, error);
+    return 0;
+  }
+};
+
+
 
   const topicWidth = `${100 / topics.length}%`;
 
@@ -275,7 +302,7 @@ function CommentSection({userId, level}) {
               Refresh
             </RefreshButton>
           </HeaderContainer>
-          <div className="thread-list" style={{ display: 'flex' }}>
+          <div className="thread-list" No Summaries style={{ display: 'flex' }}>
             {topics.map((topic, idx) => (
               <div key={idx} style={{ display: "flex", flexDirection: "column", width: topicWidth, margin: "5px" }}>
                 <div className="topic-heading" style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px"}}>
@@ -304,7 +331,7 @@ function CommentSection({userId, level}) {
                     <>
                       <b className="no-comments">No Summaries</b>
                       <br />
-                      <span className="click-here">Click here to write comments</span>
+                      <span className="click-here">View all {commentCounts[idx + 1] || 0} comments</span>
                     </>
                   )}
                 </div>
@@ -444,74 +471,95 @@ function CommentSection({userId, level}) {
       )}
 
 
-      {isReviewPopupOpen && (
-        <div className="popup-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
-        }}>
-          <div className="popup-content" style={{
-            background: 'white', padding: '20px', borderRadius: '10px', width: '500px', zIndex: 10000
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid black', paddingBottom: '10px' }}>
-              <span>Review Suggested Threads</span>
-              <button onClick={() => setIsReviewPopupOpen(false)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>X</button>
-            </div>
-            <div style={{ margin: '20px 0', textAlign: 'center' }}>
-              {pendingTopics.length > 0 ? (
-                pendingTopics.map((topic) => (
-                  <div key={topic.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ flexGrow: 1, textAlign: 'left' }}>
-                      <strong>{topic.suggested_topic}</strong>
-                      <br />
-                      <small>By: {topic.author}</small>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <button
-                        onClick={() => handleTopicAction(topic.id, 'accept')}
-                        style={{ marginRight: '5px', cursor: 'pointer', border: 'none', background: 'none' }}
-                      >
-                        {topicActions[topic.id] === 'accept' ? (
-                          <AiFillCheckSquare style={{ color: 'green', fontSize: '24px' }} />
-                        ) : (
-                          <div style={{ width: '24px', height: '24px', border: '2px solid green' }} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleTopicAction(topic.id, 'reject')}
-                        style={{ cursor: 'pointer', border: 'none', background: 'none' }}
-                      >
-                        {topicActions[topic.id] === 'reject' ? (
-                          <AiFillCloseSquare style={{ color: 'red', fontSize: '24px' }} />
-                        ) : (
-                          <div style={{ width: '24px', height: '24px', border: '2px solid red' }} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )) 
-              ) : (
-                <div style={{ marginTop: '20px' }}>
-                <p>No submitted topics by other users as of now</p>
+{isReviewPopupOpen && (
+  <div className="popup-overlay" style={{
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
+  }}>
+    <div className="popup-content" style={{
+      background: 'white', padding: '20px', borderRadius: '10px', width: '500px', zIndex: 10000
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid black', paddingBottom: '10px' }}>
+        <span>Review Suggested Threads</span>
+        <button onClick={() => setIsReviewPopupOpen(false)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>X</button>
+      </div>
+      <div style={{ margin: '20px 0', textAlign: 'center' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Your Pending Topics</h3>
+          {currentUserPendingTopics && currentUserPendingTopics.length > 0 ? (
+            currentUserPendingTopics.map((topic) => (
+              <div key={topic.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ flexGrow: 1, textAlign: 'left', marginRight: '10px' }}>
+                  <strong>{topic.suggested_topic}</strong>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
+                  <span style={{ marginRight: '10px' }}>Waiting for approval</span>
+                  <AiOutlineClockCircle style={{ color: 'black', fontSize: '30px' }} />
+                </div>
               </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <button
-                onClick={handleSaveTopicReviews}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#5D6BE5',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer'
-                }}
-              >
-                Save My Choices
-              </button>
-            </div>
-          </div>
+            ))
+          ) : (
+            <div>No pending topics submitted by you.</div>
+          )}
         </div>
-      )}
+        <div>
+          <h3>Other Users' Pending Topics</h3>
+          {allPendingTopics.filter(topic => topic.author !== userId).length > 0 ? (
+            allPendingTopics
+              .filter(topic => topic.author !== userId)
+              .map((topic) => (
+                <div key={topic.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ flexGrow: 1, textAlign: 'left' }}>
+                    <strong>{topic.suggested_topic}</strong>
+                    <br />
+                    <small>By: {topic.author}</small>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <button
+                      onClick={() => handleTopicAction(topic.id, 'accept')}
+                      style={{ marginRight: '5px', cursor: 'pointer', border: 'none', background: 'none' }}
+                    >
+                      {topicActions[topic.id] === 'accept' ? (
+                        <AiFillCheckSquare style={{ color: 'green', fontSize: '24px' }} />
+                      ) : (
+                        <div style={{ width: '24px', height: '24px', border: '2px solid green' }} />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleTopicAction(topic.id, 'reject')}
+                      style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+                    >
+                      {topicActions[topic.id] === 'reject' ? (
+                        <AiFillCloseSquare style={{ color: 'red', fontSize: '24px' }} />
+                      ) : (
+                        <div style={{ width: '24px', height: '24px', border: '2px solid red' }} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))
+          ) : (
+            <div>No pending topics submitted by other users.</div>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <button
+          onClick={handleSaveTopicReviews}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#5D6BE5',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Save My Choices
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
     </div>
   );

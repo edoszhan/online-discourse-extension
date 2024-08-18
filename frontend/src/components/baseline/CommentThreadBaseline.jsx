@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext} from 'react';
 import styled from 'styled-components';
 import CommentBoxBaseline from './CommentBoxBaseline';
 import axios from 'axios';
+import SummaryContext from './SummaryContextBaseline';
 
 const CommentThreadBaseline = ({userId }) => {
   const [articleId, setArticleId] = useState(null);
@@ -13,16 +14,40 @@ const CommentThreadBaseline = ({userId }) => {
   const commentInputRef = useRef(null);
   const [allowComment, setAllowComment] = useState(true);
 
+  const { commentDeleted, commentUpvoted, resetAll} = useContext(SummaryContext);
+
+  const commentBoxContainerRef = useRef(null);
+
   useEffect(() => {
     fetchArticle();
-  }, []);
-
+  
+    if (commentDeleted || commentUpvoted) {
+      handleRefresh();
+      resetAll();
+    }
+  
+    if (replyingTo && commentInputRef.current) {
+      commentInputRef.current.focus();
+    }
+  
+    if (articleId) {
+      fetchComments();
+    }
+  }, [commentDeleted, commentUpvoted, replyingTo, articleId]);
 
   useEffect(() => {
-    if (articleId) {
-      fetchComments()
-    }
-  }, [articleId]);
+    const handleClickOutside = (event) => {
+      if (replyingTo && commentBoxContainerRef.current && !commentBoxContainerRef.current.contains(event.target)) {
+        setReplyingTo(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [replyingTo]);
 
   const fetchArticle = async () => {
     try {
@@ -62,6 +87,7 @@ const CommentThreadBaseline = ({userId }) => {
   };
 
   const handleAddComment = async () => {
+    console.log("Replying to actually:", replyingTo);
     if (allowComment && newComment.trim()) {
       setAllowComment(false);
       try {
@@ -95,11 +121,16 @@ const CommentThreadBaseline = ({userId }) => {
   };
 
   const handleReplyClick = (commentId) => {
+    console.log("replying to", commentId || null);
     setReplyingTo(commentId);
   };
 
   const handleRefresh = () => {
     fetchComments();
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
   };
 
   return (
@@ -138,18 +169,19 @@ const CommentThreadBaseline = ({userId }) => {
                   clusteredComments={[]}
                   userId={userId}
                   onReplyClick={handleReplyClick}
+                  isReplyingTo={replyingTo === comment.id}
                 />
               );
             })}
         </CommentsContainer>
       )}
       <Separator />
-      <CommentBoxContainer>
+      <CommentBoxContainer ref={commentBoxContainerRef}>
         <UserProfile>{userId.charAt(0).toUpperCase() || 'A'}</UserProfile>
         <CommentInputContainer>
           <CommentInput
             ref={commentInputRef}
-            placeholder="Add a comment..."
+            placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => {
@@ -268,4 +300,17 @@ const AddCommentButton = styled.button`
   cursor: pointer;
   box-sizing: border-box;
   background-color: #5D6BE5;
+`;
+
+const CancelReplyButton = styled.button`
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;

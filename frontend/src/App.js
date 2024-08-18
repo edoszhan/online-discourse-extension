@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { logEvent } from './utils/logger';
+import CommentSection from './components/CommentSection/CommentSection';
 
 function App() {
   const [role, setRole] = useState('L0');
