@@ -483,6 +483,7 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
                         level={level}
                         hasSummaryCollapse={comment.summary !== undefined && comment.summary !== null}
                         refreshTrigger={refreshTrigger}
+                        isReplyingTo={replyingTo === comment.id}
                       />
                        {level === 'L1' && isClusterAccepted && !acceptedReview?.summary && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

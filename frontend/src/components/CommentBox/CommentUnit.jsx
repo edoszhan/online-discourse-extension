@@ -43,7 +43,7 @@ const CommentReplyContainer = styled.div`
   background-color: #F2F2F2;
 `;
 
-const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, hasSummaryCollapse,  refreshTrigger}) => {
+const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, hasSummaryCollapse,  refreshTrigger, isReplyingTo}) => {
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
@@ -78,6 +78,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             isReplyDisabled={false}
             onReplyClick={onReplyClick}
             isCombined={true}
+            isReplyingTo={isReplyingTo}
           />
         </div>
       );
@@ -103,6 +104,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             isReplyDisabled={false}
             userId={userId}
             onReplyClick={onReplyClick}
+            isReplyingTo={isReplyingTo}
           />
 
           {/* Render the replies */}
