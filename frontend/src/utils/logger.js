@@ -7,7 +7,7 @@ export function logEvent(action, user_id, folder_name) {
       timestamp: new Date().toISOString()
     };
   
-    fetch('http://127.0.0.1:8000/log', {
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/log`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

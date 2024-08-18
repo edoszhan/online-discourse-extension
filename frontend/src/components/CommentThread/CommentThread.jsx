@@ -13,6 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import SummaryContext from '../CommentSection/SummaryContext';
 
+import { logEvent } from '../../utils/logger';
+
 const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  question, color}) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -322,6 +324,15 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
         };
         setShowAcceptedPopup(true);
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/reviews/${threadId}`, reviewObj);
+
+        const sourceId = source.droppableId.split('-')[1];
+        const destinationId = destination.droppableId.split('-')[1];
+    
+        logEvent(
+          `User clustered sourceId ${sourceId} into destinationId ${destinationId}`,
+          userId,
+          'cluster_added'
+        );
       }
     } catch (error) {
       console.error('Error updating comment order:', error);
@@ -351,6 +362,11 @@ const CommentThread = ({ articleId, threadId, topic, onBack, level, userId,  que
           children_id: replyingTo ? replyingTo : null,
           hasClusters: false,
         });
+        logEvent(
+          `User added new comment with ID ${response.data.id} to thread ${threadId}`,
+          userId,
+          'comment_added'
+        );
         setComments([...comments, response.data]);
         setNewComment('');
         setCommentCounter(commentCounter + 1);

@@ -5,6 +5,7 @@ import CommentBox from './CommentBoxReview';
 import './ReviewPage.css';
 import AcceptedPopup from './AcceptedPopup';
 import DeletedPopup from './DeletedPopup';
+import { logEvent } from '../../utils/logger';
 
 import SummaryContext from '../CommentSection/SummaryContext';
 
@@ -78,6 +79,12 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setShowFloatingMessage(true);
         setTimeout(() => setShowFloatingMessage(false), 5000);
 
+        logEvent(
+          `User accepted review for sourceId ${reviewObj.sourceId} into destinationId ${reviewObj.destinationId}`,
+          userId,
+          'review_accepted'
+        );        
+
         if (updatedReviewObj.acceptedBy.length >= 3) {
           // Update the cluster_id of the source comment
           try {
@@ -130,6 +137,12 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
         setFloatingMessage("You have rejected the cluster! Wait for the other users to vote for final decision");
         setShowFloatingMessage(true);
         setTimeout(() => setShowFloatingMessage(false), 5000);
+
+        logEvent(
+          `User declined review for sourceId ${reviewObj.sourceId} into destinationId ${reviewObj.destinationId}`,
+          userId,
+          'review_declined'
+        );
   
 
         if (updatedReviewObj.deniedBy.length >= 3) {
@@ -272,12 +285,38 @@ const ReviewPage = ({ articleId, threadId, onBack, header, userId}) => {
               <div style={{ display: 'flex', justifyContent:'flex-end' }}>
                 {review.pendingReview === null && (
                   <>
-                    <ReviewButton style={{ backgroundColor: 'green' }} onClick={() => handleAccept(review)}>
-                      Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/3)
-                    </ReviewButton>
-                    <ReviewButton onClick={() => handleDecline(review)}>
-                      Decline ({review.deniedBy ? review.deniedBy.length : 0}/3)
-                    </ReviewButton>
+                      <ReviewButton
+                        style={{
+                          backgroundColor: review.acceptedBy.includes(userId)
+                            ? 'green'
+                            : '#F2F2F2',
+                          color: review.acceptedBy.includes(userId)
+                            ? 'white'
+                            : 'black',
+                          border: review.acceptedBy.includes(userId)
+                            ? 'none'
+                            : '1px solid black',
+                        }}
+                        onClick={() => handleAccept(review)}
+                      >
+                        Accept ({review.acceptedBy ? review.acceptedBy.length : 0}/3)
+                      </ReviewButton>
+                      <ReviewButton
+                        style={{
+                          backgroundColor: review.deniedBy.includes(userId)
+                            ? 'red'
+                            : '#F2F2F2',
+                          color: review.deniedBy.includes(userId)
+                            ? 'white'
+                            : 'black',
+                          border: review.deniedBy.includes(userId)
+                            ? 'none'
+                            : '1px solid black',
+                        }}
+                        onClick={() => handleDecline(review)}
+                      >
+                        Reject ({review.deniedBy ? review.deniedBy.length : 0}/3)
+                      </ReviewButton>
                   </>
                 )}
               </div>

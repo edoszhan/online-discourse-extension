@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { AiFillCheckSquare, AiFillCloseSquare, AiOutlineClockCircle} from "react-icons/ai";
 import moment from 'moment-timezone';
 import { SummaryProvider } from './SummaryContext';
+import { logEvent } from '../../utils/logger';
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -172,6 +173,12 @@ function CommentSection({userId, level}) {
       }
 
       try {
+        logEvent(
+          `User suggested new thread: ${newTopicText}`,
+          userId,
+          'thread_suggested'
+        );
+
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/topics/${articleId}`, {
           author: userId,
           suggested_topic: newTopicText,
@@ -491,7 +498,7 @@ function CommentSection({userId, level}) {
                 <div style={{ flexGrow: 1, textAlign: 'left', marginRight: '10px' }}>
                   <strong>{topic.suggested_topic}</strong>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center'}}>
                   <span style={{ marginRight: '10px' }}>Waiting for approval</span>
                   <AiOutlineClockCircle style={{ color: 'black', fontSize: '30px' }} />
                 </div>
