@@ -264,9 +264,9 @@ async def update_review(article_id: int, thread_id: int, review_id: int, updated
     if updated_review.summary is not None:
         review.summary = updated_review.summary
 
-    if len(review.accepted_by) >= 2:
+    if len(review.accepted_by) >= 3:
         review.pending_review = False
-    elif len(review.denied_by) >= 2:
+    elif len(review.denied_by) >= 3:
         review.pending_review = True
     else:
         review.pending_review = None
@@ -376,7 +376,7 @@ async def update_topic(article_id: int, topic_id: int, topic_update: TopicUpdate
     elif topic_update.deniedBy and topic_update.deniedBy[0] not in db_topic.acceptedBy + db_topic.deniedBy:
         db_topic.deniedBy = db_topic.deniedBy + topic_update.deniedBy
 
-    if len(db_topic.acceptedBy) >= 2:
+    if len(db_topic.acceptedBy) >= 3:
         db_topic.final_status = "accepted"
         thread = db.query(Thread).filter(Thread.id == article_id).first()
         if thread:
@@ -386,7 +386,7 @@ async def update_topic(article_id: int, topic_id: int, topic_update: TopicUpdate
             if db_topic.suggested_question not in thread.questions:
                 thread.questions = thread.questions + [db_topic.suggested_question]
                 attributes.flag_modified(thread, "questions")
-    elif len(db_topic.deniedBy) >= 2:
+    elif len(db_topic.deniedBy) >= 3:
         db_topic.final_status = "denied"
     else: 
         db_topic.final_status = "pending"
