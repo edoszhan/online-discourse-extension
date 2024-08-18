@@ -267,8 +267,22 @@ const CancelModalButton = styled.button`
   cursor: pointer;
 `;
 
+const FloatingMessage = styled.div`
+  position: fixed;
+  bottom: 40px;
+  right: 380px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 10000;
+  opacity: ${({ show }) => (show ? 1 : 0)};
+  transition: opacity 0.3s ease-in-out;
+`;
 
-const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick, level, isReplyingTo, isReplyEnabled}) => {
+
+
+const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReplyDisabled, userId, onReplyClick, level, isReplyingTo, isReplyEnabled, allComments}) => {
   if (!comment) {
     return null;
   }
@@ -288,6 +302,8 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
 
   const menuPopupRef = useRef(null);
   const ellipsisButtonRef = useRef(null);
+  const [floatingMessage, setFloatingMessage] = useState(null);
+  const [showFloatingMessage, setShowFloatingMessage] = useState(false);
 
 
   const authorInitial = comment.author ? comment.author.charAt(0).toUpperCase() : 'A';
@@ -362,6 +378,16 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (floatingMessage) {
+      setShowFloatingMessage(true);
+      const timer = setTimeout(() => {
+        setShowFloatingMessage(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [floatingMessage]);
+
   const handleEdit = () => {
     setIsEditing(true);
     setIsMenuOpen(false);
@@ -381,6 +407,16 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
   };
 
   const handleDelete = async () => {
+    const hasDependencies = allComments.some(
+      (c) => c.children_id === comment.id || c.cluster_id === comment.id
+    );
+
+    if (hasDependencies) {
+      setFloatingMessage('Cannot delete comment. It has replies or is part of a cluster.');
+      closeDeleteModal();
+      return;
+    }
+
     try {
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/comments/${comment.id}`);
       updateCommentDeleted();
@@ -466,6 +502,9 @@ const Comment = ({ articleId, threadId, comment, isCombined, isDragging, isReply
             </ModalButtons>
           </ModalContent>
         </ModalOverlay>
+      )}
+      {floatingMessage && (
+        <FloatingMessage show={showFloatingMessage}>{floatingMessage}</FloatingMessage>
       )}
     </CommentContainer>
   );

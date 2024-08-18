@@ -79,6 +79,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             onReplyClick={onReplyClick}
             isCombined={true}
             isReplyingTo={isReplyingTo}
+            allComments={allComments}
           />
         </div>
       );
@@ -105,6 +106,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
             userId={userId}
             onReplyClick={onReplyClick}
             isReplyingTo={isReplyingTo}
+            allComments={allComments}
           />
 
           {/* Render the replies */}
@@ -122,6 +124,7 @@ const CommentUnit = ({ articleId, threadId, comment, index, clusteredComments, c
                     userId={userId}
                     onReplyClick={onReplyClick}
                     isCombined={true}
+                    allComments={allComments}
                   />
                 </div>
               ))}

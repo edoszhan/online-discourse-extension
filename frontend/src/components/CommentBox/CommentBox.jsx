@@ -37,21 +37,21 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
   const [allComments, setAllComments] = useState([]);
   const hasChildren = clusteredComments && clusteredComments.length > 0;
 
-  // useEffect(() => {
-  //   fetchComments();
-  // }, []);
+  useEffect(() => {
+    fetchComments();
+  }, []);
 
-  // const fetchComments = async () => {
-  //   if (articleId === undefined || threadId === undefined) {
-  //     return;
-  //   }
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
-  //     setAllComments(response.data);
-  //   } catch (error) {
-  //     return;
-  //   }
-  // };
+  const fetchComments = async () => {
+    if (articleId === undefined || threadId === undefined) {
+      return;
+    }
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/articles/${articleId}/comments/${threadId}`);
+      setAllComments(response.data);
+    } catch (error) {
+      return;
+    }
+  };
 
   const renderClusteredComments = () => {
     return clusteredComments.map((child, childIndex) => {
@@ -70,6 +70,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
             userId={userId}
             isReplyDisabled={false}
             onReplyClick={onReplyClick}
+            allComments={allComments}
           />
         </div>
       );
@@ -92,6 +93,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
             onReplyClick={onReplyClick}
             level={level}
             isReplyEnabled={false} 
+            allComments={allComments}
           />
           {childrenComments && childrenComments.length > 0 && (
             <ReplyContainer>
@@ -107,6 +109,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
                     userId={userId}
                     onReplyClick={onReplyClick}
                     isCombined={false}
+                    allComments={allComments}
                   />
                 </div>
               ))}
@@ -152,6 +155,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
                   isReplyingTo={isReplyingTo}
                   setReplyingTo={setReplyingTo}
                   isReplyEnabled={false} 
+                  allComments={allComments}
                 />
                 {!snapshot.isDragging && (
                   <>
@@ -169,6 +173,7 @@ const CommentBox = ({ articleId, threadId, comment, index, isReplyingTo, setRepl
                               userId={userId}
                               onReplyClick={onReplyClick}
                               isCombined={false}
+                              allComments={allComments}
                             />
                           </div>
                         ))}

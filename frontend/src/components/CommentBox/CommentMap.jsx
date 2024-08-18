@@ -14,7 +14,7 @@ const ReplyContainer = styled.div`
   padding-left: 10px;
 `;
 
-const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, isCombined}) => {
+const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, childrenComments, userId, onReplyClick, isCombined, allComments}) => {
   return (
     <CommentMapContainer>
       <Comment
@@ -26,6 +26,7 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
         isReplyDisabled={false}
         userId={userId}
         onReplyClick={onReplyClick}
+        allComments={allComments}
       />
 
       {/* Render the replies */}
@@ -43,6 +44,7 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
                 userId={userId}
                 isCombined={isCombined}
                 onReplyClick={onReplyClick}
+                allComments={allComments}
               />
             </div>
           ))}
@@ -65,6 +67,7 @@ const CommentMap = ({ articleId, threadId, comment, index, clusteredComments, ch
               isReplyDisabled={false}
               onReplyClick={onReplyClick}
               isCombined={isCombined}
+              allComments={allComments}
             />
           ))}
         </div>
