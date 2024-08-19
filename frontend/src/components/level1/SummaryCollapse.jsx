@@ -14,7 +14,7 @@ const SummaryCollapse = ({ articleId, threadId, summary, comment, clusteredComme
   return (
     <div>
       <SummaryContainer>
-        <SummaryText>{summary}</SummaryText>
+        <SummaryText>User Summary: {summary}</SummaryText>
         <ToggleButton onClick={toggleExpand}>
           {isExpanded ? <AiFillCaretUp /> : <AiFillCaretDown />}
         </ToggleButton>

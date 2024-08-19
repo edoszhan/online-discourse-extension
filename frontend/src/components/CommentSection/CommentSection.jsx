@@ -296,7 +296,7 @@ function CommentSection({userId, level}) {
 
 
 
-  const topicWidth = `${100 / topics.length}%`;
+  // const topicWidth = `${100 / topics.length}%`;
 
   return (
     <div className="comment-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -309,9 +309,9 @@ function CommentSection({userId, level}) {
               Refresh
             </RefreshButton>
           </HeaderContainer>
-          <div className="thread-list" No Summaries style={{ display: 'flex' }}>
+          <div className="thread-list" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', gap: '10px' }}>
             {topics.map((topic, idx) => (
-              <div key={idx} style={{ display: "flex", flexDirection: "column", width: topicWidth, margin: "5px" }}>
+              <div key={idx} style={{ display: "flex", flexDirection: "column",   width: idx < 3 ? '32%' : '32%', marginBottom: '15px'}}>
                 <div className="topic-heading" style={{ display: "flex", borderBottom: `3px solid ${colors[idx % colors.length]}`, height: "50px", alignItems: "center", marginBottom: "15px"}}>
                   {topic}
                 </div>
@@ -430,7 +430,7 @@ function CommentSection({userId, level}) {
                     disabled={newTopic.trim() !== '' || newQuestion.trim() !== ''}
                   />
                   <label htmlFor="suggested-topic" style={{ marginLeft: '10px' }}>
-                    <b>AI Topic:</b> {suggestedMaterials[0]}
+                    <b>Suggested AI topic:</b> {suggestedMaterials[0]}
                     <br />
                     <i> Question: </i> {suggestedMaterials[1]}
                   </label>
