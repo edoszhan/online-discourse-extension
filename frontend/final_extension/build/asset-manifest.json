@@ -1,0 +1,31 @@
+{
+  "files": {
+    "main.js": "/static/js/main.js",
+    "main.css": "/static/css/main.ad02863b.css",
+    "contentScript.js": "/static/js/contentScript.js",
+    "contentScript.css": "/static/css/contentScript.bb205d0b.css",
+    "extractionScript.js": "/static/js/extractionScript.js",
+    "background.js": "/static/js/background.js",
+    "static/js/453.a15da546.chunk.js": "/static/js/453.a15da546.chunk.js",
+    "static/media/icon_fox.png": "/static/media/icon_fox.png",
+    "static/media/icon_cat.png": "/static/media/icon_cat.png",
+    "static/media/icon_duck.png": "/static/media/icon_duck.png",
+    "static/media/default-avatar-2.png": "/static/media/default-avatar-2.png",
+    "static/css/CommentThread.css": "/static/css/CommentThread.css",
+    "static/css/CommentSection.css": "/static/css/CommentSection.css",
+    "index.html": "/index.html",
+    "static/css/ReviewPage.css": "/static/css/ReviewPage.css",
+    "static/css/CommentBox.css": "/static/css/CommentBox.css",
+    "main.js.map": "/static/js/main.js.map",
+    "main.ad02863b.css.map": "/static/css/main.ad02863b.css.map",
+    "contentScript.js.map": "/static/js/contentScript.js.map",
+    "contentScript.bb205d0b.css.map": "/static/css/contentScript.bb205d0b.css.map",
+    "extractionScript.js.map": "/static/js/extractionScript.js.map",
+    "background.js.map": "/static/js/background.js.map",
+    "453.a15da546.chunk.js.map": "/static/js/453.a15da546.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.js",
+    "static/css/main.ad02863b.css"
+  ]
+}

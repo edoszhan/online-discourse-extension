@@ -1,0 +1,107 @@
+.comment-thread-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.thread-header {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.thread-header h2 {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.heading-underline {
+  height: 4px;
+  width: 620px;
+}
+
+.random-question {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.comment-count {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #888;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 16px;
+  color: #999;
+  font-weight: bold;
+}
+
+.comments-list {
+  margin-top: 20px;
+}
+
+.comment-box-container {
+  margin-top: 20px;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  resize: vertical;
+  min-height: 100px; /* Make the input area bigger */
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-profile {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.add-comment-button {
+  padding: 10px 20px;
+  background-color: #5D6BE5; /* Change this color to match the topic */
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.add-comment-button:hover {
+  background-color: #4A90E2;
+}
+
+.combined-comments {
+  background-color: lightblue;
+  padding: 8px;
+  margin-top: 8px;
+}
+.font-blue {
+  color: blue;
+}
+
+.comment-box {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.comment-box.dragging {
+  background-color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

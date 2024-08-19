@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "short_name": "Extension App",
+  "name": "Redesigning Online Discourse",
+  "action": {
+    "default_title": "Click Me", 
+    "default_popup": "index.html",
+    "default_width": 400,
+    "default_height": 600
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["static/js/contentScript.js"],
+      "css": [
+        "static/css/CommentSection.css",
+        "static/css/CommentThread.css",
+        "static/css/CommentBox.css",
+        "static/css/ReviewPage.css"
+      ]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["static/js/extractionScript.js"]
+
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "static/css/CommentSection.css",
+        "static/css/CommentThread.css",
+        "static/css/CommentBox.css",
+        "static/media/default-avatar-2.png",
+        "static/media/icon_fox.png",
+        "static/media/icon_cat.png",
+        "static/media/icon_duck.png",
+        "static/css/ReviewPage.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "background": {
+    "service_worker": "static/js/background.js"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ]
+}
